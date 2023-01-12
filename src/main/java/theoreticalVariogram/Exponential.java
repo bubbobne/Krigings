@@ -18,36 +18,48 @@
  */
 package theoreticalVariogram;
 
-
-public class Exponential implements Model{
+public class Exponential implements Model {
 
 	double dist;
 	double sill;
 	double range;
 	double nug;
 
-
-	public Exponential (double dist, double sill, double range, double nug){	
-		this.dist=dist;
-		this.sill=sill;
-		this.range=range;
-		this.nug=nug;		
+	public Exponential(double dist, double sill, double range, double nug) {
+		this.dist = dist;
+		this.sill = sill;
+		this.range = range;
+		this.nug = nug;
 	}
-
-
 
 	@Override
 	public double computeSemivariance() {
 
-		double result = 0;
+		double result = Double.NaN;
 
-		if (dist != 0.0) {
+		if (nug >= 0 && sill >= 0 && range >= 0 && dist >= 0.0) {
 			result = nug + sill * (1 - (Math.exp(-dist / range)));
 		}
-		//System.out.println(func[i]);
+		// System.out.println(func[i]);
 
 		return result;
 	}
 
+	@Override
+	public double[] computeGradient() {
+		// TODO Auto-generated method stub
+		double[] gradient = new double[] {  Double.NaN,  Double.NaN,  Double.NaN };
+
+		if (nug >= 0 && sill >= 0 && range >= 0 && dist >= 0.0) {
+//			gradient = new double[] { 1.0, 1 - Math.exp(-(dist / range)),
+//					-sill * Math.exp(-(dist / range)) * (dist / (range * range)) };
+		// }
+
+		gradient = new double[] { 1 - Math.exp(-(dist / range)),
+				-sill * Math.exp(-(dist / range)) * (dist / (range * range)), 1.0 };
+		}
+		return gradient;
+
+	}
 
 }

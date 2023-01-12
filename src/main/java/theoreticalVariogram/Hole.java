@@ -45,4 +45,12 @@ public class Hole implements Model{
 		return result;
 	}
 
+
+
+	@Override
+	public double[] computeGradient() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

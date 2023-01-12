@@ -25,5 +25,10 @@ public interface Model {
 
 	
 	abstract public double computeSemivariance ();
+	
+	
+	abstract public double[] computeGradient ();
+
+	
 
 }

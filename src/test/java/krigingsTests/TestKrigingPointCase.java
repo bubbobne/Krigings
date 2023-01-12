@@ -30,9 +30,11 @@ import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorReader;
 import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorWriter;
 
 import org.junit.Test;
+
+import oldPointCase.Krigings;
+
 import static org.junit.Assert.*;
 
-import krigingsPointCase.Krigings;
 
 
 public class TestKrigingPointCase{
@@ -75,14 +77,14 @@ public class TestKrigingPointCase{
 		//
 		kriging.inStations = stationsFC;
 		kriging.fStationsid = "ID_PUNTI_M";
-		//
+		kriging.doDetrended=true;
 		kriging.inInterpolate = interpolatedPointsFC;
 		kriging.fInterpolateid = "netnum";
         kriging.maxdist=40368.0;
 
-        kriging.range = 123537.0;
-        kriging.nugget = 0.0;
-        kriging.sill= 1.678383;
+//        kriging.range = 123537.0;
+//        kriging.nugget = 0.0;
+//        kriging.sill= 1.678383;
         kriging.pSemivariogramType="linear";
         
 
@@ -103,16 +105,14 @@ public class TestKrigingPointCase{
 			 */
 	
 	
-			HashMap<Integer, double[]> result = kriging.outData;
-			
-			/*
+			HashMap<Integer, double[]> result = kriging.outData;	
 			Set<Integer> pointsToInterpolateResult = result.keySet();
 			Iterator<Integer> iterator = pointsToInterpolateResult.iterator();
 			while( iterator.hasNext() ) {
 				int id = iterator.next();
 				double[] actual = result.get(id);
 				assertEquals(1.0, actual[0], 0);
-			}*/
+			}
 			
 			writer.inData = result;
 			writer.writeNextLine();
@@ -168,7 +168,8 @@ public class TestKrigingPointCase{
 		//
 		kriging.inStations = stationsFC;
 		kriging.fStationsid = "ID_PUNTI_M";
-		//
+		kriging.doDetrended=true;
+
 		kriging.inInterpolate = interpolatedPointsFC;
 		kriging.fInterpolateid = "netnum";
 
@@ -244,13 +245,14 @@ public class TestKrigingPointCase{
 		reader.fileNovalue = "-9999";
 		//
 		reader.initProcess();
-		//
+
 		Krigings kriging = new Krigings();
 		//kriging.pm = pm;
 		//
 		kriging.inStations = stationsFC;
 		kriging.fStationsid = "ID_PUNTI_M";
-		//
+		kriging.doDetrended=true;
+
 		kriging.inInterpolate = interpolatedPointsFC;
 		kriging.fInterpolateid = "netnum";
 		

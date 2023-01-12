@@ -50,4 +50,12 @@ public class Gaussian implements Model{
 	}
 
 
+
+	@Override
+	public double[] computeGradient() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
 }

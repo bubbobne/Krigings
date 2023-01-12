@@ -48,4 +48,12 @@ public class Spline implements Model{
         return result;
 	}
 
+
+
+	@Override
+	public double[] computeGradient() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

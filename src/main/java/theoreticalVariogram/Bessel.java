@@ -92,4 +92,12 @@ public class Bessel implements Model{
 		return (double) x < 0.0 ? -ans : ans;
 	}
 
+
+
+	@Override
+	public double[] computeGradient() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

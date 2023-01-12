@@ -15,7 +15,7 @@ import org.hortonmachine.gears.utils.sorting.QuickSortAlgorithm;
 import org.opengis.feature.simple.SimpleFeature;
 
 /*
- * Niccolò Tubini 28-12-2021
+ * Niccolï¿½ Tubini 28-12-2021
  * Replaced with lines 40 and 41 
  * https://sourceforge.net/p/geotools/mailman/message/36652855/
  */
@@ -40,6 +40,10 @@ public class StationsSelection {
 
 	/** Include zeros in computations (default is true). */
 	public boolean doIncludezero = true;
+	
+	/** Include zeros in computations (default is true). */
+	public boolean doLogarithmic = false;
+	
 
 	/** In the case of kriging with neighbor, maxdist is the maximum distance 
 	    within the algorithm has to consider the stations */
@@ -140,8 +144,9 @@ public class StationsSelection {
 				}
 				double[] h = inData.get(id);
 				if (h == null || isNovalue(h[0])) {
-
 					continue;
+				}else if(doLogarithmic){
+					h[0]=Utility.getLog(h[0]);
 				}
 
 
