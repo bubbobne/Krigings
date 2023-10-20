@@ -18,48 +18,53 @@
  */
 package theoreticalVariogram;
 
-public class Spherical implements Model{
-	
-	double  dist;
+public class Spherical implements Model {
+
+	double dist;
 	double sill;
 	double range;
 	double nug;
-	
-	
-	public Spherical (double dist, double sill, double range, double nug){	
-		this.dist=dist;
-		this.sill=sill;
-		this.range=range;
-		this.nug=nug;		
+	boolean isOk = false;
+
+	public Spherical(double dist, double sill, double range, double nug) {
+		this.dist = dist;
+		this.sill = sill;
+		this.range = range;
+		this.nug = nug;
+		this.isOk = nug >= 0 && sill >= 0 && range >= 0;
+
 	}
-	
-	
 
 	@Override
 	public double computeSemivariance() {
-  
-        double result = 0;
 
-            double hr;
-            hr = dist  / (range);
-            if (dist < range) {
-                result = nug + sill * hr * (1.5 - 0.5 * hr * hr);
-            } else if (dist >= range) {
-                result = sill+nug;
-            }else if (dist==0){
-            	result=0;
-            }
-            	
-        
-        return result;
+		double result = Double.NaN;
+		if (isOk) {
+			double hr;
+			hr = dist / (range);
+			if (dist < range) {
+				result = nug + sill * hr * (1.5 - 0.5 * hr * hr);
+			} else if (dist >= range) {
+				result = sill + nug;
+			}
+		}
+		return result;
 	}
-
-
 
 	@Override
 	public double[] computeGradient() {
-		// TODO Auto-generated method stub
-		return null;
+		double[] gradient = new double[] { Double.NaN, Double.NaN, Double.NaN };
+
+		if (isOk) {
+			double hr;
+			hr = dist / (range);
+			if (dist < range) {
+				gradient = new double[] { hr * (1.5 - 0.5 * hr * hr), 1.5 * sill * hr / range * (1 - hr * hr), 1.0 };
+			} else if (dist >= range) {
+				gradient = new double[] { 1.0, 0.0, 1.0 };
+			}
+		}
+		return gradient;
 	}
 
 }

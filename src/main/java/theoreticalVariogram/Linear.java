@@ -24,36 +24,41 @@ public class Linear implements Model {
 	double sill;
 	double range;
 	double nug;
+	boolean isOk = false;
 
 	public Linear(double dist, double sill, double range, double nug) {
 		this.dist = dist;
 		this.sill = sill;
 		this.range = range;
 		this.nug = nug;
+		this.isOk = nug >= 0 && sill >= 0 && range >= 0;
+
 	}
 
 	@Override
 	public double computeSemivariance() {
 
-		double result = 0;
-
-		if (dist > 0.0 & dist <= range) {
-			result = nug + sill * (dist / range);
+		double result = Double.MAX_VALUE;
+		if (isOk) {
+			if (dist <= range) {
+				result = nug + sill * (dist / range);
+			}
+			if (dist > range) {
+				result = sill + nug;
+			}
 		}
-		if (dist > range) {
-			result = sill + nug;
-		}
-
 		return result;
 	}
 
 	@Override
 	public double[] computeGradient() {
 		double[] gradient = new double[] { Double.NaN, Double.NaN, Double.NaN };
-		if (dist > 0.0 & dist <= range) {
-			gradient = new double[] { 1.0, dist / range, -(sill * dist) / Math.pow(range, 2.0) };
-		} else if (dist > range) {
-			gradient = new double[] { 1.0, 1.0, 0.0 };
+		if (isOk) {
+			if ( dist <= range) {
+				gradient = new double[] { dist / range, -(sill * dist) / Math.pow(range, 2.0), 1.0 };
+			} else if (dist > range) {
+				gradient = new double[] { 1.0, 0.0, 1.0 };
+			}
 		}
 		return gradient;
 	}

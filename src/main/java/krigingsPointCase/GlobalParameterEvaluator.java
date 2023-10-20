@@ -84,6 +84,10 @@ public class GlobalParameterEvaluator {
 
 	@Out
 	public double pNugGlogalDeTrended;
+
+	@Out
+	public StationsSelection stations;
+
 	@Description("In the case of kriging with neighbor, maxdist is the maximum distance "
 			+ "within the algorithm has to consider the stations")
 	@In
@@ -91,28 +95,14 @@ public class GlobalParameterEvaluator {
 
 	@In
 	public String fileNoValue = "-9999";
+	public String outGlobalVariogramType;
+	public String outGlobalDetrendedVariogramType;
 
 	@Execute
 	public void execute() {
+		verifyInput();
 
-		/**
-		 * StationsSelection is an external class that allows the selection of the
-		 * stations involved in the study. It is possible to define if to include
-		 * stations with zero values, station in a define neighborhood or within a max
-		 * distance from the considered point.
-		 */
-
-		if (doDetrended) {
-			int ff = inStations.getSchema().indexOf(fStationsZ);
-
-			if (ff < 0) {
-				throw new NullPointerException("check if the z field name is correct");
-
-			}
-
-		}
-
-		StationsSelection stations = new StationsSelection();
+		stations = new StationsSelection();
 		stations.inStations = inStations;
 		stations.doIncludezero = doIncludeZero;
 		stations.maxdist = maxdist;
@@ -127,6 +117,16 @@ public class GlobalParameterEvaluator {
 			e.printStackTrace();
 		}
 
+	}
+
+	private void verifyInput() {
+		if (doDetrended) {
+			int ff = inStations.getSchema().indexOf(fStationsZ);
+
+			if (ff < 0) {
+				throw new NullPointerException("check if the z field name is correct");
+			}
+		}
 	}
 
 	private void createDefaulParams(StationsSelection stations) throws Exception {
@@ -144,7 +144,8 @@ public class GlobalParameterEvaluator {
 		readH.tStart = tStart;
 		readH.tTimestep = tTimeStep;
 		readH.initProcess();
-		ExperimentalVariogram exp = getExperimentalVariogram();
+		ExperimentalVariogram exp = Utility.getExperimentalVariogram(fStationsid, inStations, doIncludeZero,
+				cutoffDivide, cutoffInput, 0);
 		int nRows = 0;
 		int nRowsDeTrended = 0;
 		try {
@@ -211,43 +212,48 @@ public class GlobalParameterEvaluator {
 				throw new IllegalArgumentException();
 			}
 
-			VariogramFitter fitter = new VariogramFitter(new VariogramFunction(pSemivariogramType));
-			ArrayList<WeightedObservedPoint> points = new ArrayList<WeightedObservedPoint>();
-
 			for (int i = 0; i < distance.length; i++) {
-				double x = distance[i] / nRows;
-				double y = variance[i] / nRows;
-				WeightedObservedPoint point = new WeightedObservedPoint(1.0, x, y);
-				points.add(point);
+				distance[i] = distance[i] / nRows;
+				variance[i] = variance[i] / nRows;
+
 			}
+			VariogramParamsEvaluator vEvaluator = new VariogramParamsEvaluator();
+			vEvaluator.pSemivariogramType = pSemivariogramType;
+			vEvaluator.x = distance;
+			vEvaluator.y = variance;
+			vEvaluator.proces();
 
-			double coeffs[] = fitter.fit(points);
-			pNugGlogal = coeffs[2];
-			pSGlogal = coeffs[0];
-			pAGlobal = coeffs[1];
+			pNugGlogal = vEvaluator.nugget;
+			pSGlogal = vEvaluator.sill;
+			pAGlobal = vEvaluator.range;
+			outGlobalVariogramType = vEvaluator.outSemivariogramType;
 
-			pm.message("Global value for nugget: " + pNugGlogal + " sill:" + pSGlogal + " range: " + pAGlobal);
+			pm.message("Global value for nugget: " + pNugGlogal + " sill:" + pSGlogal + " range: " + pAGlobal
+					+ "  semivariogram type:" + vEvaluator.outSemivariogramType);
 
 			if (doDetrended) {
 				if (distanceDeTrended.length != varianceDeTrended.length) {
 					throw new IllegalArgumentException();
 				}
 
-				points = new ArrayList<WeightedObservedPoint>();
 				if (nRowsDeTrended > 0) {
 					for (int i = 0; i < distanceDeTrended.length; i++) {
-						double x = distanceDeTrended[i] / nRowsDeTrended;
-						double y = varianceDeTrended[i] / nRowsDeTrended;
-						WeightedObservedPoint point = new WeightedObservedPoint(1.0, x, y);
-						points.add(point);
+						distanceDeTrended[i] = distanceDeTrended[i] / nRowsDeTrended;
+						varianceDeTrended[i] = varianceDeTrended[i] / nRowsDeTrended;
 					}
+					vEvaluator = new VariogramParamsEvaluator();
+					vEvaluator.pSemivariogramType = pSemivariogramType;
+					vEvaluator.x = distanceDeTrended;
+					vEvaluator.y = varianceDeTrended;
+					vEvaluator.proces();
+					pNugGlogalDeTrended = vEvaluator.nugget;
+					pSGlogalDeTrended = vEvaluator.sill;
+					pAGlobalDeTrended = vEvaluator.range;
+					outGlobalDetrendedVariogramType = vEvaluator.outSemivariogramType;
 
-					coeffs = fitter.fit(points);
-					pNugGlogalDeTrended = coeffs[2];
-					pSGlogalDeTrended = coeffs[0];
-					pAGlobalDeTrended = coeffs[1];
 					pm.message("Global value with TREND for nugget: " + pNugGlogalDeTrended + " sill:"
-							+ pSGlogalDeTrended + " range: " + pAGlobalDeTrended);
+							+ pSGlogalDeTrended + " range: " + pAGlobalDeTrended + "  semivariogram type:"
+							+ vEvaluator.outSemivariogramType);
 
 				} else {
 					pm.message("no trend has been found, so no parameters has been evauate");
@@ -259,33 +265,6 @@ public class GlobalParameterEvaluator {
 			e.printStackTrace();
 		}
 
-	}
-
-	private ExperimentalVariogram getExperimentalVariogram(double[] hresiduals, int[] idArray) {
-		ExperimentalVariogram expVariogram = getExperimentalVariogram();
-		HashMap<Integer, double[]> tmpInData = new HashMap<Integer, double[]>();
-		for (int i = 0; i < idArray.length; i++) {
-			tmpInData.put(idArray[i], new double[] { hresiduals[i] });
-		}
-		expVariogram.inData = tmpInData;
-		return expVariogram;
-	}
-
-	private ExperimentalVariogram getExperimentalVariogram() {
-		ExperimentalVariogram expVariogram = new ExperimentalVariogram();
-		expVariogram.fStationsid = this.fStationsid;
-		expVariogram.inStations = this.inStations;
-		expVariogram.doIncludezero = this.doIncludeZero;
-
-		expVariogram.inNumCloserStations = 0;
-
-		if (cutoffDivide > 0) {
-			expVariogram.Cutoff_divide = this.cutoffDivide;
-		}
-		if (cutoffInput > 0) {
-			expVariogram.Cutoffinput = this.cutoffInput;
-		}
-		return expVariogram;
 	}
 
 }

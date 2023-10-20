@@ -22,7 +22,7 @@ public class TestGlobalParam {
 		String stationIdField = "ID";
 		// 100 station to training model
 		URL stationShpUrl = this.getClass().getClassLoader().getResource("MeteoStations.shp");
-		File stazioniGridFile = new File("/home/andreisd/Downloads/problemakriging//MeteoStations.shp");
+		File stazioniGridFile = new File("/home/andreisd/Downloads/problemakriging/MeteoStations.shp");
 		OmsShapefileFeatureReader stationsReader = new OmsShapefileFeatureReader();
 		stationsReader.file = stazioniGridFile.getAbsolutePath();
 		stationsReader.readFeatureCollection();
@@ -31,7 +31,7 @@ public class TestGlobalParam {
 	//	URL observedRain4Url = this.getClass().getClassLoader().getResource("precipitation_cleaned12h.csv");
 	//	File observedFile = new File("/home/andreisd/Documents/project/GEOFRAME/Krigings/resources/Input/krigings/sic97/precipitation_cleaned12h.csv");
 		GlobalParameterEvaluator kriging = new GlobalParameterEvaluator();
-		kriging.pSemivariogramType = "exponential";
+		kriging.pSemivariogramType = null;
 		kriging.inStations = stationsFC;
 		kriging.fStationsid = stationIdField;
 	//	kriging.inHValuesPath = observedFile.getAbsolutePath();

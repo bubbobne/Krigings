@@ -18,40 +18,43 @@
  */
 package theoreticalVariogram;
 
-public class Power implements Model{
-	
+public class Power implements Model {
+
 	double dist;
 	double sill;
 	double range;
 	double nug;
-	
-	
-	public Power (double dist, double sill, double range, double nug){	
-		this.dist=dist;
-		this.sill=sill;
-		this.range=range;
-		this.nug=nug;		
+	boolean isOk = false;
+
+	public Power(double dist, double sill, double range, double nug) {
+		this.dist = dist;
+		this.sill = sill;
+		this.range = range;
+		this.nug = nug;
+		this.isOk = nug >= 0 && sill >= 0 && range >= 0;
+
 	}
-	
-	
 
 	@Override
 	public double computeSemivariance() {
-        double result = 0;
+		double result = Double.NaN;
+		if (isOk) {
+			result = nug + sill * (Math.pow(dist, range));
 
-            if (dist != 0.0) {
-                result = nug + sill * (Math.pow(dist, range));
-            }
-
-        return result;
+		}
+		return result;
 	}
-
-
 
 	@Override
 	public double[] computeGradient() {
 		// TODO Auto-generated method stub
-		return null;
+		double[] gradient = new double[] { Double.NaN, Double.NaN, Double.NaN };
+
+		if (isOk) {
+
+			gradient = new double[] { Math.pow(dist, range), sill * Math.pow(dist, range) * Math.log(dist), 1.0 };
+		}
+		return gradient;
 	}
 
 }

@@ -1,6 +1,9 @@
 package curvefitter;
 
+import java.util.ArrayList;
+
 import org.apache.commons.math3.analysis.ParametricUnivariateFunction;
+import org.apache.commons.math3.fitting.WeightedObservedPoint;
 
 import theoreticalVariogram.Model;
 import theoreticalVariogram.SimpleModelFactory;
@@ -30,6 +33,23 @@ public class VariogramFunction implements ParametricUnivariateFunction {
 		
 		return variogram.computeGradient();
 
+	}
+
+	public  ArrayList<WeightedObservedPoint> filterPoint(ArrayList<WeightedObservedPoint> points) {
+		 ArrayList<WeightedObservedPoint> newPoint =   new ArrayList<WeightedObservedPoint>();
+		if(type=="logarithmic" || type=="power") {
+			for(WeightedObservedPoint point:points) {
+				if(point.getX()!=0) {
+					newPoint.add(point);
+				}
+			}
+			
+			return newPoint;
+		}
+		
+		
+		return points;
+		
 	}
 
 }

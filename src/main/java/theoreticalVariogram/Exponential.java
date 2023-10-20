@@ -24,12 +24,14 @@ public class Exponential implements Model {
 	double sill;
 	double range;
 	double nug;
+	boolean isOk = false;
 
 	public Exponential(double dist, double sill, double range, double nug) {
 		this.dist = dist;
 		this.sill = sill;
 		this.range = range;
 		this.nug = nug;
+		this.isOk = nug >= 0 && sill >= 0 && range >= 0;
 	}
 
 	@Override
@@ -37,7 +39,7 @@ public class Exponential implements Model {
 
 		double result = Double.NaN;
 
-		if (nug >= 0 && sill >= 0 && range >= 0 && dist >= 0.0) {
+		if (isOk) {
 			result = nug + sill * (1 - (Math.exp(-dist / range)));
 		}
 		// System.out.println(func[i]);
@@ -48,15 +50,11 @@ public class Exponential implements Model {
 	@Override
 	public double[] computeGradient() {
 		// TODO Auto-generated method stub
-		double[] gradient = new double[] {  Double.NaN,  Double.NaN,  Double.NaN };
+		double[] gradient = new double[] { Double.NaN, Double.NaN, Double.NaN };
 
-		if (nug >= 0 && sill >= 0 && range >= 0 && dist >= 0.0) {
-//			gradient = new double[] { 1.0, 1 - Math.exp(-(dist / range)),
-//					-sill * Math.exp(-(dist / range)) * (dist / (range * range)) };
-		// }
-
-		gradient = new double[] { 1 - Math.exp(-(dist / range)),
-				-sill * Math.exp(-(dist / range)) * (dist / (range * range)), 1.0 };
+		if (isOk) {
+			gradient = new double[] { 1 - Math.exp(-(dist / range)),
+					-sill * Math.exp(-(dist / range)) * (dist / (range * range)), 1.0 };
 		}
 		return gradient;
 

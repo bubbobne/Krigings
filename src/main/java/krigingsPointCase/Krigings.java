@@ -18,21 +18,15 @@ package krigingsPointCase;
 
 import static org.hortonmachine.gears.libs.modules.HMConstants.isNovalue;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.commons.math3.fitting.WeightedObservedPoint;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.feature.FeatureIterator;
 import org.geotools.feature.SchemaException;
-import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorReader;
 import org.hortonmachine.gears.libs.exceptions.ModelsRuntimeException;
 import org.hortonmachine.gears.libs.modules.HMConstants;
 import org.hortonmachine.gears.libs.modules.HMModel;
@@ -40,12 +34,10 @@ import org.hortonmachine.gears.libs.monitor.IHMProgressMonitor;
 import org.hortonmachine.gears.libs.monitor.LogProgressMonitor;
 import org.hortonmachine.gears.utils.math.matrixes.ColumnVector;
 import org.hortonmachine.hmachine.i18n.HortonMessageHandler;
-import org.hortonmachine.hmachine.modules.statistics.kriging.variogram.VariogramFunction;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.opengis.feature.simple.SimpleFeature;
 
-import curvefitter.VariogramFitter;
 import experimentalVariogram.ExperimentalVariogram;
 import linearSistemSolver.SimpleLinearSystemSolverFactory;
 import oms3.annotations.Author;
@@ -147,10 +139,6 @@ public class Krigings extends HMModel {
 	@In
 	public String linearSystemSolverType = "default";
 
-	@Description("The hashmap withe the interpolated results")
-	@Out
-	public HashMap<Integer, double[]> outData = null;
-
 	@Description("Specified cutoff")
 	@In
 	public double cutoffInput;
@@ -169,6 +157,14 @@ public class Krigings extends HMModel {
 	/** transform to log. */
 	@In
 	public boolean boundedToZero = false;
+	@Description("The hashmap withe the interpolated results")
+	@Out
+	public HashMap<Integer, double[]> outData = null;
+
+	@Description("The hashmap withe the parameter for each time step: 0=>nugget, 1=>sill, 2=> range, 3 => is local (0 if used local parameter 1 if use global, 4 => is detrended (0 no trend, 1 with trend)")
+	@Out
+	public HashMap<Integer, double[]> outVariogramParams = null;
+
 	private static final double TOLL = 1.0d * 10E-8;
 
 	private int step = 0;
@@ -216,6 +212,14 @@ public class Krigings extends HMModel {
 	private double nugGlobalDeTrended;
 
 	private boolean noGlobalParams = false;
+	@In
+	public String globalDetrendedVariogramType;
+	@In
+	public String globalVariogramType;
+
+	private String actualSemivariogramType;
+
+	private boolean noEvaluationGlobalParams;
 
 	/**
 	 * Executing ordinary kriging.
@@ -232,7 +236,16 @@ public class Krigings extends HMModel {
 	@Execute
 	public void executeKriging() throws Exception {
 
-		verifyInput();
+
+		if (step == 0) {
+			try {
+				verifyInput();
+				this.createDefaulParams();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				pm.errorMessage(e.toString());
+			}
+		}
 		nugget = 0;
 		sill = 0;
 		range = 0;
@@ -262,14 +275,6 @@ public class Krigings extends HMModel {
 		stations.fStationsZ = fStationsZ;
 		stations.doLogarithmic = doLogarithmic;
 
-		if (step == 0) {
-			try {
-				this.createDefaulParams(stations);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				pm.errorMessage(e.toString());
-			}
-		}
 		step = step + 1;
 		stations.inData = inData;
 		stations.execute();
@@ -291,9 +296,16 @@ public class Krigings extends HMModel {
 			hResiduals = residualsEvaluator.hResiduals;
 			trendCoeff = residualsEvaluator.trend_coefficient;
 			trendIntercept = residualsEvaluator.trend_intercept;
-			if (!areAllEquals && n1 > 1) {
-				setKrigingParams(stations, residualsEvaluator);
-			}
+			setKrigingParams(stations, residualsEvaluator);
+
+		} else {
+			outVariogramParams = new HashMap<Integer, double[]>();
+			outVariogramParams.put(0, new double[] { HMConstants.doubleNovalue });
+			outVariogramParams.put(1, new double[] { HMConstants.doubleNovalue });
+			outVariogramParams.put(2, new double[] { HMConstants.doubleNovalue });
+			outVariogramParams.put(3, new double[] { HMConstants.doubleNovalue });
+			outVariogramParams.put(4, new double[] { HMConstants.doubleNovalue });
+			outVariogramParams.put(4, new double[] { HMConstants.doubleNovalue });
 
 		}
 		while (idIterator.hasNext()) {
@@ -372,8 +384,8 @@ public class Krigings extends HMModel {
 				} else if (n1 == 1 || areAllEquals) {
 
 					double tmp = hResiduals[0];
-					pm.message(msg.message("kriging.setequalsvalue"));
-					pm.beginTask(msg.message("kriging.working"), pointsToInterpolateId2Coordinates.size());
+			//		pm.message(msg.message("kriging.setequalsvalue"));
+			//		pm.beginTask(msg.message("kriging.working"), pointsToInterpolateId2Coordinates.size());
 					result[j] = tmp;
 					j++;
 					n1 = 0;
@@ -410,7 +422,7 @@ public class Krigings extends HMModel {
 		residualsEvaluator.doDetrended = this.doDetrended;
 		residualsEvaluator.hStations = hStations;
 		residualsEvaluator.zStations = zStations;
-		residualsEvaluator.regressionOrder = this.REGRESSION_ORDER;
+		residualsEvaluator.regressionOrder = Krigings.REGRESSION_ORDER;
 		residualsEvaluator.process();
 		return residualsEvaluator;
 	}
@@ -428,6 +440,8 @@ public class Krigings extends HMModel {
 			residualsEvaluator.process();
 
 		}
+		double isLocal = 0.0;
+		double isTrend = 0.0;
 		int[] idStations = Arrays.copyOfRange(stations.idStationInitialSet, 0, n1);
 		hResiduals = residualsEvaluator.hResiduals;
 		if (nugget == 0 && sill == 0 && range == 0) {
@@ -437,55 +451,61 @@ public class Krigings extends HMModel {
 			variogramParamsEvaluator.proces();
 
 			if (residualsEvaluator.isPValueOk == false) {
-				if ((nugget >= 0 && sill > 0 && range > 0 && variogramParamsEvaluator.isFitGood) || noGlobalParams) {
+				if ((variogramParamsEvaluator.nugget >= 0 && variogramParamsEvaluator.sill > 0
+						&& variogramParamsEvaluator.range > 0 && variogramParamsEvaluator.isFitGood)
+						|| noGlobalParams) {
 					nugget = variogramParamsEvaluator.nugget;
 					sill = variogramParamsEvaluator.sill;
 					range = variogramParamsEvaluator.range;
+					actualSemivariogramType = variogramParamsEvaluator.outSemivariogramType;
 				} else {
 					nugget = nugGlobal;
 					sill = sGlobal;
 					range = aGlobal;
-
+					actualSemivariogramType = globalVariogramType;
+					isLocal = 1.0;
 				}
 			} else if (residualsEvaluator.isPValueOk) {
-				if ((nugget >= 0 && sill > 0 && range > 0 && variogramParamsEvaluator.isFitGood) || noGlobalParams) {
+				isTrend = 1.0;
+				if ((variogramParamsEvaluator.nugget >= 0 && variogramParamsEvaluator.sill > 0
+						&& variogramParamsEvaluator.range > 0 && variogramParamsEvaluator.isFitGood)
+						|| noGlobalParams) {
 					nugget = variogramParamsEvaluator.nugget;
 					sill = variogramParamsEvaluator.sill;
 					range = variogramParamsEvaluator.range;
+					actualSemivariogramType = variogramParamsEvaluator.outSemivariogramType;
+
 				} else {
 					nugget = nugGlobalDeTrended;
 					sill = sGlobalDeTrended;
 					range = aGlobalDeTrended;
+					actualSemivariogramType = globalDetrendedVariogramType;
+					isLocal = 1.0;
 
 				}
 			}
+		}else {
+			actualSemivariogramType = pSemivariogramType;
 		}
+
+		outVariogramParams = new HashMap<Integer, double[]>();
+		outVariogramParams.put(0, new double[] { nugget });
+		outVariogramParams.put(1, new double[] { sill });
+		outVariogramParams.put(2, new double[] { range });
+		outVariogramParams.put(3, new double[] { isLocal });
+		outVariogramParams.put(4, new double[] { isTrend });
+		outVariogramParams.put(5, new double[] { Utility.getVariogramCode(actualSemivariogramType) });
+
 	}
 
 	private ExperimentalVariogram getExperimentalVariogram(double[] hresiduals, int[] idArray) {
-		ExperimentalVariogram expVariogram = getExperimentalVariogram();
+		ExperimentalVariogram expVariogram = Utility.getExperimentalVariogram(fStationsid, inStations, doIncludeZero,
+				cutoffDivide, cutoffInput, 0);
 		HashMap<Integer, double[]> tmpInData = new HashMap<Integer, double[]>();
 		for (int i = 0; i < idArray.length; i++) {
 			tmpInData.put(idArray[i], new double[] { hresiduals[i] });
 		}
 		expVariogram.inData = tmpInData;
-		return expVariogram;
-	}
-
-	private ExperimentalVariogram getExperimentalVariogram() {
-		ExperimentalVariogram expVariogram = new ExperimentalVariogram();
-		expVariogram.fStationsid = this.fStationsid;
-		expVariogram.inStations = this.inStations;
-		expVariogram.doIncludezero = this.doIncludeZero;
-		if (inNumCloserStations > 0) {
-			expVariogram.inNumCloserStations = this.inNumCloserStations;
-		}
-		if (cutoffDivide > 0) {
-			expVariogram.Cutoff_divide = this.cutoffDivide;
-		}
-		if (cutoffInput > 0) {
-			expVariogram.Cutoffinput = this.cutoffInput;
-		}
 		return expVariogram;
 	}
 
@@ -511,153 +531,75 @@ public class Krigings extends HMModel {
 
 		}
 
-		noGlobalParams = (inHValuesPath == null || inHValuesPath.isEmpty());
-		if (nugget == 0 && range == 0 && nugget == 0 && noGlobalParams) {
-			pm.message("Warning: nugget,range and sill will be evaluate only at each timestep");
+		if ((nugget != 0 || sill != 0 || range != 0) && ( pSemivariogramType == null || pSemivariogramType.isEmpty())) {
+			throw new NullPointerException(
+					"You provide incomplete fixed parameter check: nugget, sill, range or pSemivariogramType");
 		}
+
+	
 
 	}
 
-	private void createDefaulParams(StationsSelection stations) throws Exception {
+	private void createDefaulParams() throws Exception {
 		nugGlobal = pNugGlobal;
 		aGlobal = pAGlobal;
 		sGlobal = pSGlobal;
 		nugGlobalDeTrended = pNugGlobalDeTrended;
 		sGlobalDeTrended = pSGlobalDeTrended;
 		aGlobalDeTrended = pAGlobalDeTrended;
+		noEvaluationGlobalParams = (inHValuesPath == null || inHValuesPath.isEmpty());
 
-		if (!noGlobalParams && nugGlobal == 0 && aGlobal == 0 && sGlobal == 0) {
-			System.out.println("evaluate global params");
-			double[] variance = new double[cutoffDivide];
-			double[] distance = new double[cutoffDivide];
+		boolean gloablZero = (nugGlobal == 0 && aGlobal == 0 && sGlobal == 0);
+		boolean gloablZeroDeTrended = (nugGlobalDeTrended == 0 && aGlobalDeTrended == 0 && sGlobalDeTrended == 0);
+		
+		if(noGlobalParams && !gloablZero && globalVariogramType == null) {
+			throw new NullPointerException(
+					"You provide incomplete fixed parameter for global: nugGlobal, sGlobal, rGlobal or globalVariogramType");
+		}
+		
+		if(noGlobalParams && !gloablZeroDeTrended && globalDetrendedVariogramType == null) {
+			throw new NullPointerException(
+					"You provide incomplete fixed parameter for global de trended: nugGlobal, sGlobal, rGlobal or globalVariogramType");
+		}
+		
+		if (doDetrended) {
+			noGlobalParams = noGlobalParams && gloablZero || globalVariogramType == null;
+		} else {
+			noGlobalParams = noGlobalParams && (gloablZero || globalVariogramType == null || gloablZeroDeTrended
+					|| globalDetrendedVariogramType == null);
+		}
 
-			double[] varianceDeTrended = new double[cutoffDivide];
-			double[] distanceDeTrended = new double[cutoffDivide];
-			OmsTimeSeriesIteratorReader readH = new OmsTimeSeriesIteratorReader();
-			readH.file = this.inHValuesPath;
-			readH.idfield = "ID";
-			readH.fileNovalue = fileNoValue;
-			readH.tStart = tStart;
-			readH.tTimestep = tTimeStep;
-			readH.initProcess();
-			ExperimentalVariogram exp = getExperimentalVariogram();
-			int nRows = 0;
-			int nRowsDeTrended = 0;
-			try {
-				while (readH.doProcess) {
-					readH.nextRecord();
-					HashMap<Integer, double[]> h = readH.outData;
+		if (nugget == 0 && range == 0 && nugget == 0 && noGlobalParams) {
+			pm.message("Warning: nugget,range and sill will be evaluate only at each timestep");
+		}
+		if (!noEvaluationGlobalParams) {
 
-					exp.inData = h;
-					exp.process();
-					if (!exp.areAllEquals && exp.differents > 2) {
-						HashMap<Integer, double[]> d = exp.outDistances;
-						HashMap<Integer, double[]> v = exp.outExperimentalVariogram;
-						int j = 0;
-						for (Map.Entry<Integer, double[]> tt : d.entrySet()) {
-							distance[j] = distance[j] + tt.getValue()[0];
-							variance[j] = variance[j] + v.get(tt.getKey())[0];
-							j = j + 1;
-						}
-						if (doDetrended) {
+			GlobalParameterEvaluator gParam = new GlobalParameterEvaluator();
+			gParam.inStations = inStations;
+			gParam.doIncludeZero = doIncludeZero;
+			gParam.maxdist = maxdist;
+			gParam.fStationsid = fStationsid;
+			gParam.fStationsZ = fStationsZ;
+			gParam.doLogarithmic = doLogarithmic;
+			gParam.cutoffDivide = cutoffDivide;
+			gParam.inHValuesPath = this.inHValuesPath;
+			gParam.fStationsid = "ID";
+			gParam.fileNoValue = fileNoValue;
+			gParam.tStart = tStart;
+			gParam.tTimeStep = tTimeStep;
+			gParam.pSemivariogramType = pSemivariogramType;
+			gParam.doDetrended = doDetrended;
+			gParam.cutoffInput = cutoffInput;
+			gParam.execute();
+			nugGlobal = gParam.pNugGlogal;
+			aGlobal = gParam.pAGlobal;
+			sGlobal = gParam.pSGlogal;
+			globalVariogramType = gParam.outGlobalVariogramType;
+			nugGlobalDeTrended = gParam.pNugGlogalDeTrended;
+			sGlobalDeTrended = gParam.pSGlogalDeTrended;
+			aGlobalDeTrended = gParam.pAGlobalDeTrended;
+			globalDetrendedVariogramType = gParam.outGlobalDetrendedVariogramType;
 
-							if (this.inNumCloserStations != 0) {
-								stations.inNumCloserStations = 0;
-
-							}
-							stations.inData = h;
-							stations.execute();
-							int n1 = stations.hStationInitialSet.length - 1;
-							int[] idStations = Arrays.copyOfRange(stations.idStationInitialSet, 0, n1);
-
-							ResidualsEvaluator rEvaluator = new ResidualsEvaluator();
-							rEvaluator.doDetrended = true;
-							rEvaluator.hStations = Arrays.copyOfRange(stations.hStationInitialSet, 0, n1);
-							rEvaluator.zStations = Arrays.copyOfRange(stations.zStationInitialSet, 0, n1);
-
-							rEvaluator.process();
-							if (rEvaluator.isPValueOk) {
-								double[] hVal = rEvaluator.hResiduals;
-								nRowsDeTrended = nRowsDeTrended + 1;
-								HashMap<Integer, double[]> hRes = new HashMap<>();
-								for (int i = 0; i < n1; i++) {
-									hRes.put(stations.idStationInitialSet[i], new double[] { hVal[i] });
-								}
-
-								exp.inData = hRes;
-								exp.process();
-								if (exp.differents > 2) {
-									d = exp.outDistances;
-									v = exp.outExperimentalVariogram;
-									j = 0;
-									for (Map.Entry<Integer, double[]> tt : d.entrySet()) {
-										distanceDeTrended[j] = distanceDeTrended[j] + tt.getValue()[0];
-										varianceDeTrended[j] = varianceDeTrended[j] + v.get(tt.getKey())[0];
-										j = j + 1;
-									}
-								}
-							}
-						}
-					}
-
-					nRows = nRows + 1;
-
-				}
-
-				readH.close();
-
-				if (distance.length != variance.length) {
-					throw new IllegalArgumentException(msg.message("kriging.defaultMode"));
-				}
-
-				VariogramFitter fitter = new VariogramFitter(new VariogramFunction(pSemivariogramType));
-				ArrayList<WeightedObservedPoint> points = new ArrayList<WeightedObservedPoint>();
-
-				for (int i = 0; i < distance.length; i++) {
-					double x = distance[i] / nRows;
-					double y = variance[i] / nRows;
-					WeightedObservedPoint point = new WeightedObservedPoint(1.0, x, y);
-					points.add(point);
-				}
-
-				double coeffs[] = fitter.fit(points);
-				nugGlobal = coeffs[2];
-				sGlobal = coeffs[0];
-				aGlobal = coeffs[1];
-
-				pm.message("Global value for nugget: " + nugGlobal + " sill:" + sGlobal + " range: " + aGlobal);
-
-				if (doDetrended) {
-					if (distanceDeTrended.length != varianceDeTrended.length) {
-						throw new IllegalArgumentException(msg.message("kriging.defaultMode"));
-					}
-					if (nRowsDeTrended > 0) {
-
-						points = new ArrayList<WeightedObservedPoint>();
-
-						for (int i = 0; i < distanceDeTrended.length; i++) {
-							double x = distanceDeTrended[i] / nRowsDeTrended;
-							double y = varianceDeTrended[i] / nRowsDeTrended;
-							WeightedObservedPoint point = new WeightedObservedPoint(1.0, x, y);
-							points.add(point);
-						}
-
-						coeffs = fitter.fit(points);
-						nugGlobalDeTrended = coeffs[2];
-						sGlobalDeTrended = coeffs[0];
-						aGlobalDeTrended = coeffs[1];
-
-					} else {
-
-						pm.message("no trend has been found, so no parameters has been evauate");
-
-					}
-				}
-
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
 		}
 	}
 
@@ -765,7 +707,6 @@ public class Krigings extends HMModel {
 
 		// known terms vector
 		double[] gamma = new double[n + 1];
-
 		for (int i = 0; i < n; i++) {
 			double rx = x[i] - x[n];
 			double ry = y[i] - y[n];
@@ -798,7 +739,7 @@ public class Krigings extends HMModel {
 
 		if (h2 != 0) {
 			TheoreticalVariogram vgm = new TheoreticalVariogram();
-			vgmResult = vgm.calculateVGM(pSemivariogramType, h2, sill, range, nug);
+			vgmResult = vgm.calculateVGM(actualSemivariogramType, h2, sill, range, nug);
 		} else {
 			vgmResult = 0;
 		}

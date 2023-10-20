@@ -70,12 +70,14 @@ public class VariogramFitter extends AbstractCurveFitter {
 		}
 		double initialRange = x[index];
 		final double[] initialGuess = { initialSill, initialRange, initialNugget };
-		//final double[] initialGuess = { 1000.0, 10.0, 0.0000001 };
+		// final double[] initialGuess = { 1000.0, 10.0, 0.0000001 };
 		final AbstractCurveFitter.TheoreticalValuesFunction model = new AbstractCurveFitter.TheoreticalValuesFunction(
 				myFunction, points);
 		problem = new LeastSquaresBuilder().maxEvaluations(1000).maxIterations(1000).start(initialGuess).target(target)
 				.model(model.getModelFunction(), model.getModelFunctionJacobian())
-				.checker(new EvaluationRmsChecker(tol, tol)).lazyEvaluation(false).build();
+				.checker(new EvaluationRmsChecker(tol, tol))
+				.parameterValidator(new KrigingParamValidator(new double[] {0.000001,0.000001,0})).lazyEvaluation(false)
+				.build();
 
 		return problem;
 
@@ -85,7 +87,8 @@ public class VariogramFitter extends AbstractCurveFitter {
 		double[] optimalValues = null;
 		LevenbergMarquardtOptimizer lmo = new LevenbergMarquardtOptimizer();
 
-		LeastSquaresOptimizer.Optimum lsoo = lmo.withCostRelativeTolerance(1.0e-12).withParameterRelativeTolerance(1.0e-12).optimize(getProblem(points));
+		LeastSquaresOptimizer.Optimum lsoo = lmo.withCostRelativeTolerance(1.0e-12)
+				.withParameterRelativeTolerance(1.0e-12).optimize(getProblem(points));
 		optimalValues = lsoo.getPoint().toArray();
 		nIteration = lsoo.getIterations();
 		nEvaluation = lsoo.getEvaluations();
