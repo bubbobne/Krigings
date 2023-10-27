@@ -38,27 +38,25 @@ public class Linear implements Model {
 	@Override
 	public double computeSemivariance() {
 
-		double result = Double.MAX_VALUE;
-		if (isOk) {
-			if (dist <= range) {
-				result = nug + sill * (dist / range);
-			}
-			if (dist > range) {
-				result = sill + nug;
-			}
+		double result = 0;
+
+		if (dist > 0.0 & dist <= range) {
+			result = nug + sill * (dist / range);
 		}
+		if (dist > range) {
+			result = sill + nug;
+		}
+
 		return result;
 	}
 
 	@Override
 	public double[] computeGradient() {
 		double[] gradient = new double[] { Double.NaN, Double.NaN, Double.NaN };
-		if (isOk) {
-			if ( dist <= range) {
-				gradient = new double[] { dist / range, -(sill * dist) / Math.pow(range, 2.0), 1.0 };
-			} else if (dist > range) {
-				gradient = new double[] { 1.0, 0.0, 1.0 };
-			}
+		if (dist > 0.0 & dist <= range) {
+			gradient = new double[] { 1.0, dist / range, -(sill * dist) / Math.pow(range, 2.0) };
+		} else if (dist > range) {
+			gradient = new double[] { 1.0, 1.0, 0.0 };
 		}
 		return gradient;
 	}

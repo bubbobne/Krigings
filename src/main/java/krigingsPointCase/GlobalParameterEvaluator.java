@@ -60,7 +60,8 @@ public class GlobalParameterEvaluator {
 	public String inHValuesPath;
 	@In
 	public String tStart = null;
-
+	@In
+	public String tEnd = null;
 	@In
 	public int tTimeStep = 60;
 	/** transform to log. */
@@ -143,6 +144,9 @@ public class GlobalParameterEvaluator {
 		readH.fileNovalue = fileNoValue;
 		readH.tStart = tStart;
 		readH.tTimestep = tTimeStep;
+		if(this.tEnd!=null) {
+			readH.tEnd = this.tEnd;
+		}
 		readH.initProcess();
 		ExperimentalVariogram exp = Utility.getExperimentalVariogram(fStationsid, inStations, doIncludeZero,
 				cutoffDivide, cutoffInput, 0);
