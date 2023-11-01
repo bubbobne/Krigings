@@ -53,7 +53,7 @@ public class Linear implements Model {
 	@Override
 	public double[] computeGradient() {
 		double[] gradient = new double[] { Double.NaN, Double.NaN, Double.NaN };
-		if (dist > 0.0 & dist <= range) {
+		if (dist > 0.0 && dist <= range && !Double.isInfinite(Math.pow(range, 2.0))) {
 			gradient = new double[] { 1.0, dist / range, -(sill * dist) / Math.pow(range, 2.0) };
 		} else if (dist > range) {
 			gradient = new double[] { 1.0, 1.0, 0.0 };
