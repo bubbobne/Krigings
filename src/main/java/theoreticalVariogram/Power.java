@@ -37,10 +37,12 @@ public class Power implements Model {
 
 	@Override
 	public double computeSemivariance() {
-		double result = Double.NaN;
+		double result = 0;
 		if (isOk) {
-			result = nug + sill * (Math.pow(dist, range));
-
+			result = nug + sill * (Math.pow(dist, 2));
+		}
+		if(Double.isInfinite(result)) {
+			return Double.NaN;
 		}
 		return result;
 	}
@@ -49,10 +51,9 @@ public class Power implements Model {
 	public double[] computeGradient() {
 		// TODO Auto-generated method stub
 		double[] gradient = new double[] { Double.NaN, Double.NaN, Double.NaN };
-
-		if (isOk) {
-
-			gradient = new double[] { Math.pow(dist, range), sill * Math.pow(dist, range) * Math.log(dist), 1.0 };
+		
+		if (isOk && !Double.isInfinite(Math.pow(dist, 2))) {
+			gradient = new double[] { Math.pow(dist, range), sill * Math.pow(dist, 2) * Math.log(dist), 1.0 };
 		}
 		return gradient;
 	}

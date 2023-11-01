@@ -552,21 +552,24 @@ public class Krigings extends HMModel {
 		boolean gloablZero = (nugGlobal == 0 && aGlobal == 0 && sGlobal == 0);
 		boolean gloablZeroDeTrended = (nugGlobalDeTrended == 0 && aGlobalDeTrended == 0 && sGlobalDeTrended == 0);
 		
-		if(noGlobalParams && !gloablZero && globalVariogramType == null) {
+		if(noEvaluationGlobalParams && !gloablZero && globalVariogramType == null) {
 			throw new NullPointerException(
 					"You provide incomplete fixed parameter for global: nugGlobal, sGlobal, rGlobal or globalVariogramType");
 		}
 		
-		if(noGlobalParams && !gloablZeroDeTrended && globalDetrendedVariogramType == null) {
+		if(noEvaluationGlobalParams && !gloablZeroDeTrended && globalDetrendedVariogramType == null) {
 			throw new NullPointerException(
 					"You provide incomplete fixed parameter for global de trended: nugGlobal, sGlobal, rGlobal or globalVariogramType");
 		}
 		
 		if (doDetrended) {
-			noGlobalParams = noGlobalParams && gloablZero || globalVariogramType == null;
+			noGlobalParams = noEvaluationGlobalParams && gloablZero || globalVariogramType == null;
+			noEvaluationGlobalParams =  noEvaluationGlobalParams || (!gloablZero && globalVariogramType != null);
 		} else {
-			noGlobalParams = noGlobalParams && (gloablZero || globalVariogramType == null || gloablZeroDeTrended
+			noGlobalParams = noEvaluationGlobalParams && (gloablZero || globalVariogramType == null || gloablZeroDeTrended
 					|| globalDetrendedVariogramType == null);
+			noEvaluationGlobalParams = noEvaluationGlobalParams || (!gloablZero && globalVariogramType != null && !gloablZeroDeTrended
+					&& globalDetrendedVariogramType != null);
 		}
 
 		if (nugget == 0 && range == 0 && nugget == 0 && noGlobalParams) {

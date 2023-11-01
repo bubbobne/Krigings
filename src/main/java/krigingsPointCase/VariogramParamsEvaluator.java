@@ -117,6 +117,7 @@ public class VariogramParamsEvaluator {
 								.createModel(variogramType[j], points.get(i).getX(), coeffs[0], coeffs[1], coeffs[2])
 								.computeSemivariance() - actualValue) / actualValue;
 						count = count + 1;
+					//	System.out.println(" "+actualValue);
 					}
 				}
 				double tmpError = Math.abs(distance / points.size());
@@ -132,6 +133,8 @@ public class VariogramParamsEvaluator {
 				}
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
+				System.out.println(variogramType[j]);
+
 				System.out.println(e.getMessage());
 			}
 		}
