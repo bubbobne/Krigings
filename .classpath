@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="output" path="bin/default"/>
 	<classpathentry output="bin/main" kind="src" path="src/main/java">
 		<attributes>
 			<attribute name="gradle_scope" value="main"/>
@@ -14,6 +13,7 @@
 			<attribute name="test" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="output" path="bin/default"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-11/"/>
 	<classpathentry sourcepath="/home/andreisd/.gradle/caches/modules-2/files-2.1/org.hortonmachine/hm-modules/0.10.7/a4420f8ce5415dcedb5dce98a68c3ebdf355d506/hm-modules-0.10.7-sources.jar" kind="lib" path="/home/andreisd/.gradle/caches/modules-2/files-2.1/org.hortonmachine/hm-modules/0.10.7/dcc51a13be99068f64de949d576779c7e1319943/hm-modules-0.10.7.jar">
 		<attributes>

@@ -38,7 +38,7 @@ public class Gaussian implements Model {
 
 	@Override
 	public double computeSemivariance() {
-		double result = 0;
+		double result = Double.MAX_VALUE;
 		double hr = dist / (range);
 		if (isOk) {
 			if (dist != 0) {

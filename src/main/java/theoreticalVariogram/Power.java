@@ -37,12 +37,12 @@ public class Power implements Model {
 
 	@Override
 	public double computeSemivariance() {
-		double result = 0;
+		double result = Double.MAX_VALUE;
 		if (isOk) {
 			result = nug + sill * (Math.pow(dist, 2));
 		}
 		if(Double.isInfinite(result)) {
-			return Double.NaN;
+			return Double.MAX_VALUE;
 		}
 		return result;
 	}

@@ -135,9 +135,12 @@ public class GlobalParameterEvaluator {
 		System.out.println("evaluate global params");
 		double[] variance = new double[cutoffDivide];
 		double[] distance = new double[cutoffDivide];
+		double[] n = new double[cutoffDivide];
 
 		double[] varianceDeTrended = new double[cutoffDivide];
 		double[] distanceDeTrended = new double[cutoffDivide];
+		double[] nDeTrended = new double[cutoffDivide];
+
 		OmsTimeSeriesIteratorReader readH = new OmsTimeSeriesIteratorReader();
 		readH.file = this.inHValuesPath;
 		readH.idfield = "ID";
@@ -156,16 +159,22 @@ public class GlobalParameterEvaluator {
 			while (readH.doProcess) {
 				readH.nextRecord();
 				HashMap<Integer, double[]> h = readH.outData;
-
+				if(doLogarithmic) {
+					h = Utility.getLog(h);
+				}
 				exp.inData = h;
 				exp.process();
 				if (!exp.areAllEquals && exp.differents > 2) {
 					HashMap<Integer, double[]> d = exp.outDistances;
 					HashMap<Integer, double[]> v = exp.outExperimentalVariogram;
 					int j = 0;
+					HashMap<Integer, double[]> nTmp = exp.outNumberPairsPerBin;
+
 					for (Map.Entry<Integer, double[]> tt : d.entrySet()) {
 						distance[j] = distance[j] + tt.getValue()[0];
 						variance[j] = variance[j] + v.get(tt.getKey())[0];
+						n[j] =n[j]+ nTmp.get(tt.getKey())[0];
+
 						j = j + 1;
 					}
 					if (doDetrended) {
@@ -194,10 +203,12 @@ public class GlobalParameterEvaluator {
 							if (exp.differents > 2) {
 								d = exp.outDistances;
 								v = exp.outExperimentalVariogram;
+								HashMap<Integer, double[]> nDeTrendedTmp = exp.outNumberPairsPerBin;
 								j = 0;
 								for (Map.Entry<Integer, double[]> tt : d.entrySet()) {
 									distanceDeTrended[j] = distanceDeTrended[j] + tt.getValue()[0];
 									varianceDeTrended[j] = varianceDeTrended[j] + v.get(tt.getKey())[0];
+									nDeTrended[j] = nDeTrended[j] + nDeTrendedTmp.get(tt.getKey())[0];
 									j = j + 1;
 								}
 							}
@@ -219,12 +230,14 @@ public class GlobalParameterEvaluator {
 			for (int i = 0; i < distance.length; i++) {
 				distance[i] = distance[i] / nRows;
 				variance[i] = variance[i] / nRows;
-
+				n[i] = n[i] / nRows;
 			}
 			VariogramParamsEvaluator vEvaluator = new VariogramParamsEvaluator();
 			vEvaluator.pSemivariogramType = pSemivariogramType;
 			vEvaluator.x = distance;
 			vEvaluator.y = variance;
+			vEvaluator.n = n;
+
 			vEvaluator.proces();
 
 			pNugGlogal = vEvaluator.nugget;
@@ -244,11 +257,13 @@ public class GlobalParameterEvaluator {
 					for (int i = 0; i < distanceDeTrended.length; i++) {
 						distanceDeTrended[i] = distanceDeTrended[i] / nRowsDeTrended;
 						varianceDeTrended[i] = varianceDeTrended[i] / nRowsDeTrended;
+						nDeTrended[i]  = nDeTrended[i] / nRowsDeTrended;
 					}
 					vEvaluator = new VariogramParamsEvaluator();
 					vEvaluator.pSemivariogramType = pSemivariogramType;
 					vEvaluator.x = distanceDeTrended;
 					vEvaluator.y = varianceDeTrended;
+					vEvaluator.n = nDeTrended;
 					vEvaluator.proces();
 					pNugGlogalDeTrended = vEvaluator.nugget;
 					pSGlogalDeTrended = vEvaluator.sill;

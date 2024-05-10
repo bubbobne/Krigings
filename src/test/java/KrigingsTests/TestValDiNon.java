@@ -1,5 +1,7 @@
 package KrigingsTests;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -27,7 +29,7 @@ public class TestValDiNon {
 		String stationIdField = "ID";
 		// 100 station to training model
 	    URL stationShpUrl = this.getClass().getClassLoader().getResource("MeteoStations.shp");
-		File stazioniGridFile = new File(stationShpUrl.toURI());
+		File stazioniGridFile = new File(stationShpUrl.getFile());
 		OmsShapefileFeatureReader stationsReader = new OmsShapefileFeatureReader();
 		stationsReader.file = stazioniGridFile.getAbsolutePath();
 		stationsReader.readFeatureCollection();
@@ -93,7 +95,7 @@ public class TestValDiNon {
 					int id = iteratorTest.next();
 					double[] values = result.get(id);
 					double[] actual = predictedGstatR.get(id);
-					// assertEquals(actual[0], values[0], 2);
+					assertEquals(actual[0], values[0], 2);
 					System.out.println("actual is:" + actual[0] + " evaluate " + values[0]);
 				}
 
@@ -159,7 +161,7 @@ public class TestValDiNon {
 		kriging.fStationsid = stationIdField;
 		kriging.fInterpolateid = "basinid";
 		kriging.inHValuesPath = observedFile.getAbsolutePath();
-		kriging.cutoffDivide = 10;
+		kriging.cutoffDivide = 15;
 		kriging.doDetrended = true;
 		kriging.fPointZ = "elev_m";
 		kriging.fStationsZ = "z_dem";
@@ -194,7 +196,7 @@ public class TestValDiNon {
 					int id = iteratorTest.next();
 					double[] values = result.get(id);
 					System.out.println(values[0]);
-					// assertEquals(actual[0], values[0], 2);
+					//assertEquals(actual[0], values[0], 2);
 				}
 
 				writer.inData = kriging.outData;

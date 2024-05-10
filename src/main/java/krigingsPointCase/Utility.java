@@ -1,5 +1,9 @@
 package krigingsPointCase;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import org.geotools.data.simple.SimpleFeatureCollection;
 
 import experimentalVariogram.ExperimentalVariogram;
@@ -9,8 +13,7 @@ public class Utility {
 //	public static String[] availableTheorethicalVariogra = new String[] { "exponential", "gaussian", "linear",
 //			 "power", "spherical" };
 	
-	public static String[] availableTheorethicalVariogra = new String[] { "exponential", "linear",
-	 "power", "spherical" };
+	public static String[] availableTheorethicalVariogra = new String[] { "exponential", "linear", "power", "spherical"};
 	
 
 	public final static int getVariogramCode(String name) {
@@ -26,6 +29,27 @@ public class Utility {
 		return Math.log(h + 1.0);
 	}
 
+	public final static HashMap<Integer, double[]> getLog(HashMap<Integer, double[]> h ) { 
+		HashMap<Integer, double[]> logMap = new HashMap<>();
+        for (Map.Entry<Integer, double[]> entry : h.entrySet()) {
+            double[] originalArray = entry.getValue();
+            double[] logArray = new double[originalArray.length];
+            for (int i = 0; i < originalArray.length; i++) {
+                if (originalArray[i] >= 0) {
+                    logArray[i] = getLog(originalArray[i]);
+                } else {
+                    // Handle non-positive values, e.g., by setting to NaN or skipping
+                    logArray[i] = Double.NaN;  // Or you can use Double.NEGATIVE_INFINITY
+                }
+            }
+            logMap.put(entry.getKey(), logArray);
+        }
+
+        // Optionally, you can now replace the old map with the new map if modification in place isn't desired
+        return logMap;
+	}
+	
+	
 	public final static double getInverseLog(double h) {
 		return Math.exp(h) - 1.0;
 	}

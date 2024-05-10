@@ -7,12 +7,11 @@ import org.apache.commons.math3.analysis.ParametricUnivariateFunction;
 import org.apache.commons.math3.fitting.AbstractCurveFitter;
 import org.apache.commons.math3.fitting.WeightedObservedPoint;
 import org.apache.commons.math3.fitting.leastsquares.EvaluationRmsChecker;
-import org.apache.commons.math3.fitting.leastsquares.GaussNewtonOptimizer;
 import org.apache.commons.math3.fitting.leastsquares.LeastSquaresBuilder;
 import org.apache.commons.math3.fitting.leastsquares.LeastSquaresOptimizer;
-import org.apache.commons.math3.fitting.leastsquares.LeastSquaresOptimizer.Optimum;
 import org.apache.commons.math3.fitting.leastsquares.LeastSquaresProblem;
 import org.apache.commons.math3.fitting.leastsquares.LevenbergMarquardtOptimizer;
+import org.apache.commons.math3.linear.DiagonalMatrix;
 import org.apache.commons.math3.linear.RealVector;
 
 public class VariogramFitter extends AbstractCurveFitter {
@@ -39,6 +38,8 @@ public class VariogramFitter extends AbstractCurveFitter {
 		final int len = points.size();
 		final double[] target = new double[len];
 		final double[] x = new double[len];
+		final double[] weights = new double[len];
+
 		/*
 		 * TODO: quali valori iniziali? da dove posso ricavarli?
 		 * 
@@ -51,6 +52,7 @@ public class VariogramFitter extends AbstractCurveFitter {
 		for (WeightedObservedPoint point : points) {
 			target[i] = point.getY();
 			x[i] = point.getX();
+			weights[i] = point.getWeight();
 			i += 1;
 		}
 
@@ -74,7 +76,7 @@ public class VariogramFitter extends AbstractCurveFitter {
 		final AbstractCurveFitter.TheoreticalValuesFunction model = new AbstractCurveFitter.TheoreticalValuesFunction(
 				myFunction, points);
 		problem = new LeastSquaresBuilder().maxEvaluations(1000).maxIterations(1000).start(initialGuess).target(target)
-				.model(model.getModelFunction(), model.getModelFunctionJacobian())
+				.model(model.getModelFunction(), model.getModelFunctionJacobian()).weight(new DiagonalMatrix(weights))
 				.checker(new EvaluationRmsChecker(tol, tol))
 				.parameterValidator(new KrigingParamValidator(new double[] {0.000001,0.000001,0})).lazyEvaluation(false)
 				.build();

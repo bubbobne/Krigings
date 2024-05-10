@@ -236,7 +236,6 @@ public class Krigings extends HMModel {
 	@Execute
 	public void executeKriging() throws Exception {
 
-
 		if (step == 0) {
 			try {
 				verifyInput();
@@ -269,12 +268,11 @@ public class Krigings extends HMModel {
 		 */
 		StationsSelection stations = new StationsSelection();
 		stations.inStations = inStations;
-		stations.doIncludezero = doIncludeZero;
 		stations.maxdist = maxdist;
 		stations.fStationsid = fStationsid;
 		stations.fStationsZ = fStationsZ;
 		stations.doLogarithmic = doLogarithmic;
-
+		stations.inNumCloserStations = 0;
 		step = step + 1;
 		stations.inData = inData;
 		stations.execute();
@@ -323,17 +321,24 @@ public class Krigings extends HMModel {
 				}
 				stations.idx = coordinate.x;
 				stations.idy = coordinate.y;
+				stations.doIncludezero = doIncludeZero;
+
 				stations.execute();
 				xStations = stations.xStationInitialSet;
 				yStations = stations.yStationInitialSet;
 				zStations = stations.zStationInitialSet;
 				hStations = stations.hStationInitialSet;
 				n1 = xStations.length - 1;
+				residualsEvaluator = getResidualsEvaluator(Arrays.copyOfRange(zStations, 0, n1),
+						Arrays.copyOfRange(hStations, 0, n1));
+				hResiduals = residualsEvaluator.hResiduals;
+				trendCoeff = residualsEvaluator.trend_coefficient;
+				trendIntercept = residualsEvaluator.trend_intercept;
 			}
 
 			xStations[n1] = coordinate.x;
 			yStations[n1] = coordinate.y;
-//			zStations[n1] = Double.NaN;
+	//		zStations[n1] = Double.NaN;
 
 			if (n1 != 0) {
 
@@ -384,8 +389,9 @@ public class Krigings extends HMModel {
 				} else if (n1 == 1 || areAllEquals) {
 
 					double tmp = hResiduals[0];
-			//		pm.message(msg.message("kriging.setequalsvalue"));
-			//		pm.beginTask(msg.message("kriging.working"), pointsToInterpolateId2Coordinates.size());
+					// pm.message(msg.message("kriging.setequalsvalue"));
+					// pm.beginTask(msg.message("kriging.working"),
+					// pointsToInterpolateId2Coordinates.size());
 					result[j] = tmp;
 					j++;
 					n1 = 0;
@@ -484,7 +490,7 @@ public class Krigings extends HMModel {
 
 				}
 			}
-		}else {
+		} else {
 			actualSemivariogramType = pSemivariogramType;
 		}
 
@@ -531,12 +537,10 @@ public class Krigings extends HMModel {
 
 		}
 
-		if ((nugget != 0 || sill != 0 || range != 0) && ( pSemivariogramType == null || pSemivariogramType.isEmpty())) {
+		if ((nugget != 0 || sill != 0 || range != 0) && (pSemivariogramType == null || pSemivariogramType.isEmpty())) {
 			throw new NullPointerException(
 					"You provide incomplete fixed parameter check: nugget, sill, range or pSemivariogramType");
 		}
-
-	
 
 	}
 
@@ -551,25 +555,25 @@ public class Krigings extends HMModel {
 
 		boolean gloablZero = (nugGlobal == 0 && aGlobal == 0 && sGlobal == 0);
 		boolean gloablZeroDeTrended = (nugGlobalDeTrended == 0 && aGlobalDeTrended == 0 && sGlobalDeTrended == 0);
-		
-		if(noEvaluationGlobalParams && !gloablZero && globalVariogramType == null) {
+
+		if (noEvaluationGlobalParams && !gloablZero && globalVariogramType == null) {
 			throw new NullPointerException(
 					"You provide incomplete fixed parameter for global: nugGlobal, sGlobal, rGlobal or globalVariogramType");
 		}
-		
-		if(noEvaluationGlobalParams && !gloablZeroDeTrended && globalDetrendedVariogramType == null) {
+
+		if (noEvaluationGlobalParams && !gloablZeroDeTrended && globalDetrendedVariogramType == null) {
 			throw new NullPointerException(
 					"You provide incomplete fixed parameter for global de trended: nugGlobal, sGlobal, rGlobal or globalVariogramType");
 		}
-		
-		if (doDetrended) {
+
+		if (!doDetrended) {
 			noGlobalParams = noEvaluationGlobalParams && gloablZero || globalVariogramType == null;
-			noEvaluationGlobalParams =  noEvaluationGlobalParams || (!gloablZero && globalVariogramType != null);
+			noEvaluationGlobalParams = noEvaluationGlobalParams || (!gloablZero && globalVariogramType != null);
 		} else {
-			noGlobalParams = noEvaluationGlobalParams && (gloablZero || globalVariogramType == null || gloablZeroDeTrended
-					|| globalDetrendedVariogramType == null);
-			noEvaluationGlobalParams = noEvaluationGlobalParams || (!gloablZero && globalVariogramType != null && !gloablZeroDeTrended
-					&& globalDetrendedVariogramType != null);
+			noGlobalParams = noEvaluationGlobalParams && (gloablZero || globalVariogramType == null
+					|| gloablZeroDeTrended || globalDetrendedVariogramType == null);
+			noEvaluationGlobalParams = noEvaluationGlobalParams || (!gloablZero && globalVariogramType != null
+					&& !gloablZeroDeTrended && globalDetrendedVariogramType != null);
 		}
 
 		if (nugget == 0 && range == 0 && nugget == 0 && noGlobalParams) {
@@ -586,7 +590,6 @@ public class Krigings extends HMModel {
 			gParam.doLogarithmic = doLogarithmic;
 			gParam.cutoffDivide = cutoffDivide;
 			gParam.inHValuesPath = this.inHValuesPath;
-			gParam.fStationsid = "ID";
 			gParam.fileNoValue = fileNoValue;
 			gParam.tStart = tStart;
 			gParam.tTimeStep = tTimeStep;
@@ -693,6 +696,7 @@ public class Krigings extends HMModel {
 
 		}
 		covarianceMatrix[n][n] = 0;
+
 		return covarianceMatrix;
 
 	}
@@ -745,6 +749,7 @@ public class Krigings extends HMModel {
 			vgmResult = vgm.calculateVGM(actualSemivariogramType, h2, sill, range, nug);
 		} else {
 			vgmResult = 0;
+			
 		}
 		return vgmResult;
 	}

@@ -38,7 +38,7 @@ public class Spherical implements Model {
 	@Override
 	public double computeSemivariance() {
 
-		double result = Double.NaN;
+		double result = Double.MAX_VALUE;
 		if (isOk) {
 			double hr;
 			hr = dist / (range);

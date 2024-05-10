@@ -79,9 +79,9 @@ public class TestKrigingStandardFromR {
 		kriging.fInterpolateid = stationIdField;
 		kriging.inHValuesPath = observedFile.getAbsolutePath();
 		kriging.cutoffDivide = 15;
-//		kriging.nugget = 0;
-//		kriging.sill = 15292.38;
-//		kriging.range = 82946.36;
+		kriging.nugget = 0;
+		kriging.sill = 15292.38;
+		kriging.range = 82946.36;
 
 		while (reader.doProcess) {
 			try {
@@ -99,17 +99,14 @@ public class TestKrigingStandardFromR {
 					int id = iteratorTest.next();
 					double[] values = result.get(id);
 					double[] actual = predictedGstatR.get(id);
-					assertEquals(actual[0], values[0], 40);
+					assertEquals(actual[0], values[0], 25);
 					System.out.println("actual is:" + actual[0] + " evaluate " + values[0]);
 				}
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (CQLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -117,7 +114,6 @@ public class TestKrigingStandardFromR {
 		try {
 			reader.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		// writer.close();
@@ -205,7 +201,7 @@ public class TestKrigingStandardFromR {
 					int id = iteratorTest.next();
 					double[] values = result.get(id);
 					double[] actual = predictedGstatR.get(id);
-					assertEquals(actual[0], values[0], 40);
+					assertEquals(actual[0], values[0], 15);
 					System.out.println("actual is:" + actual[0] + " evaluate " + values[0]);
 				}
 			} catch (IOException e) {

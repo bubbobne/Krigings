@@ -88,6 +88,9 @@ public class ExperimentalVariogram extends HMModel {
 	@Description("The Experimental Variogram.")
 	@Out
 	public HashMap<Integer, double[]> outExperimentalVariogram;
+	@Description("The numbers of pairs at certain lag.")
+	@Out
+	public HashMap<Integer, double[]>  outNumberPairsPerBin;
 	@Out
 	public int differents;
 	@Out
@@ -168,9 +171,9 @@ public class ExperimentalVariogram extends HMModel {
 
 		if (Cutoffinput == 0) {
 			Cutoff = diagonal / 3;
-		} else
+		} else {
 			Cutoff = Cutoffinput;
-
+		}
 		// Compute the distance matrix
 		for (int i = 0; i < iCount - 1; i++) {
 			x1 = xStation[i];
@@ -263,7 +266,7 @@ public class ExperimentalVariogram extends HMModel {
 
 		}
 
-		double[][] result = new double[Cutoff_divide][2];
+		double[][] result = new double[Cutoff_divide][3];
 
 		for (int i = 0; i < Cutoff_divide; i++) {
 
@@ -277,6 +280,7 @@ public class ExperimentalVariogram extends HMModel {
 
 			result[i][0] = m_ddist[i];
 			result[i][1] = m_dSemivar[i];
+			result[i][2] = iPointsInClass[i];
 		}
 
 		return result;
@@ -292,10 +296,12 @@ public class ExperimentalVariogram extends HMModel {
 	private void storeResult(double[][] result) throws SchemaException {
 		outDistances = new HashMap<Integer, double[]>();
 		outExperimentalVariogram = new HashMap<Integer, double[]>();
+		outNumberPairsPerBin = new HashMap<Integer, double[]>();
 
 		for (int i = 0; i < result.length; i++) {
 			outDistances.put(i, new double[] { result[i][0] });
 			outExperimentalVariogram.put(i, new double[] { result[i][1] });
+			outNumberPairsPerBin.put(i, new double[] { result[i][2] });
 		}
 	}
 

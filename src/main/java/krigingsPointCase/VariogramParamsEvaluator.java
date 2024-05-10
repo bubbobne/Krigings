@@ -31,6 +31,10 @@ public class VariogramParamsEvaluator {
 	@In
 	public double[] y;
 
+	@In
+	public double[] n;
+	
+	
 	@Out
 	public double sill;
 
@@ -66,8 +70,11 @@ public class VariogramParamsEvaluator {
 					Integer ID = entry.getKey();
 					double x = expVar.outDistances.get(ID)[0];
 					double y = expVar.outExperimentalVariogram.get(ID)[0];
+					double n = expVar.outNumberPairsPerBin.get(ID)[0];
 					if (y != HMConstants.doubleNovalue) {
-						WeightedObservedPoint point = new WeightedObservedPoint(1.0, x, y);
+						double w = n/(x*x);
+						w=1.0;
+						WeightedObservedPoint point = new WeightedObservedPoint(w, x, y);
 						points.add(point);
 					}
 				}
@@ -75,7 +82,10 @@ public class VariogramParamsEvaluator {
 				for (int i = 0; i < x.length; i++) {
 					double distance = x[i];
 					double variance = y[i];
-					WeightedObservedPoint point = new WeightedObservedPoint(1.0, distance, variance);
+					double number = n[i];
+					double w =number/(distance*distance);
+					w=1;
+					WeightedObservedPoint point = new WeightedObservedPoint(w, distance, variance);
 					points.add(point);
 				}
 			}
@@ -93,6 +103,7 @@ public class VariogramParamsEvaluator {
 			// + range);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
+			System.out.println(e.getMessage());
 			isFitGood = false;
 		}
 	}
@@ -121,7 +132,7 @@ public class VariogramParamsEvaluator {
 					}
 				}
 				double tmpError = Math.abs(distance / points.size());
-				// System.out.println(variogramType[j]+" errore "+tmpError);
+				//System.out.println(variogramType[j]+" errore "+tmpError);
 				if (j == 0 || tmpError < relError) {
 					relError = Math.abs(distance / points.size());
 					sill = coeffs[0];
@@ -133,9 +144,9 @@ public class VariogramParamsEvaluator {
 				}
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
-				System.out.println(variogramType[j]);
+				//System.out.println(variogramType[j]);
 
-				System.out.println(e.getMessage());
+				//System.out.println(e.getMessage());
 			}
 		}
 	}
