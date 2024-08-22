@@ -73,7 +73,6 @@ public class VariogramParamsEvaluator {
 					double n = expVar.outNumberPairsPerBin.get(ID)[0];
 					if (y != HMConstants.doubleNovalue) {
 						double w = n/(x*x);
-						w=1.0;
 						WeightedObservedPoint point = new WeightedObservedPoint(w, x, y);
 						points.add(point);
 					}
@@ -84,7 +83,6 @@ public class VariogramParamsEvaluator {
 					double variance = y[i];
 					double number = n[i];
 					double w =number/(distance*distance);
-					w=1;
 					WeightedObservedPoint point = new WeightedObservedPoint(w, distance, variance);
 					points.add(point);
 				}

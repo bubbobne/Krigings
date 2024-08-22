@@ -121,7 +121,6 @@ public class ExperimentalVariogram extends HMModel {
 		double[] xStations = stations.xStationInitialSet;
 		double[] yStations = stations.yStationInitialSet;
 		double[] hStations = stations.hStationInitialSet;
-		int[] idStations = stations.idStationInitialSet;
 
 		// number of different stations
 		if (differents > 2) {
@@ -170,7 +169,7 @@ public class ExperimentalVariogram extends HMModel {
 		diagonal = Math.sqrt((x_max - x_min) * (x_max - x_min) + (y_max - y_min) * (y_max - y_min));
 
 		if (Cutoffinput == 0) {
-			Cutoff = diagonal / 3;
+			Cutoff = diagonal;
 		} else {
 			Cutoff = Cutoffinput;
 		}
