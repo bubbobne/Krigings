@@ -9,6 +9,7 @@ import java.util.Map;
 import org.apache.commons.math3.fitting.WeightedObservedPoint;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorReader;
+import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorWriter;
 import org.hortonmachine.gears.libs.monitor.IHMProgressMonitor;
 import org.hortonmachine.gears.libs.monitor.LogProgressMonitor;
 
@@ -88,7 +89,9 @@ public class GlobalParameterEvaluator {
 
 	@Out
 	public StationsSelection stations;
-
+	@Description("The Experimental Variogram.")
+	@Out
+	public String inExperimentalVariogramFile;
 	@Description("In the case of kriging with neighbor, maxdist is the maximum distance "
 			+ "within the algorithm has to consider the stations")
 	@In
@@ -147,7 +150,7 @@ public class GlobalParameterEvaluator {
 		readH.fileNovalue = fileNoValue;
 		readH.tStart = tStart;
 		readH.tTimestep = tTimeStep;
-		if(this.tEnd!=null) {
+		if (this.tEnd != null) {
 			readH.tEnd = this.tEnd;
 		}
 		readH.initProcess();
@@ -155,11 +158,20 @@ public class GlobalParameterEvaluator {
 				cutoffDivide, cutoffInput, 0);
 		int nRows = 0;
 		int nRowsDeTrended = 0;
+		OmsTimeSeriesIteratorWriter parameterWriter = new OmsTimeSeriesIteratorWriter();
+		if (inExperimentalVariogramFile != null) {
+			parameterWriter.file = this.inExperimentalVariogramFile;
+			parameterWriter.fileNovalue = fileNoValue;
+			parameterWriter.tStart = tStart;
+			parameterWriter.tTimestep = tTimeStep;
+		}
+
 		try {
 			while (readH.doProcess) {
+
 				readH.nextRecord();
 				HashMap<Integer, double[]> h = readH.outData;
-				if(doLogarithmic) {
+				if (doLogarithmic) {
 					h = Utility.getLog(h);
 				}
 				exp.inData = h;
@@ -173,7 +185,7 @@ public class GlobalParameterEvaluator {
 					for (Map.Entry<Integer, double[]> tt : d.entrySet()) {
 						distance[j] = distance[j] + tt.getValue()[0];
 						variance[j] = variance[j] + v.get(tt.getKey())[0];
-						n[j] =n[j]+ nTmp.get(tt.getKey())[0];
+						n[j] = n[j] + nTmp.get(tt.getKey())[0];
 
 						j = j + 1;
 					}
@@ -213,6 +225,22 @@ public class GlobalParameterEvaluator {
 								}
 							}
 						}
+
+						parameterWriter.inData = getKrigingParams(stations, rEvaluator);
+						parameterWriter.writeNextLine();
+
+					} else {
+						
+						ResidualsEvaluator rEvaluator = new ResidualsEvaluator();
+						rEvaluator.doDetrended = false;
+						int n1 = stations.hStationInitialSet.length - 1;
+						rEvaluator.hStations = Arrays.copyOfRange(stations.hStationInitialSet, 0, n1);
+						rEvaluator.zStations = Arrays.copyOfRange(stations.zStationInitialSet, 0, n1);
+
+						rEvaluator.process();
+						parameterWriter.inData = getKrigingParams(stations, rEvaluator);
+						parameterWriter.writeNextLine();
+
 					}
 
 					nRows = nRows + 1;
@@ -220,13 +248,11 @@ public class GlobalParameterEvaluator {
 				}
 
 			}
-
 			readH.close();
-
+			parameterWriter.close();
 			if (distance.length != variance.length) {
 				throw new IllegalArgumentException();
 			}
-
 			for (int i = 0; i < distance.length; i++) {
 				distance[i] = distance[i] / nRows;
 				variance[i] = variance[i] / nRows;
@@ -257,7 +283,7 @@ public class GlobalParameterEvaluator {
 					for (int i = 0; i < distanceDeTrended.length; i++) {
 						distanceDeTrended[i] = distanceDeTrended[i] / nRowsDeTrended;
 						varianceDeTrended[i] = varianceDeTrended[i] / nRowsDeTrended;
-						nDeTrended[i]  = nDeTrended[i] / nRowsDeTrended;
+						nDeTrended[i] = nDeTrended[i] / nRowsDeTrended;
 					}
 					vEvaluator = new VariogramParamsEvaluator();
 					vEvaluator.pSemivariogramType = pSemivariogramType;
@@ -286,4 +312,58 @@ public class GlobalParameterEvaluator {
 
 	}
 
+	private HashMap<Integer, double[]> getKrigingParams(StationsSelection stations,
+			ResidualsEvaluator residualsEvaluator) throws Exception {
+
+		int n1 = stations.hStationInitialSet.length - 1;
+		double[] hResiduals = residualsEvaluator.hResiduals;
+		n1 = stations.hStationInitialSet.length - 1;
+		double isLocal = 1.0;
+		double isTrend = 0.0;
+		int[] idStations = Arrays.copyOfRange(stations.idStationInitialSet, 0, n1);
+		hResiduals = residualsEvaluator.hResiduals;
+		VariogramParamsEvaluator variogramParamsEvaluator = new VariogramParamsEvaluator();
+		variogramParamsEvaluator.expVar = getExperimentalVariogram(hResiduals, idStations);
+		variogramParamsEvaluator.pSemivariogramType = this.pSemivariogramType;
+		variogramParamsEvaluator.proces();
+		HashMap<Integer, double[]> outDistances = variogramParamsEvaluator.expVar.outDistances;
+		HashMap<Integer, double[]> outNumberPairsPerBin = variogramParamsEvaluator.expVar.outNumberPairsPerBin;
+		HashMap<Integer, double[]> outExperimentalVariogram = variogramParamsEvaluator.expVar.outExperimentalVariogram;
+
+		double nugget = -9999;
+		double sill = -9999;
+		double range = -9999;
+		String actualSemivariogramType = "";
+		if (residualsEvaluator.isPValueOk) {
+			isTrend = residualsEvaluator.doDetrended? 1.0:0.0;
+			if ((variogramParamsEvaluator.nugget >= 0 && variogramParamsEvaluator.sill > 0
+					&& variogramParamsEvaluator.range > 0 && variogramParamsEvaluator.isFitGood)) {
+				nugget = variogramParamsEvaluator.nugget;
+				sill = variogramParamsEvaluator.sill;
+				range = variogramParamsEvaluator.range;
+				actualSemivariogramType = variogramParamsEvaluator.outSemivariogramType;
+
+			}
+		}
+
+		HashMap<Integer, double[]> outVariogramParams = new HashMap<Integer, double[]>();
+		outVariogramParams.put(0, new double[] { nugget });
+		outVariogramParams.put(1, new double[] { sill });
+		outVariogramParams.put(2, new double[] { range });
+		outVariogramParams.put(3, new double[] { isLocal });
+		outVariogramParams.put(4, new double[] { isTrend });
+		outVariogramParams.put(5, new double[] { Utility.getVariogramCode(actualSemivariogramType) });
+		return outVariogramParams;
+	}
+
+	private ExperimentalVariogram getExperimentalVariogram(double[] hresiduals, int[] idArray) {
+		ExperimentalVariogram expVariogram = Utility.getExperimentalVariogram(fStationsid, inStations, doIncludeZero,
+				cutoffDivide, cutoffInput, 0);
+		HashMap<Integer, double[]> tmpInData = new HashMap<Integer, double[]>();
+		for (int i = 0; i < idArray.length; i++) {
+			tmpInData.put(idArray[i], new double[] { hresiduals[i] });
+		}
+		expVariogram.inData = tmpInData;
+		return expVariogram;
+	}
 }

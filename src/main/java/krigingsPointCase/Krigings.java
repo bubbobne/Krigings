@@ -454,10 +454,10 @@ public class Krigings extends HMModel {
 
 	private void setKrigingParams(HashMap<Integer, double[]> inVariogramParams2) {
 		// TODO Auto-generated method stub
-		nugget = inVariogramParams2.get(0)[0];
-		 sill= inVariogramParams2.get(1)[0];
-		range = inVariogramParams2.get(2)[0];
-		actualSemivariogramType = Utility.getVariogramType(inVariogramParams2.get(5)[0]);
+		nugget = inVariogramParams2.get(0)[0]!=HMConstants.doubleNovalue?  inVariogramParams2.get(0)[0]:(this.doDetrended ? pNugGlobalDeTrended: pNugGlobal);
+		sill = inVariogramParams2.get(1)[0]!=HMConstants.doubleNovalue?  inVariogramParams2.get(1)[0]:(this.doDetrended ? pSGlobalDeTrended: pSGlobal);
+		range = inVariogramParams2.get(2)[0]!=HMConstants.doubleNovalue?  inVariogramParams2.get(2)[0]:(this.doDetrended ? pAGlobalDeTrended: pAGlobal);
+		actualSemivariogramType = inVariogramParams2.get(5)[0]!=HMConstants.doubleNovalue ?  Utility.getVariogramType(inVariogramParams2.get(5)[0]):(this.doDetrended ? globalDetrendedVariogramType: globalVariogramType);
 	}
 
 	private ResidualsEvaluator getResidualsEvaluator(double[] zStations, double[] hStations) {
@@ -716,9 +716,8 @@ public class Krigings extends HMModel {
 				double rx = x[i] - x[j];
 				double ry = y[i] - y[j];
 				double rz = z[i] - z[j];
-
-				covarianceMatrix[j][i] = variogram(nugget, range, sill, rx, ry, rz);
-				covarianceMatrix[i][j] = variogram(nugget, range, sill, rx, ry, rz);
+				covarianceMatrix[j][i] =variogram(nugget, range, sill, rx, ry, rz);
+				covarianceMatrix[i][j] = covarianceMatrix[j][i];
 
 			}
 		}
