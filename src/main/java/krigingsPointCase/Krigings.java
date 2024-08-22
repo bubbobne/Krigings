@@ -25,19 +25,14 @@ import java.util.LinkedHashMap;
 import java.util.Set;
 
 import org.geotools.data.simple.SimpleFeatureCollection;
-import org.geotools.feature.FeatureIterator;
 import org.geotools.feature.SchemaException;
 import org.hortonmachine.gears.libs.exceptions.ModelsRuntimeException;
-import org.hortonmachine.gears.libs.modules.HMConstants;
 import org.hortonmachine.gears.libs.modules.HMModel;
 import org.hortonmachine.gears.libs.monitor.IHMProgressMonitor;
 import org.hortonmachine.gears.libs.monitor.LogProgressMonitor;
 import org.hortonmachine.gears.utils.math.matrixes.ColumnVector;
 import org.hortonmachine.hmachine.i18n.HortonMessageHandler;
 import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.Geometry;
-import org.opengis.feature.simple.SimpleFeature;
-
 import experimentalVariogram.ExperimentalVariogram;
 import linearSistemSolver.SimpleLinearSystemSolverFactory;
 import oms3.annotations.Author;
@@ -52,6 +47,7 @@ import oms3.annotations.Name;
 import oms3.annotations.Out;
 import oms3.annotations.Status;
 import theoreticalVariogram.TheoreticalVariogram;
+import theoreticalVariogram.VariogramParameters;
 
 @Description("Ordinary kriging algorithm.")
 @Documentation("Kriging.html")
@@ -162,10 +158,6 @@ public class Krigings extends HMModel {
 	public HashMap<Integer, double[]> outData = null;
 
 	@Description("The hashmap withe the parameter for each time step: 0=>nugget, 1=>sill, 2=> range, 3 => is local (0 if used local parameter 1 if use global, 4 => is detrended (0 no trend, 1 with trend)")
-	@In
-	public HashMap<Integer, double[]> inVariogramParams = null;
-
-	@Description("The hashmap withe the parameter for each time step: 0=>nugget, 1=>sill, 2=> range, 3 => is local (0 if used local parameter 1 if use global, 4 => is detrended (0 no trend, 1 with trend)")
 	@Out
 	public HashMap<Integer, double[]> outVariogramParams = null;
 	@Description("The Experimental Distances.")
@@ -213,27 +205,19 @@ public class Krigings extends HMModel {
 	@In
 	public int tTimeStep = 60;
 
-	private double aGlobal;
-
-	private double sGlobal;
-
-	private double nugGlobal;
-
-	private double aGlobalDeTrended;
-
-	private double sGlobalDeTrended;
-
-	private double nugGlobalDeTrended;
-
 	private boolean noGlobalParams = false;
 	@In
 	public String globalDetrendedVariogramType;
 	@In
 	public String globalVariogramType;
 
-	private String actualSemivariogramType;
-
 	private boolean noEvaluationGlobalParams;
+
+	private VariogramParameters variogramParameters;
+
+	private VariogramParameters vpGlobal;
+
+	private VariogramParameters vpGlobalTrend;
 
 	/**
 	 * Executing ordinary kriging.
@@ -259,12 +243,12 @@ public class Krigings extends HMModel {
 				pm.errorMessage(e.toString());
 			}
 		}
-		nugget = 0;
-		sill = 0;
-		range = 0;
+//		nugget = 0;
+//		sill = 0;
+//		range = 0;
 		LinkedHashMap<Integer, Coordinate> pointsToInterpolateId2Coordinates = null;
 
-		pointsToInterpolateId2Coordinates = getCoordinate(0, inInterpolate, fInterpolateid);
+		pointsToInterpolateId2Coordinates = Utility.getCoordinate(inInterpolate, fInterpolateid, fPointZ, pm, msg);
 
 		Set<Integer> pointsToInterpolateIdSet = pointsToInterpolateId2Coordinates.keySet();
 		Iterator<Integer> idIterator = pointsToInterpolateIdSet.iterator();
@@ -287,56 +271,38 @@ public class Krigings extends HMModel {
 		stations.fStationsZ = fStationsZ;
 		stations.doLogarithmic = doLogarithmic;
 		stations.doIncludezero = doIncludeZero;
+		stations.inNumCloserStations = 0;
 		step = step + 1;
 		stations.inData = inData;
+		stations.execute();
 
-		double[] xStations = null;
-		double[] yStations = null;
-		double[] zStations = null;
-		double[] hStations = null;
+		double[] xStations = stations.xStationInitialSet;
+		double[] yStations = stations.yStationInitialSet;
+		double[] zStations = stations.zStationInitialSet;
+		double[] hStations = stations.hStationInitialSet;
 
-		if (inVariogramParams == null) {
-			stations.inNumCloserStations = 0;
+		int n1 = xStations.length - 1;
+		double[] hResiduals = new double[n1];
+		boolean areAllEquals = stations.areAllEquals;
+		double trendCoeff = 0;
+		double trendIntercept = 0;
+		ResidualsEvaluator residualsEvaluator;
+		if (!areAllEquals && n1 > 1) {
+			residualsEvaluator = getResidualsEvaluator(Arrays.copyOfRange(zStations, 0, n1),
+					Arrays.copyOfRange(hStations, 0, n1));
+			hResiduals = residualsEvaluator.hResiduals;
+			trendCoeff = residualsEvaluator.trend_coefficient;
+			trendIntercept = residualsEvaluator.trend_intercept;
+			variogramParameters = setKrigingParams(stations, residualsEvaluator);
 
-			stations.execute();
-
-			xStations = stations.xStationInitialSet;
-			yStations = stations.yStationInitialSet;
-			zStations = stations.zStationInitialSet;
-			hStations = stations.hStationInitialSet;
-
-			int n1 = xStations.length - 1;
-			double[] hResiduals = new double[n1];
-			boolean areAllEquals = stations.areAllEquals;
-			ResidualsEvaluator residualsEvaluator;
-			if (!areAllEquals && n1 > 1) {
-				residualsEvaluator = getResidualsEvaluator(Arrays.copyOfRange(zStations, 0, n1),
-						Arrays.copyOfRange(hStations, 0, n1));
-				hResiduals = residualsEvaluator.hResiduals;
-				setKrigingParams(stations, residualsEvaluator);
-
-			} else {
-				outVariogramParams = new HashMap<Integer, double[]>();
-				outVariogramParams.put(0, new double[] { HMConstants.doubleNovalue });
-				outVariogramParams.put(1, new double[] { HMConstants.doubleNovalue });
-				outVariogramParams.put(2, new double[] { HMConstants.doubleNovalue });
-				outVariogramParams.put(3, new double[] { HMConstants.doubleNovalue });
-				outVariogramParams.put(4, new double[] { HMConstants.doubleNovalue });
-				outVariogramParams.put(4, new double[] { HMConstants.doubleNovalue });
-
-			}
-		}else {
-			setKrigingParams(inVariogramParams);
+		} else {
+			variogramParameters = new VariogramParameters();
 		}
 		while (idIterator.hasNext()) {
 			double sum = 0.;
 			id = idIterator.next();
 			idArray[j] = id;
 			Coordinate coordinate = (Coordinate) pointsToInterpolateId2Coordinates.get(id);
-			int n1 = 0;
-			double[] hResiduals = null;
-			double trendCoeff = 0;
-			double trendIntercept = 0;
 			if (maxdist > 0 || inNumCloserStations > 0) {
 				if (inNumCloserStations > 0) {
 					stations.inNumCloserStations = inNumCloserStations;
@@ -357,7 +323,7 @@ public class Krigings extends HMModel {
 				zStations = stations.zStationInitialSet;
 				hStations = stations.hStationInitialSet;
 				n1 = xStations.length - 1;
-				ResidualsEvaluator residualsEvaluator = getResidualsEvaluator(Arrays.copyOfRange(zStations, 0, n1),
+				residualsEvaluator = getResidualsEvaluator(Arrays.copyOfRange(zStations, 0, n1),
 						Arrays.copyOfRange(hStations, 0, n1));
 				hResiduals = residualsEvaluator.hResiduals;
 				trendCoeff = residualsEvaluator.trend_coefficient;
@@ -370,7 +336,7 @@ public class Krigings extends HMModel {
 
 			if (n1 != 0) {
 
-				if (!stations.areAllEquals && n1 > 1) {
+				if (!areAllEquals && n1 > 1) {
 
 					// pm.beginTask(msg.message("kriging.working"),
 					// pointsToInterpolateId2Coordinates.size());
@@ -415,7 +381,7 @@ public class Krigings extends HMModel {
 								this.getClass().getSimpleName());
 					}
 					// pm.worked(1);
-				} else if (n1 == 1 || stations.areAllEquals) {
+				} else if (n1 == 1 || areAllEquals) {
 
 					double tmp = hResiduals[0];
 					// pm.message(msg.message("kriging.setequalsvalue"));
@@ -452,19 +418,18 @@ public class Krigings extends HMModel {
 
 	}
 
-	private void setKrigingParams(HashMap<Integer, double[]> inVariogramParams2) {
-		// TODO Auto-generated method stub
-		nugget = inVariogramParams2.get(0)[0]!=HMConstants.doubleNovalue?  inVariogramParams2.get(0)[0]:(this.doDetrended ? pNugGlobalDeTrended: pNugGlobal);
-		sill = inVariogramParams2.get(1)[0]!=HMConstants.doubleNovalue?  inVariogramParams2.get(1)[0]:(this.doDetrended ? pSGlobalDeTrended: pSGlobal);
-		range = inVariogramParams2.get(2)[0]!=HMConstants.doubleNovalue?  inVariogramParams2.get(2)[0]:(this.doDetrended ? pAGlobalDeTrended: pAGlobal);
-		actualSemivariogramType = inVariogramParams2.get(5)[0]!=HMConstants.doubleNovalue ?  Utility.getVariogramType(inVariogramParams2.get(5)[0]):(this.doDetrended ? globalDetrendedVariogramType: globalVariogramType);
-	}
-
 	private ResidualsEvaluator getResidualsEvaluator(double[] zStations, double[] hStations) {
-		return Utility.getResidualsEvaluator(zStations, hStations, this.doDetrended, Krigings.REGRESSION_ORDER);
+		ResidualsEvaluator residualsEvaluator = new ResidualsEvaluator();
+		residualsEvaluator.doDetrended = this.doDetrended;
+		residualsEvaluator.hStations = hStations;
+		residualsEvaluator.zStations = zStations;
+		residualsEvaluator.regressionOrder = Krigings.REGRESSION_ORDER;
+		residualsEvaluator.process();
+		return residualsEvaluator;
 	}
 
-	private void setKrigingParams(StationsSelection stations, ResidualsEvaluator residualsEvaluator) throws Exception {
+	private VariogramParameters setKrigingParams(StationsSelection stations, ResidualsEvaluator residualsEvaluator)
+			throws Exception {
 
 		int n1 = stations.hStationInitialSet.length - 1;
 		double[] hResiduals = residualsEvaluator.hResiduals;
@@ -475,11 +440,13 @@ public class Krigings extends HMModel {
 			residualsEvaluator = getResidualsEvaluator(Arrays.copyOfRange(stations.zStationInitialSet, 0, n1),
 					Arrays.copyOfRange(stations.hStationInitialSet, 0, n1));
 			residualsEvaluator.process();
+
 		}
 		double isLocal = 0.0;
 		double isTrend = 0.0;
 		int[] idStations = Arrays.copyOfRange(stations.idStationInitialSet, 0, n1);
 		hResiduals = residualsEvaluator.hResiduals;
+		VariogramParameters vp = null;
 		if (nugget == 0 && sill == 0 && range == 0) {
 			VariogramParamsEvaluator variogramParamsEvaluator = new VariogramParamsEvaluator();
 			variogramParamsEvaluator.expVar = getExperimentalVariogram(hResiduals, idStations);
@@ -493,47 +460,40 @@ public class Krigings extends HMModel {
 				if ((variogramParamsEvaluator.nugget >= 0 && variogramParamsEvaluator.sill > 0
 						&& variogramParamsEvaluator.range > 0 && variogramParamsEvaluator.isFitGood)
 						|| noGlobalParams) {
-					nugget = variogramParamsEvaluator.nugget;
-					sill = variogramParamsEvaluator.sill;
-					range = variogramParamsEvaluator.range;
-					actualSemivariogramType = variogramParamsEvaluator.outSemivariogramType;
+					vp = new VariogramParameters(variogramParamsEvaluator.outSemivariogramType,
+							variogramParamsEvaluator.nugget, variogramParamsEvaluator.range,
+							variogramParamsEvaluator.sill);
+					vp.setIsLocal(true);
+
+				} else if (doDetrended) {
+					vp = vpGlobalTrend;
 				} else {
-					nugget = nugGlobal;
-					sill = sGlobal;
-					range = aGlobal;
-					actualSemivariogramType = globalVariogramType;
-					isLocal = 1.0;
+					vp = vpGlobal;
 				}
 			} else if (residualsEvaluator.isPValueOk) {
-				isTrend = 1.0;
 				if ((variogramParamsEvaluator.nugget >= 0 && variogramParamsEvaluator.sill > 0
 						&& variogramParamsEvaluator.range > 0 && variogramParamsEvaluator.isFitGood)
 						|| noGlobalParams) {
-					nugget = variogramParamsEvaluator.nugget;
-					sill = variogramParamsEvaluator.sill;
-					range = variogramParamsEvaluator.range;
-					actualSemivariogramType = variogramParamsEvaluator.outSemivariogramType;
+					vp = new VariogramParameters(variogramParamsEvaluator.outSemivariogramType,
+							variogramParamsEvaluator.nugget, variogramParamsEvaluator.range,
+							variogramParamsEvaluator.sill);
+					vp.setIsLocal(true);
 
+				} else if (doDetrended) {
+					vp = vpGlobalTrend;
 				} else {
-					nugget = nugGlobalDeTrended;
-					sill = sGlobalDeTrended;
-					range = aGlobalDeTrended;
-					actualSemivariogramType = globalDetrendedVariogramType;
-					isLocal = 1.0;
-
+					vp = vpGlobal;
 				}
+
 			}
+			vp.setIsTrend(doDetrended);
 		} else {
-			actualSemivariogramType = pSemivariogramType;
+			vp = new VariogramParameters(pSemivariogramType, nugget, range, sill);
+			vp.setIsLocal(false);
+			vp.setIsTrend(false);
 		}
 
-		outVariogramParams = new HashMap<Integer, double[]>();
-		outVariogramParams.put(0, new double[] { nugget });
-		outVariogramParams.put(1, new double[] { sill });
-		outVariogramParams.put(2, new double[] { range });
-		outVariogramParams.put(3, new double[] { isLocal });
-		outVariogramParams.put(4, new double[] { isTrend });
-		outVariogramParams.put(5, new double[] { Utility.getVariogramCode(actualSemivariogramType) });
+		return vp;
 
 	}
 
@@ -565,29 +525,20 @@ public class Krigings extends HMModel {
 
 			if (ff < 0 || ff2 < 0) {
 				throw new NullPointerException("check if the z field name is correct");
-
 			}
-
 		}
-
 		if ((nugget != 0 || sill != 0 || range != 0) && (pSemivariogramType == null || pSemivariogramType.isEmpty())) {
 			throw new NullPointerException(
 					"You provide incomplete fixed parameter check: nugget, sill, range or pSemivariogramType");
 		}
-
 	}
 
 	private void createDefaulParams() throws Exception {
-		nugGlobal = pNugGlobal;
-		aGlobal = pAGlobal;
-		sGlobal = pSGlobal;
-		nugGlobalDeTrended = pNugGlobalDeTrended;
-		sGlobalDeTrended = pSGlobalDeTrended;
-		aGlobalDeTrended = pAGlobalDeTrended;
+
 		noEvaluationGlobalParams = (inHValuesPath == null || inHValuesPath.isEmpty());
 
-		boolean gloablZero = (nugGlobal == 0 && aGlobal == 0 && sGlobal == 0);
-		boolean gloablZeroDeTrended = (nugGlobalDeTrended == 0 && aGlobalDeTrended == 0 && sGlobalDeTrended == 0);
+		boolean gloablZero = (pNugGlobal == 0 && pAGlobal == 0 && pSGlobal == 0);
+		boolean gloablZeroDeTrended = (pNugGlobalDeTrended == 0 && pAGlobalDeTrended == 0 && pSGlobalDeTrended == 0);
 
 		if (noEvaluationGlobalParams && !gloablZero && globalVariogramType == null) {
 			throw new NullPointerException(
@@ -630,15 +581,14 @@ public class Krigings extends HMModel {
 			gParam.doDetrended = doDetrended;
 			gParam.cutoffInput = cutoffInput;
 			gParam.execute();
-			nugGlobal = gParam.pNugGlogal;
-			aGlobal = gParam.pAGlobal;
-			sGlobal = gParam.pSGlogal;
-			globalVariogramType = gParam.outGlobalVariogramType;
-			nugGlobalDeTrended = gParam.pNugGlogalDeTrended;
-			sGlobalDeTrended = gParam.pSGlogalDeTrended;
-			aGlobalDeTrended = gParam.pAGlobalDeTrended;
-			globalDetrendedVariogramType = gParam.outGlobalDetrendedVariogramType;
-
+			vpGlobal = new VariogramParameters(gParam.outGlobalVariogramType, gParam.pNugGlogal, gParam.pAGlobal,
+					gParam.pSGlogal);
+			vpGlobal.setIsLocal(false);
+			vpGlobal.setIsTrend(false);
+			vpGlobalTrend = new VariogramParameters(gParam.outGlobalDetrendedVariogramType, gParam.pNugGlogalDeTrended,
+					gParam.pAGlobalDeTrended, gParam.pSGlogalDeTrended);
+			vpGlobal.setIsLocal(false);
+			vpGlobal.setIsTrend(false);
 		}
 	}
 
@@ -660,45 +610,6 @@ public class Krigings extends HMModel {
 	}
 
 	/**
-	 * Extract the coordinate of a FeatureCollection in a HashMap with an ID as a
-	 * key.
-	 *
-	 * @param nStaz      the number of the stations
-	 * @param collection is the collection of the considered points
-	 * @param idField    the field containing the id of the stations
-	 * @return the coordinate of the station
-	 * @throws Exception if a field of elevation isn't the same of the collection
-	 */
-	private LinkedHashMap<Integer, Coordinate> getCoordinate(int nStaz, SimpleFeatureCollection collection,
-			String idField) throws Exception {
-		LinkedHashMap<Integer, Coordinate> id2CoordinatesMcovarianceMatrix = new LinkedHashMap<Integer, Coordinate>();
-		FeatureIterator<SimpleFeature> iterator = collection.features();
-		Coordinate coordinate = null;
-		try {
-			while (iterator.hasNext()) {
-				SimpleFeature feature = iterator.next();
-				int name = ((Number) feature.getAttribute(idField)).intValue();
-				coordinate = ((Geometry) feature.getDefaultGeometry()).getCentroid().getCoordinate();
-				double z = 0;
-				if (fPointZ != null) {
-					try {
-						z = ((Number) feature.getAttribute(fPointZ)).doubleValue();
-					} catch (NullPointerException e) {
-						pm.errorMessage(msg.message("kriging.noPointZ"));
-						throw new Exception(msg.message("kriging.noPointZ"));
-					}
-				}
-				coordinate.z = z;
-				id2CoordinatesMcovarianceMatrix.put(name, coordinate);
-			}
-		} finally {
-			iterator.close();
-		}
-
-		return id2CoordinatesMcovarianceMatrix;
-	}
-
-	/**
 	 * Covariance matrix calculation.
 	 *
 	 * @param x the x coordinates.
@@ -708,29 +619,20 @@ public class Krigings extends HMModel {
 	 * @return the double[][] matrix with the covariance
 	 */
 	private double[][] covMatrixCalculating(double[] x, double[] y, double[] z, int n) {
-
 		double[][] covarianceMatrix = new double[n + 1][n + 1];
-
 		for (int j = 0; j < n; j++) {
 			for (int i = 0; i < n; i++) {
-				double rx = x[i] - x[j];
-				double ry = y[i] - y[j];
-				double rz = z[i] - z[j];
-				covarianceMatrix[j][i] =variogram(nugget, range, sill, rx, ry, rz);
+				covarianceMatrix[j][i] = TheoreticalVariogram.calculateVGMxyz(variogramParameters, x[i], y[i], z[i],
+						x[j], y[j], z[j]);
 				covarianceMatrix[i][j] = covarianceMatrix[j][i];
-
 			}
 		}
-
 		for (int i = 0; i < n; i++) {
 			covarianceMatrix[i][n] = 1.0;
 			covarianceMatrix[n][i] = 1.0;
-
 		}
 		covarianceMatrix[n][n] = 0;
-
 		return covarianceMatrix;
-
 	}
 
 	/**
@@ -747,43 +649,11 @@ public class Krigings extends HMModel {
 		// known terms vector
 		double[] gamma = new double[n + 1];
 		for (int i = 0; i < n; i++) {
-			double rx = x[i] - x[n];
-			double ry = y[i] - y[n];
-			double rz = z[i] - z[n];
-			gamma[i] = variogram(nugget, range, sill, rx, ry, rz);
+			gamma[i] = TheoreticalVariogram.calculateVGMxyz(variogramParameters, x[i], y[i], z[i], x[n], y[n], z[n]);
 		}
-
 		gamma[n] = 1.0;
 		return gamma;
 
-	}
-
-	/**
-	 * Variogram.
-	 *
-	 * @param nug   is the nugget
-	 * @param range is the range
-	 * @param sill  is the sill
-	 * @param rx    is the x distance
-	 * @param ry    is the y distance
-	 * @param rz    is the z distance
-	 * @return the double value of the variance
-	 */
-	private double variogram(double nug, double range, double sill, double rx, double ry, double rz) {
-		if (isNovalue(rz)) {
-			rz = 0;
-		}
-		double h2 = Math.sqrt(rx * rx + rz * rz + ry * ry);
-		double vgmResult;
-
-		if (h2 != 0) {
-			TheoreticalVariogram vgm = new TheoreticalVariogram();
-			vgmResult = vgm.calculateVGM(actualSemivariogramType, h2, sill, range, nug);
-		} else {
-			vgmResult = 0;
-
-		}
-		return vgmResult;
 	}
 
 	/**
@@ -798,6 +668,7 @@ public class Krigings extends HMModel {
 		for (int i = 0; i < result.length; i++) {
 			outData.put(id[i], new double[] { result[i] });
 		}
+		outExperimentalVariogram = variogramParameters.toHashMap();
 	}
 
 }

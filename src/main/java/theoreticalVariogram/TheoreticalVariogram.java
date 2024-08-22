@@ -18,6 +18,7 @@
  */
 package theoreticalVariogram;
 
+import static org.hortonmachine.gears.libs.modules.HMConstants.isNovalue;
 
 import java.util.HashMap;
 import java.util.Set;
@@ -28,7 +29,6 @@ import oms3.annotations.*;
 import org.geotools.feature.SchemaException;
 import org.hortonmachine.gears.libs.modules.HMConstants;
 import org.hortonmachine.gears.libs.modules.HMModel;
-
 
 @Description("Teorethical semivariogram models.")
 @Documentation("vgm.html")
@@ -48,8 +48,7 @@ public class TheoreticalVariogram extends HMModel {
 	@Description("Experimental Variogram input Hashmap")
 	@In
 	public HashMap<Integer, double[]> inExperimentalVariogramValues;
-	
-	
+
 	@Description("Distances value.")
 	@In
 	public boolean doCalibrate;
@@ -80,58 +79,73 @@ public class TheoreticalVariogram extends HMModel {
 
 	@Description("the output hashmap withe the semivariance")
 	@Out
-	public double [] result;
+	public double[] result;
 
 	@Description("the output hashmap withe the semivariance")
 	@Out
-	public double [] observation;
+	public double[] observation;
 
 	@Description("the output hashmap withe the semivariance")
 	@Out
-	public HashMap<Integer, double[]> outHMtheoreticalVariogram=new HashMap<Integer, double[]>();;
-
-	Model modelVGM;
+	public HashMap<Integer, double[]> outHMtheoreticalVariogram = new HashMap<Integer, double[]>();;
 
 	@Execute
 	public void process() throws Exception {
 
-		// reading the ID of all the stations 
+		// reading the ID of all the stations
 		Set<Entry<Integer, double[]>> entrySet = inDistanceValues.entrySet();
-		result=  new double[inDistanceValues.size()];
-		observation=  new double[inDistanceValues.size()];
+		result = new double[inDistanceValues.size()];
+		observation = new double[inDistanceValues.size()];
 
 		for (Entry<Integer, double[]> entry : entrySet) {
 			Integer ID = entry.getKey();
 
-			distance=inDistanceValues.get(ID)[0];		
+			distance = inDistanceValues.get(ID)[0];
 
-			result[ID]=calculateVGM(modelName, distance, sill, range, nugget);
-			observation[ID]=inExperimentalVariogramValues.get(ID)[0];
-		
-			storeVariogramResults(ID,result[ID]);
+			result[ID] = calculateVGM(modelName, distance, sill, range, nugget);
+			observation[ID] = inExperimentalVariogramValues.get(ID)[0];
+
+			storeVariogramResults(ID, result[ID]);
 		}
 
-
 	}
 
-
-
-
-
-	public double calculateVGM( String model,double distance, double sill, double range, double nug) {
-
-		modelVGM=SimpleModelFactory.createModel(model,distance, sill, range, nug);
-		double result=modelVGM.computeSemivariance();
-
-		return result;
+	public final static double calculateVGM(String model, double distance, double sill, double range, double nug) {
+		Model modelVGM = SimpleModelFactory.createModel(model, distance, sill, range, nug);
+		return modelVGM.computeSemivariance();
 	}
 
-	
-	private void storeVariogramResults(int ID, double result) 
-			throws SchemaException {
+	public final static double calculateVGMxyz(VariogramParameters params, double x1, double y1, double z1, double x2,
+			double y2, double z2) {
+		double rx = x1 - x2;
+		double ry = y1 - y2;
+		double rz = z1 - z2;
+		return calculateVGMDelta(params, rx, ry, rz);
+	}
 
-		outHMtheoreticalVariogram.put(ID, new double[]{result});
-		
+	/**
+	 * Variogram.
+	 *
+	 * @param nug   is the nugget
+	 * @param range is the range
+	 * @param sill  is the sill
+	 * @param rx    is the x distance
+	 * @param ry    is the y distance
+	 * @param rz    is the z distance
+	 * @return the double value of the variance
+	 */
+	private final static double calculateVGMDelta(VariogramParameters params,
+			double rx, double ry, double rz) {
+		if (isNovalue(rz)) {
+			rz = 0;
+		}
+		double h2 = Math.sqrt(rx * rx + rz * rz + ry * ry);
+		return h2 != 0 ? calculateVGM(params.getModelName(), h2, params.getSill(),params.getRange(),params.getNugget() ) : 0;
+	}
+
+	private void storeVariogramResults(int ID, double result) throws SchemaException {
+
+		outHMtheoreticalVariogram.put(ID, new double[] { result });
+
 	}
 }
-

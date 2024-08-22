@@ -114,6 +114,8 @@ public class StationsSelection {
 		/*
 		 * Store the station coordinates and measured data in the array.
 		 * Skip data for non existing stations and also skip novalues.
+		 * 
+		 * @TODO maybe use Utility.
 		 */
 
 		FeatureIterator<SimpleFeature> stationsIter = inStations.features();

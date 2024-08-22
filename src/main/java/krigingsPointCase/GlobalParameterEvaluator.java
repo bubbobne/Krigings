@@ -1,20 +1,14 @@
 package krigingsPointCase;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.apache.commons.math3.fitting.WeightedObservedPoint;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorReader;
 import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorWriter;
 import org.hortonmachine.gears.libs.monitor.IHMProgressMonitor;
 import org.hortonmachine.gears.libs.monitor.LogProgressMonitor;
-
-import curvefitter.VariogramFitter;
-import curvefitter.VariogramFunction;
 import experimentalVariogram.ExperimentalVariogram;
 import oms3.annotations.Description;
 import oms3.annotations.Execute;
