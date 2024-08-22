@@ -702,7 +702,7 @@ public class Krigings extends HMModel {
 				double rz = z[i] - z[j];
 
 				covarianceMatrix[j][i] = variogram(nugget, range, sill, rx, ry, rz);
-				covarianceMatrix[i][j] = variogram(nugget, range, sill, rx, ry, rz);
+				covarianceMatrix[i][j] = covarianceMatrix[j][i];
 
 			}
 		}
