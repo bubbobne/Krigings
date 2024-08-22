@@ -137,35 +137,36 @@ public class StationsSelection {
 				}
 
 				Coordinate coordinate = ((Geometry) feature.getDefaultGeometry()).getCentroid().getCoordinate();
-				
-				if(inData.get(id)==null){
-					
-					
-				}
 				double[] h = inData.get(id);
+
 				if (h == null || isNovalue(h[0])) {
-					continue;
-				}else if(doLogarithmic){
-					h[0]=Utility.getLog(h[0]);
+				    continue;
 				}
 
+				double h0;
+
+				if (doLogarithmic) {
+				    h0 = Utility.getLog(h[0]);
+				} else {
+				    h0 = h[0];
+				}
 
 				if (doIncludezero) {
-					if (Math.abs(h[0]) >= 0.0) { // TOLL
+					if (Math.abs(h0) >= 0.0) { // TOLL
 						xStationList.add(coordinate.x);
 						yStationList.add(coordinate.y);
 						zStationList.add(z);
-						hStationList.add(h[0]);
+						hStationList.add(h0);
 						idStationList.add(id);
 						n1 = n1 + 1;
 					}
 
 				} else {
-					if (Math.abs(h[0]) > 0.0) { // TOLL
+					if (Math.abs(h0) > 0.0) { // TOLL
 						xStationList.add(coordinate.x);
 						yStationList.add(coordinate.y);
 						zStationList.add(z);
-						hStationList.add(h[0]);
+						hStationList.add(h0);
 						idStationList.add(id);
 
 						n1 = n1 + 1;

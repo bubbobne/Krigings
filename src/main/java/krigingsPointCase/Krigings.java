@@ -164,6 +164,16 @@ public class Krigings extends HMModel {
 	@Description("The hashmap withe the parameter for each time step: 0=>nugget, 1=>sill, 2=> range, 3 => is local (0 if used local parameter 1 if use global, 4 => is detrended (0 no trend, 1 with trend)")
 	@Out
 	public HashMap<Integer, double[]> outVariogramParams = null;
+	@Description("The Experimental Distances.")
+	@Out
+	public HashMap<Integer, double[]> outDistances;
+
+	@Description("The Experimental Variogram.")
+	@Out
+	public HashMap<Integer, double[]> outExperimentalVariogram;
+	@Description("The numbers of pairs at certain lag.")
+	@Out
+	public HashMap<Integer, double[]>  outNumberPairsPerBin;
 
 	private static final double TOLL = 1.0d * 10E-8;
 
@@ -272,6 +282,7 @@ public class Krigings extends HMModel {
 		stations.fStationsid = fStationsid;
 		stations.fStationsZ = fStationsZ;
 		stations.doLogarithmic = doLogarithmic;
+		stations.doIncludezero = doIncludeZero;
 		stations.inNumCloserStations = 0;
 		step = step + 1;
 		stations.inData = inData;
@@ -322,6 +333,8 @@ public class Krigings extends HMModel {
 				stations.idx = coordinate.x;
 				stations.idy = coordinate.y;
 				stations.doIncludezero = doIncludeZero;
+				stations.doLogarithmic = doLogarithmic;
+				stations.inData = inData;
 
 				stations.execute();
 				xStations = stations.xStationInitialSet;
@@ -344,7 +357,7 @@ public class Krigings extends HMModel {
 
 				if (!areAllEquals && n1 > 1) {
 
-					pm.beginTask(msg.message("kriging.working"), pointsToInterpolateId2Coordinates.size());
+				//	pm.beginTask(msg.message("kriging.working"), pointsToInterpolateId2Coordinates.size());
 
 					double h0 = 0.0;
 
@@ -385,7 +398,7 @@ public class Krigings extends HMModel {
 						throw new ModelsRuntimeException("Error in the coffeicients calculation",
 								this.getClass().getSimpleName());
 					}
-					pm.worked(1);
+			//		pm.worked(1);
 				} else if (n1 == 1 || areAllEquals) {
 
 					double tmp = hResiduals[0];
@@ -395,11 +408,11 @@ public class Krigings extends HMModel {
 					result[j] = tmp;
 					j++;
 					n1 = 0;
-					pm.worked(1);
+			//		pm.worked(1);
 
 				}
 
-				pm.done();
+			//	pm.done();
 
 			} else {
 
@@ -455,6 +468,10 @@ public class Krigings extends HMModel {
 			variogramParamsEvaluator.expVar = getExperimentalVariogram(hResiduals, idStations);
 			variogramParamsEvaluator.pSemivariogramType = this.pSemivariogramType;
 			variogramParamsEvaluator.proces();
+			this.outDistances = variogramParamsEvaluator.expVar.outDistances;
+			this.outNumberPairsPerBin = variogramParamsEvaluator.expVar.outNumberPairsPerBin;
+			this.outExperimentalVariogram = variogramParamsEvaluator.expVar.outExperimentalVariogram;
+
 
 			if (residualsEvaluator.isPValueOk == false) {
 				if ((variogramParamsEvaluator.nugget >= 0 && variogramParamsEvaluator.sill > 0
