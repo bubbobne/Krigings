@@ -82,9 +82,7 @@ public class VariogramParamsEvaluator {
 				for (int i = 0; i < x.length; i++) {
 					double distance = x[i];
 					double variance = y[i];
-					double number = n[i];
-					double w =number/(distance*distance);
-					w=1;
+					double w=1;
 					WeightedObservedPoint point = new WeightedObservedPoint(w, distance, variance);
 					points.add(point);
 				}

@@ -23,7 +23,6 @@ public class VariogramFitter extends AbstractCurveFitter {
 	private RealVector residuals;
 	double tol = Math.pow(0.1, 9);
 
-//double tol=1;
 	private VariogramFitter() {
 		// make constructor private to prevento inizializzation without the parametric
 		// function.
