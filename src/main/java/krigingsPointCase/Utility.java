@@ -25,6 +25,13 @@ public class Utility {
 		return -9999;
 	}
 
+	
+	public static String getVariogramType(double d) {
+		return availableTheorethicalVariogra[(int) d];
+	}
+	
+	
+	
 	public final static double getLog(double h) {
 		return Math.log(h + 1.0);
 	}
@@ -75,4 +82,18 @@ public class Utility {
 //		expVariogram.inData = tmpInData;
 		return expVariogram;
 	}
+	
+	public final static ResidualsEvaluator getResidualsEvaluator(double[] zStations, double[] hStations, boolean doDetrended, int regressionOrder) {
+		ResidualsEvaluator residualsEvaluator = new ResidualsEvaluator();
+		residualsEvaluator.doDetrended = doDetrended;
+		residualsEvaluator.hStations = hStations;
+		residualsEvaluator.zStations = zStations;
+		residualsEvaluator.regressionOrder = regressionOrder;
+		residualsEvaluator.process();
+		return residualsEvaluator;
+	}
+
+
+	
+	
 }
