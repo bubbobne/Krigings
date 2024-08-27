@@ -171,7 +171,7 @@ public class Krigings extends HMModel {
 	@Out
 	public HashMap<Integer, double[]> outTheoreticalVariogram;
 	@Description("The Experimental Variogram.")
-	@Out
+	@In
 	public HashMap<Integer, double[]> inTheoreticalVariogram;
 
 	@Description("The numbers of pairs at certain lag.")
