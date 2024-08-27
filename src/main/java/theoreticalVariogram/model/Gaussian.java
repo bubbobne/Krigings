@@ -16,9 +16,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package theoreticalVariogram;
 
-public class Power implements Model {
+package theoreticalVariogram.model;
+
+public class Gaussian implements Model {
 
 	double dist;
 	double sill;
@@ -26,7 +27,7 @@ public class Power implements Model {
 	double nug;
 	boolean isOk = false;
 
-	public Power(double dist, double sill, double range, double nug) {
+	public Gaussian(double dist, double sill, double range, double nug) {
 		this.dist = dist;
 		this.sill = sill;
 		this.range = range;
@@ -38,12 +39,15 @@ public class Power implements Model {
 	@Override
 	public double computeSemivariance() {
 		double result = Double.MAX_VALUE;
+		double hr = dist / (range);
 		if (isOk) {
-			result = nug + sill * (Math.pow(dist, 2));
+			if (dist != 0) {
+				result = nug + sill * (1.0 - (Math.exp(-(hr * hr))));
+			} else {
+				result = nug;
+			}
 		}
-		if(Double.isInfinite(result)) {
-			return Double.MAX_VALUE;
-		}
+
 		return result;
 	}
 
@@ -51,9 +55,10 @@ public class Power implements Model {
 	public double[] computeGradient() {
 		// TODO Auto-generated method stub
 		double[] gradient = new double[] { Double.NaN, Double.NaN, Double.NaN };
-		
-		if (isOk && !Double.isInfinite(Math.pow(dist, 2))) {
-			gradient = new double[] { Math.pow(dist, range), sill * Math.pow(dist, 2) * Math.log(dist), 1.0 };
+
+		if (isOk) {
+			gradient = new double[] { 1 - Math.exp(-(dist / range)),
+					-sill * Math.exp(-(dist * dist / (range*range))) * 2 * (dist * dist / (range * range * range)), 1.0 };
 		}
 		return gradient;
 	}

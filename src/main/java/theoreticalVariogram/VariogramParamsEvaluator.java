@@ -1,4 +1,4 @@
-package krigingsPointCase;
+package theoreticalVariogram;
 
 import java.util.ArrayList;
 import java.util.Map.Entry;
@@ -13,7 +13,7 @@ import experimentalVariogram.ExperimentalVariogram;
 import oms3.annotations.Execute;
 import oms3.annotations.In;
 import oms3.annotations.Out;
-import theoreticalVariogram.SimpleModelFactory;
+import theoreticalVariogram.model.SimpleModelFactory;
 
 public class VariogramParamsEvaluator {
 
@@ -92,7 +92,7 @@ public class VariogramParamsEvaluator {
 			if (pSemivariogramType != null) {
 				variogramType = new String[] { pSemivariogramType };
 			} else {
-				variogramType = Utility.availableTheorethicalVariogra;
+				variogramType = VariogramParameters.availableTheorethicalVariogra;
 			}
 
 			performEvaluation(variogramType, points);

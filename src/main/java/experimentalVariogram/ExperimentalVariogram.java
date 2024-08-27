@@ -121,7 +121,6 @@ public class ExperimentalVariogram extends HMModel {
 		double[] xStations = stations.xStationInitialSet;
 		double[] yStations = stations.yStationInitialSet;
 		double[] hStations = stations.hStationInitialSet;
-		int[] idStations = stations.idStationInitialSet;
 
 		// number of different stations
 		if (differents > 2) {
@@ -304,5 +303,27 @@ public class ExperimentalVariogram extends HMModel {
 			outNumberPairsPerBin.put(i, new double[] { result[i][2] });
 		}
 	}
+
+	public final static ExperimentalVariogram create(String fStationsid,
+				SimpleFeatureCollection inStations, boolean doIncludeZero, int cutoffDivide, double cutoffInput,
+				int numCloseStation) {
+			ExperimentalVariogram expVariogram = new ExperimentalVariogram();
+			expVariogram.fStationsid = fStationsid;
+			expVariogram.inStations = inStations;
+			expVariogram.doIncludezero = doIncludeZero;
+			expVariogram.inNumCloserStations = numCloseStation;
+			if (cutoffDivide > 0) {
+				expVariogram.Cutoff_divide = cutoffDivide;
+			}
+			if (cutoffInput > 0) {
+				expVariogram.Cutoffinput = cutoffInput;
+			}
+	//		HashMap<Integer, double[]> tmpInData = new HashMap<Integer, double[]>();
+	//		for (int i = 0; i < idArray.length; i++) {
+	//			tmpInData.put(idArray[i], new double[] { hresiduals[i] });
+	//		}
+	//		expVariogram.inData = tmpInData;
+			return expVariogram;
+		}
 
 }

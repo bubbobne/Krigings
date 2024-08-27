@@ -16,49 +16,44 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package theoreticalVariogram;
+package theoreticalVariogram.model;
 
-public class Logarithmic implements Model {
-
+public class Spline implements Model{
+	
 	double dist;
 	double sill;
 	double range;
 	double nug;
-	boolean isOk = false;
-
-	public Logarithmic(double dist, double sill, double range, double nug) {
-		this.dist = dist;
-		this.sill = sill;
-		this.range = range;
-		this.nug = nug;
-		this.isOk = nug >= 0 && sill >= 0 && range >= 0;
-
+	
+	
+	public Spline (double dist, double sill, double range, double nug){	
+		this.dist=dist;
+		this.sill=sill;
+		this.range=range;
+		this.nug=nug;		
 	}
+	
+	
 
 	@Override
 	public double computeSemivariance() {
-		double result = Double.NaN;
-		if (isOk) {
-			if (dist != 0) {
-				result = nug + sill * (Math.log(dist / range));
-			} else {
-				result = nug;
-			}
-		}
+        double  result = 0;
 
-		return result;
+            if (dist < range) {
+                result = nug + sill * (dist * dist * Math.log(dist));
+            }else if (dist>= range) {
+                result = sill+nug;
+            }
+
+        return result;
 	}
+
+
 
 	@Override
 	public double[] computeGradient() {
-		double[] gradient = new double[] { Double.NaN, Double.NaN, Double.NaN };
-		if (isOk) {
-
-			gradient = new double[] { Math.log(dist / range), -sill / range, 1.0 };
-
-		}
-		return gradient;
-
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

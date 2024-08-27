@@ -25,6 +25,8 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 import oms3.annotations.*;
+import theoreticalVariogram.model.Model;
+import theoreticalVariogram.model.SimpleModelFactory;
 
 import org.geotools.feature.SchemaException;
 import org.hortonmachine.gears.libs.modules.HMConstants;

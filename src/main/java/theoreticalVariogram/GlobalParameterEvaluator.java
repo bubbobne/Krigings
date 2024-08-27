@@ -1,15 +1,20 @@
-package krigingsPointCase;
+package theoreticalVariogram;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.codehaus.groovy.runtime.metaclass.ConcurrentReaderHashMap;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorReader;
 import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorWriter;
 import org.hortonmachine.gears.libs.monitor.IHMProgressMonitor;
 import org.hortonmachine.gears.libs.monitor.LogProgressMonitor;
 import experimentalVariogram.ExperimentalVariogram;
+import krigingsPointCase.ResidualsEvaluator;
+import krigingsPointCase.StationsSelection;
+import krigingsPointCase.Utility;
 import oms3.annotations.Description;
 import oms3.annotations.Execute;
 import oms3.annotations.In;
@@ -63,28 +68,28 @@ public class GlobalParameterEvaluator {
 	@In
 	public boolean doLogarithmic = false;
 
-	@Out
-	public double pAGlobal;
-	@Out
-
-	public double pSGlogal;
-
-	@Out
-	public double pNugGlogal;
-
-	@Out
-	public double pAGlobalDeTrended;
-
-	@Out
-	public double pSGlogalDeTrended;
-
-	@Out
-	public double pNugGlogalDeTrended;
+//	@Out
+//	public double pAGlobal;
+//	@Out
+//
+//	public double pSGlogal;
+//
+//	@Out
+//	public double pNugGlogal;
+//
+//	@Out
+//	public double pAGlobalDeTrended;
+//
+//	@Out
+//	public double pSGlogalDeTrended;
+//
+//	@Out
+//	public double pNugGlogalDeTrended;
 
 	@Out
 	public StationsSelection stations;
 	@Description("The Experimental Variogram.")
-	@Out
+	@In
 	public String inExperimentalVariogramFile;
 	@Description("In the case of kriging with neighbor, maxdist is the maximum distance "
 			+ "within the algorithm has to consider the stations")
@@ -93,8 +98,11 @@ public class GlobalParameterEvaluator {
 
 	@In
 	public String fileNoValue = "-9999";
-	public String outGlobalVariogramType;
-	public String outGlobalDetrendedVariogramType;
+//	public String outGlobalVariogramType;
+//	public String outGlobalDetrendedVariogramType;
+
+	private VariogramParameters vpGlobal = null;
+	private VariogramParameters vpGlobalDetrended = null;
 
 	@Execute
 	public void execute() {
@@ -110,11 +118,58 @@ public class GlobalParameterEvaluator {
 
 		try {
 			this.createDefaulParams(stations);
+			if (inExperimentalVariogramFile != null) {
+
+				this.createFile(stations);
+			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
+	}
+
+	private void createFile(StationsSelection stations2) {
+		// TODO Auto-generated method stub
+		OmsTimeSeriesIteratorWriter parameterWriter = getWriter();
+		OmsTimeSeriesIteratorReader readH = getReader();
+
+		try {
+			while (readH.doProcess) {
+
+				readH.nextRecord();
+				HashMap<Integer, double[]> h = readH.outData;
+				if (doLogarithmic) {
+					h = Utility.getLog(h);
+				}
+				stations.inData = h;
+				VariogramParametersCalculator vpcalCulator = new VariogramParametersCalculator(stations, doDetrended,
+						doIncludeZero);
+				vpcalCulator.setGlobalVp(vpGlobal);
+				vpcalCulator.setGlobalDeTrendedVp(vpGlobalDetrended);
+
+				HashMap<Integer, double[]> out = vpcalCulator.execute().toHashMap();
+
+				parameterWriter.inData = out;
+				parameterWriter.writeNextLine();
+
+			}
+			parameterWriter.close();
+			readH.close();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+
+	private OmsTimeSeriesIteratorWriter getWriter() {
+		OmsTimeSeriesIteratorWriter parameterWriter = new OmsTimeSeriesIteratorWriter();
+		parameterWriter.file = this.inExperimentalVariogramFile;
+		parameterWriter.fileNovalue = fileNoValue;
+		parameterWriter.tStart = tStart;
+		parameterWriter.tTimestep = tTimeStep;
+		return parameterWriter;
 	}
 
 	private void verifyInput() {
@@ -138,27 +193,11 @@ public class GlobalParameterEvaluator {
 		double[] distanceDeTrended = new double[cutoffDivide];
 		double[] nDeTrended = new double[cutoffDivide];
 
-		OmsTimeSeriesIteratorReader readH = new OmsTimeSeriesIteratorReader();
-		readH.file = this.inHValuesPath;
-		readH.idfield = "ID";
-		readH.fileNovalue = fileNoValue;
-		readH.tStart = tStart;
-		readH.tTimestep = tTimeStep;
-		if (this.tEnd != null) {
-			readH.tEnd = this.tEnd;
-		}
-		readH.initProcess();
-		ExperimentalVariogram exp = Utility.getExperimentalVariogram(fStationsid, inStations, doIncludeZero,
-				cutoffDivide, cutoffInput, 0);
+		OmsTimeSeriesIteratorReader readH = getReader();
+		ExperimentalVariogram exp = ExperimentalVariogram.create(fStationsid, inStations, doIncludeZero, cutoffDivide,
+				cutoffInput, 0);
 		int nRows = 0;
 		int nRowsDeTrended = 0;
-		OmsTimeSeriesIteratorWriter parameterWriter = new OmsTimeSeriesIteratorWriter();
-		if (inExperimentalVariogramFile != null) {
-			parameterWriter.file = this.inExperimentalVariogramFile;
-			parameterWriter.fileNovalue = fileNoValue;
-			parameterWriter.tStart = tStart;
-			parameterWriter.tTimestep = tTimeStep;
-		}
 
 		try {
 			while (readH.doProcess) {
@@ -203,7 +242,6 @@ public class GlobalParameterEvaluator {
 							for (int i = 0; i < n1; i++) {
 								hRes.put(stations.idStationInitialSet[i], new double[] { hVal[i] });
 							}
-
 							exp.inData = hRes;
 							exp.process();
 							if (exp.differents > 2) {
@@ -219,31 +257,12 @@ public class GlobalParameterEvaluator {
 								}
 							}
 						}
-
-						parameterWriter.inData = getKrigingParams(stations, rEvaluator);
-						parameterWriter.writeNextLine();
-
-					} else {
-						
-						ResidualsEvaluator rEvaluator = new ResidualsEvaluator();
-						rEvaluator.doDetrended = false;
-						int n1 = stations.hStationInitialSet.length - 1;
-						rEvaluator.hStations = Arrays.copyOfRange(stations.hStationInitialSet, 0, n1);
-						rEvaluator.zStations = Arrays.copyOfRange(stations.zStationInitialSet, 0, n1);
-
-						rEvaluator.process();
-						parameterWriter.inData = getKrigingParams(stations, rEvaluator);
-						parameterWriter.writeNextLine();
-
 					}
-
 					nRows = nRows + 1;
-
 				}
 
 			}
 			readH.close();
-			parameterWriter.close();
 			if (distance.length != variance.length) {
 				throw new IllegalArgumentException();
 			}
@@ -259,14 +278,16 @@ public class GlobalParameterEvaluator {
 			vEvaluator.n = n;
 
 			vEvaluator.proces();
+			vpGlobal = new VariogramParameters(vEvaluator.outSemivariogramType, vEvaluator.nugget, vEvaluator.range,
+					vEvaluator.sill);
+			vpGlobal.setIsLocal(false);
+			vpGlobal.setIsTrend(false);
+			pm.message("Global value for nugget: " + vpGlobal.getNugget() + " sill:" + vpGlobal.getSill() + " range: "
+					+ vpGlobal.getRange() + "  semivariogram type:" + vpGlobal.getModelName());
 
-			pNugGlogal = vEvaluator.nugget;
-			pSGlogal = vEvaluator.sill;
-			pAGlobal = vEvaluator.range;
-			outGlobalVariogramType = vEvaluator.outSemivariogramType;
-
-			pm.message("Global value for nugget: " + pNugGlogal + " sill:" + pSGlogal + " range: " + pAGlobal
-					+ "  semivariogram type:" + vEvaluator.outSemivariogramType);
+			if (!vEvaluator.isFitGood) {
+				pm.message("warning the fit is not good!");
+			}
 
 			if (doDetrended) {
 				if (distanceDeTrended.length != varianceDeTrended.length) {
@@ -285,15 +306,16 @@ public class GlobalParameterEvaluator {
 					vEvaluator.y = varianceDeTrended;
 					vEvaluator.n = nDeTrended;
 					vEvaluator.proces();
-					pNugGlogalDeTrended = vEvaluator.nugget;
-					pSGlogalDeTrended = vEvaluator.sill;
-					pAGlobalDeTrended = vEvaluator.range;
-					outGlobalDetrendedVariogramType = vEvaluator.outSemivariogramType;
-
-					pm.message("Global value with TREND for nugget: " + pNugGlogalDeTrended + " sill:"
-							+ pSGlogalDeTrended + " range: " + pAGlobalDeTrended + "  semivariogram type:"
-							+ vEvaluator.outSemivariogramType);
-
+					vpGlobalDetrended = new VariogramParameters(vEvaluator.outSemivariogramType, vEvaluator.nugget,
+							vEvaluator.range, vEvaluator.sill);
+					vpGlobalDetrended.setIsLocal(false);
+					vpGlobalDetrended.setIsTrend(true);
+					pm.message("Global value with TREND for nugget: " + vpGlobalDetrended.getNugget() + " sill:"
+							+ vpGlobalDetrended.getSill() + " range: " + vpGlobalDetrended.getRange()
+							+ "  semivariogram type:" + vpGlobalDetrended.getModelName());
+					if (!vEvaluator.isFitGood) {
+						pm.message("warning the fit is not good!");
+					}
 				} else {
 					pm.message("no trend has been found, so no parameters has been evauate");
 				}
@@ -306,58 +328,27 @@ public class GlobalParameterEvaluator {
 
 	}
 
-	private HashMap<Integer, double[]> getKrigingParams(StationsSelection stations,
-			ResidualsEvaluator residualsEvaluator) throws Exception {
-
-		int n1 = stations.hStationInitialSet.length - 1;
-		double[] hResiduals = residualsEvaluator.hResiduals;
-		n1 = stations.hStationInitialSet.length - 1;
-		double isLocal = 1.0;
-		double isTrend = 0.0;
-		int[] idStations = Arrays.copyOfRange(stations.idStationInitialSet, 0, n1);
-		hResiduals = residualsEvaluator.hResiduals;
-		VariogramParamsEvaluator variogramParamsEvaluator = new VariogramParamsEvaluator();
-		variogramParamsEvaluator.expVar = getExperimentalVariogram(hResiduals, idStations);
-		variogramParamsEvaluator.pSemivariogramType = this.pSemivariogramType;
-		variogramParamsEvaluator.proces();
-		HashMap<Integer, double[]> outDistances = variogramParamsEvaluator.expVar.outDistances;
-		HashMap<Integer, double[]> outNumberPairsPerBin = variogramParamsEvaluator.expVar.outNumberPairsPerBin;
-		HashMap<Integer, double[]> outExperimentalVariogram = variogramParamsEvaluator.expVar.outExperimentalVariogram;
-
-		double nugget = -9999;
-		double sill = -9999;
-		double range = -9999;
-		String actualSemivariogramType = "";
-		if (residualsEvaluator.isPValueOk) {
-			isTrend = residualsEvaluator.doDetrended? 1.0:0.0;
-			if ((variogramParamsEvaluator.nugget >= 0 && variogramParamsEvaluator.sill > 0
-					&& variogramParamsEvaluator.range > 0 && variogramParamsEvaluator.isFitGood)) {
-				nugget = variogramParamsEvaluator.nugget;
-				sill = variogramParamsEvaluator.sill;
-				range = variogramParamsEvaluator.range;
-				actualSemivariogramType = variogramParamsEvaluator.outSemivariogramType;
-
-			}
+	private OmsTimeSeriesIteratorReader getReader() {
+		OmsTimeSeriesIteratorReader readH = new OmsTimeSeriesIteratorReader();
+		readH.file = this.inHValuesPath;
+		readH.idfield = "ID";
+		readH.fileNovalue = fileNoValue;
+		readH.tStart = tStart;
+		readH.tTimestep = tTimeStep;
+		if (this.tEnd != null) {
+			readH.tEnd = this.tEnd;
 		}
-
-		HashMap<Integer, double[]> outVariogramParams = new HashMap<Integer, double[]>();
-		outVariogramParams.put(0, new double[] { nugget });
-		outVariogramParams.put(1, new double[] { sill });
-		outVariogramParams.put(2, new double[] { range });
-		outVariogramParams.put(3, new double[] { isLocal });
-		outVariogramParams.put(4, new double[] { isTrend });
-		outVariogramParams.put(5, new double[] { Utility.getVariogramCode(actualSemivariogramType) });
-		return outVariogramParams;
+		readH.initProcess();
+		return readH;
 	}
 
-	private ExperimentalVariogram getExperimentalVariogram(double[] hresiduals, int[] idArray) {
-		ExperimentalVariogram expVariogram = Utility.getExperimentalVariogram(fStationsid, inStations, doIncludeZero,
-				cutoffDivide, cutoffInput, 0);
-		HashMap<Integer, double[]> tmpInData = new HashMap<Integer, double[]>();
-		for (int i = 0; i < idArray.length; i++) {
-			tmpInData.put(idArray[i], new double[] { hresiduals[i] });
-		}
-		expVariogram.inData = tmpInData;
-		return expVariogram;
+	public VariogramParameters getGlobalVariogramParameters() {
+		// TODO Auto-generated method stub
+		return vpGlobal;
+	}
+
+	public VariogramParameters getGlobalVariogramParametersDeTrended() {
+		// TODO Auto-generated method stub
+		return vpGlobalDetrended;
 	}
 }

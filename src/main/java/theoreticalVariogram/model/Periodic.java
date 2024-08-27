@@ -16,49 +16,43 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package theoreticalVariogram;
+package theoreticalVariogram.model;
 
-public class Linear implements Model {
-
+public class Periodic implements Model{
+	
 	double dist;
 	double sill;
 	double range;
 	double nug;
-	boolean isOk = false;
-
-	public Linear(double dist, double sill, double range, double nug) {
-		this.dist = dist;
-		this.sill = sill;
-		this.range = range;
-		this.nug = nug;
-		this.isOk = nug >= 0 && sill >= 0 && range >= 0;
-
+	
+	
+	public Periodic (double dist, double sill, double range, double nug){	
+		this.dist=dist;
+		this.sill=sill;
+		this.range=range;
+		this.nug=nug;		
 	}
+	
+	
 
 	@Override
-	public double computeSemivariance() {
+	public double  computeSemivariance() {
+		double result= 0;
 
-		double result = Double.MAX_VALUE;;
+            if (dist != 0.0) {
+                result  = nug + sill * (1.0 - Math.cos(2.0 * Math.PI * dist / (range)));
+            }
 
-		if ( dist <= range) {
-			result = nug + sill * (dist / range);
-		}
-		if (dist > range) {
-			result = sill + nug;
-		}
+        return result;
 
-		return result;
 	}
+
+
 
 	@Override
 	public double[] computeGradient() {
-		double[] gradient = new double[] { Double.NaN, Double.NaN, Double.NaN };
-		if ( dist <= range) {
-			gradient = new double[] {  dist / range, -(sill * dist) / Math.pow(range, 2.0),1.0 };
-		} else if (dist > range) {
-			gradient = new double[] { 1.0, 0.0, 1.0 };
-		}
-		return gradient;
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

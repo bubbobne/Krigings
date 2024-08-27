@@ -31,31 +31,34 @@ import org.locationtech.jts.geom.Geometry;
  */
 public class StationsSelection {
 
-	/** The .shp of the measurement point, containing the position of the stations. */
+	/**
+	 * The .shp of the measurement point, containing the position of the stations.
+	 */
 	public SimpleFeatureCollection inStations = null;
 
 	/** The HM with the measured data to be interpolated. */
 	public HashMap<Integer, double[]> inData = null;
 
-
 	/** Include zeros in computations (default is true). */
 	public boolean doIncludezero = true;
-	
+
 	/** Include zeros in computations (default is true). */
 	public boolean doLogarithmic = false;
-	
 
-	/** In the case of kriging with neighbor, maxdist is the maximum distance 
-	    within the algorithm has to consider the stations */
+	/**
+	 * In the case of kriging with neighbor, maxdist is the maximum distance within
+	 * the algorithm has to consider the stations
+	 */
 	public double maxdist;
 
-	/** In the case of kriging with neighbor, inNumCloserStations is the number 
-    of stations the algorithm has to consider */
+	/**
+	 * In the case of kriging with neighbor, inNumCloserStations is the number of
+	 * stations the algorithm has to consider
+	 */
 	public int inNumCloserStations;
 
-	/** The field of the vector of stations, defining the id.*/
+	/** The field of the vector of stations, defining the id. */
 	public String fStationsid = null;
-
 
 	/** The pm. */
 	public IHMProgressMonitor pm = new LogProgressMonitor();
@@ -84,17 +87,11 @@ public class StationsSelection {
 	public double idx;
 
 	public double idy;
-	
 
 	public String fStationsZ = null;
-	
-
 
 	/** The model selection for the choice of the stations. */
 	Model modelSelection;
-
-
-
 
 	/**
 	 * Execute.
@@ -103,17 +100,16 @@ public class StationsSelection {
 	 */
 	public void execute() throws Exception {
 
-		// create the arraylist containing the station with the measurements 
+		// create the arraylist containing the station with the measurements
 		List<Double> xStationList = new ArrayList<Double>();
 		List<Double> yStationList = new ArrayList<Double>();
 		List<Double> zStationList = new ArrayList<Double>();
 		List<Double> hStationList = new ArrayList<Double>();
 		List<Integer> idStationList = new ArrayList<Integer>();
 
-
 		/*
-		 * Store the station coordinates and measured data in the array.
-		 * Skip data for non existing stations and also skip novalues.
+		 * Store the station coordinates and measured data in the array. Skip data for
+		 * non existing stations and also skip novalues.
 		 * 
 		 * @TODO maybe use Utility.
 		 */
@@ -124,16 +120,12 @@ public class StationsSelection {
 				SimpleFeature feature = stationsIter.next();
 				int id = ((Number) feature.getAttribute(fStationsid)).intValue();
 
-
 				double z = 0;
-				
-				
+
 				if (fStationsZ != null) {
 					try {
-						z = ((Number) feature.getAttribute(fStationsZ))
-								.doubleValue();
+						z = ((Number) feature.getAttribute(fStationsZ)).doubleValue();
 					} catch (NullPointerException e) {
-
 
 					}
 				}
@@ -142,15 +134,15 @@ public class StationsSelection {
 				double[] h = inData.get(id);
 
 				if (h == null || isNovalue(h[0])) {
-				    continue;
+					continue;
 				}
 
 				double h0;
 
 				if (doLogarithmic) {
-				    h0 = Utility.getLog(h[0]);
+					h0 = Utility.getLog(h[0]);
 				} else {
-				    h0 = h[0];
+					h0 = h[0];
 				}
 
 				if (doIncludezero) {
@@ -181,20 +173,17 @@ public class StationsSelection {
 
 		int nStaz = xStationList.size();
 
-
 		/*
-		 * Check if the coordinates or the values are the same for all the measurements stations.
-		 * xStationInitialSet has the dimensions of the coordinates of the measurements points 
-		 * plus 1 (the station where it is going to interpolate)
+		 * Check if the coordinates or the values are the same for all the measurements
+		 * stations. xStationInitialSet has the dimensions of the coordinates of the
+		 * measurements points plus 1 (the station where it is going to interpolate)
 		 */
 
-
-		xStationInitialSet = new double[nStaz+1];
-		yStationInitialSet = new double[nStaz+1];
-		zStationInitialSet = new double[nStaz+1];
-		hStationInitialSet = new double[nStaz+1];
-		idStationInitialSet = new int[nStaz+1];
-
+		xStationInitialSet = new double[nStaz + 1];
+		yStationInitialSet = new double[nStaz + 1];
+		zStationInitialSet = new double[nStaz + 1];
+		hStationInitialSet = new double[nStaz + 1];
+		idStationInitialSet = new int[nStaz + 1];
 
 		if (nStaz != 0) {
 			xStationInitialSet[0] = xStationList.get(0);
@@ -204,9 +193,11 @@ public class StationsSelection {
 			idStationInitialSet[0] = idStationList.get(0);
 			double previousValue = hStationInitialSet[0];
 
-			/* for each station added to the vector, it checks the coordinate/values and if they are
-			 * not null or equal, it adds to the list of the available stations. If the coordinates
-			 * or the values are all different, the flag areAllEquals  becomes false.   
+			/*
+			 * for each station added to the vector, it checks the coordinate/values and if
+			 * they are not null or equal, it adds to the list of the available stations. If
+			 * the coordinates or the values are all different, the flag areAllEquals
+			 * becomes false.
 			 */
 
 			for (int i = 0; i < nStaz; i++) {
@@ -217,8 +208,8 @@ public class StationsSelection {
 				double hTmp = hStationList.get(i);
 				int idTmp = idStationList.get(i);
 
-				boolean doubleStation = ModelsEngine.verifyDoubleStation( xStationInitialSet, yStationInitialSet, zStationInitialSet, 
-						hStationInitialSet,xTmp,yTmp, zTmp, hTmp, i, false);
+				boolean doubleStation = ModelsEngine.verifyDoubleStation(xStationInitialSet, yStationInitialSet,
+						zStationInitialSet, hStationInitialSet, xTmp, yTmp, zTmp, hTmp, i, false);
 				if (!doubleStation) {
 					xStationInitialSet[i] = xTmp;
 					yStationInitialSet[i] = yTmp;
@@ -233,21 +224,18 @@ public class StationsSelection {
 				}
 			}
 		}
-		
-	
 
-		/* in case of kriging with neighbor computes the distances between the
-		 * point where is going to interpolate and the other stations and it
-		 * sorts them
-		 */ 
+		/*
+		 * in case of kriging with neighbor computes the distances between the point
+		 * where is going to interpolate and the other stations and it sorts them
+		 */
 
-		if (inNumCloserStations > 0 || maxdist>0) {
+		if (inNumCloserStations > 0 || maxdist > 0) {
 
 			double x2, y2;
 			double dDifX, dDifY;
 			double distanceVector[] = new double[xStationInitialSet.length];
 			double pos[] = new double[xStationInitialSet.length];
-
 
 			for (int jj = 0; jj < xStationInitialSet.length; jj++) {
 
@@ -256,37 +244,31 @@ public class StationsSelection {
 
 				dDifX = idx - x2;
 				dDifY = idy - y2;
-				distanceVector[jj] = Math.sqrt(dDifX * dDifX + dDifY * dDifY); 
-				pos[jj] = jj;					
+				distanceVector[jj] = Math.sqrt(dDifX * dDifX + dDifY * dDifY);
+				pos[jj] = jj;
 			}
 
 			// sorts the distances
 			QuickSortAlgorithm t = new QuickSortAlgorithm(pm);
 			t.sort(distanceVector, pos);
 
-			
-			inNumCloserStations= (inNumCloserStations> nStaz)? nStaz:inNumCloserStations;
-			
+			inNumCloserStations = (inNumCloserStations > nStaz) ? nStaz : inNumCloserStations;
+
 			/*
-			 * The dimension of the new vector of the station is then defined
-			 * by the actual number of the station within the distance or defined 
-			 * by the users
+			 * The dimension of the new vector of the station is then defined by the actual
+			 * number of the station within the distance or defined by the users
 			 */
 
+			modelSelection = SimpleModelFactory.createModel(distanceVector, inNumCloserStations, maxdist);
+			int dim = modelSelection.numberOfStations();
 
-			modelSelection=SimpleModelFactory.createModel(distanceVector, inNumCloserStations, maxdist);
-			int dim=modelSelection.numberOfStations();
+			double[] xStationWithNeighbour = new double[dim + 1];
+			double[] yStationWithNeighbour = new double[dim + 1];
+			int[] idStationWithNeighbour = new int[dim + 1];
+			double[] zStationWithNeighbour = new double[dim + 1];
+			double[] hWithNeighbour = new double[dim + 1];
 
-
-			double[] xStationWithNeighbour = new double[dim+1];
-			double[] yStationWithNeighbour = new double[dim+1];
-			int[] idStationWithNeighbour = new int[dim+1];
-			double[] zStationWithNeighbour = new double[dim+1];
-			double[] hWithNeighbour = new double[dim+1];
-
-
-
-			for (int i = 0; i < dim; i++) {					
+			for (int i = 0; i < dim; i++) {
 
 				xStationWithNeighbour[i] = xStationInitialSet[(int) pos[i]];
 				yStationWithNeighbour[i] = yStationInitialSet[(int) pos[i]];
@@ -302,12 +284,7 @@ public class StationsSelection {
 			hStationInitialSet = hWithNeighbour;
 
 		}
-		
-		
-
 
 	}
-	
-	
 
 }

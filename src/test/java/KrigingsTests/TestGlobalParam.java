@@ -10,7 +10,7 @@ import org.geotools.filter.text.cql2.CQLException;
 import org.hortonmachine.gears.io.shapefile.OmsShapefileFeatureReader;
 import org.junit.Test;
 
-import krigingsPointCase.GlobalParameterEvaluator;
+import theoreticalVariogram.GlobalParameterEvaluator;
 
 public class TestGlobalParam {
 	@Test
@@ -37,6 +37,7 @@ public class TestGlobalParam {
 		gbEval.fStationsZ = "elev";
 		gbEval.tStart = "2010-01-01 00:00";
 		gbEval.tTimeStep = 60;
+		gbEval.inExperimentalVariogramFile = baseUrl+"/data/Meteo/variogram.csv";
 //		kriging.inNumCloserStations = 5;
 		gbEval.doLogarithmic = false;
 		gbEval.inHValuesPath = baseUrl+"/data/Meteo//Rain_OMS_format_10_sel_rem.csv";

@@ -16,9 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package theoreticalVariogram;
+package theoreticalVariogram.model;
 
-public class Exponential implements Model {
+public class Spherical implements Model {
 
 	double dist;
 	double sill;
@@ -26,38 +26,45 @@ public class Exponential implements Model {
 	double nug;
 	boolean isOk = false;
 
-	public Exponential(double dist, double sill, double range, double nug) {
+	public Spherical(double dist, double sill, double range, double nug) {
 		this.dist = dist;
 		this.sill = sill;
 		this.range = range;
 		this.nug = nug;
 		this.isOk = nug >= 0 && sill >= 0 && range >= 0;
+
 	}
 
 	@Override
 	public double computeSemivariance() {
 
-		double result = Double.NaN;
-
+		double result = Double.MAX_VALUE;
 		if (isOk) {
-			result = nug + sill * (1 - (Math.exp(-dist / range)));
+			double hr;
+			hr = dist / (range);
+			if (dist < range) {
+				result = nug + sill * hr * (1.5 - 0.5 * hr * hr);
+			} else if (dist >= range) {
+				result = sill + nug;
+			}
 		}
-		// System.out.println(func[i]);
-
 		return result;
 	}
 
 	@Override
 	public double[] computeGradient() {
-		// TODO Auto-generated method stub
 		double[] gradient = new double[] { Double.NaN, Double.NaN, Double.NaN };
 
 		if (isOk) {
-			gradient = new double[] { 1 - Math.exp(-(dist / range)),
-					-sill * Math.exp(-(dist / range)) * (dist / (range * range)), 1.0 };
+			double hr;
+			hr = dist / (range);
+			if (dist < range) {
+				gradient = new double[] { hr * (1.5 - 0.5 * hr * hr), 1.5 * sill * hr / range * (1 - hr * hr), 1.0 };
+			} else if (dist >= range) {
+				gradient = new double[] { 1.0, 0.0, 1.0 };
+			}
 		}
 		return gradient;
-
 	}
 
 }

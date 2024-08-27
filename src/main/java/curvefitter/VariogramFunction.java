@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import org.apache.commons.math3.analysis.ParametricUnivariateFunction;
 import org.apache.commons.math3.fitting.WeightedObservedPoint;
 
-import theoreticalVariogram.Model;
-import theoreticalVariogram.SimpleModelFactory;
+import theoreticalVariogram.model.Model;
+import theoreticalVariogram.model.SimpleModelFactory;
 
 public class VariogramFunction implements ParametricUnivariateFunction {
 

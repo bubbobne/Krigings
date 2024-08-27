@@ -73,5 +73,24 @@ public class ResidualsEvaluator {
 		}
 
 	}
+/**
+ * @todo
+ * 
+ * @param zStations
+ * @param hStations
+ * @param doDetrended
+ * @param regressionOrder
+ * @return
+ */
+	public final static ResidualsEvaluator create(double[] zStations, double[] hStations,
+			boolean doDetrended, int regressionOrder) {
+		ResidualsEvaluator residualsEvaluator = new ResidualsEvaluator();
+		residualsEvaluator.doDetrended = doDetrended;
+		residualsEvaluator.hStations = hStations;
+		residualsEvaluator.zStations = zStations;
+		residualsEvaluator.regressionOrder = regressionOrder;
+		residualsEvaluator.process();
+		return residualsEvaluator;
+	}
 
 }

@@ -16,35 +16,33 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package theoreticalVariogram;
+package theoreticalVariogram.model;
 
-public class Periodic implements Model{
-	
+public class Hole implements Model{
+
 	double dist;
 	double sill;
 	double range;
 	double nug;
-	
-	
-	public Periodic (double dist, double sill, double range, double nug){	
+
+
+	public Hole (double dist, double sill, double range, double nug){	
 		this.dist=dist;
 		this.sill=sill;
 		this.range=range;
 		this.nug=nug;		
 	}
-	
-	
+
+
 
 	@Override
-	public double  computeSemivariance() {
-		double result= 0;
+	public double computeSemivariance() {
+		double result = 0;
 
-            if (dist != 0.0) {
-                result  = nug + sill * (1.0 - Math.cos(2.0 * Math.PI * dist / (range)));
-            }
-
-        return result;
-
+			if (dist != 0.0) {
+				result = nug + sill * (1.0 - Math.sin(dist / (range)) / (dist / (range)));
+			}
+		return result;
 	}
 
 

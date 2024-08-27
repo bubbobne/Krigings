@@ -1,4 +1,4 @@
-package theoreticalVariogram;
+package theoreticalVariogram.model;
 
 public class Circular implements Model{
 	
