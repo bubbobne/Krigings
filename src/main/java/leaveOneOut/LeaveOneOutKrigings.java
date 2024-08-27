@@ -148,6 +148,8 @@ public class LeaveOneOutKrigings extends HMModel {
 
 	@Execute
 	public void executeKriging() throws Exception {
+		outData = new HashMap<Integer, double[]>();
+
 		Krigings kriging = new Krigings();
 		kriging.pAGlobal = pAGlobal;
 		kriging.pNugGlobal = pNugGlobal;
@@ -188,13 +190,17 @@ public class LeaveOneOutKrigings extends HMModel {
 			Filter filter = CQL.toFilter("ID = " + idToCheck);
 			kriging.inInterpolate = inStations.subCollection(filter);
 			kriging.inStations = inStations;
-			double[] tmpValue = inData.get(idToCheck);
-			inData.remove(idToCheck);
-			kriging.inData = inData;
-			kriging.executeKriging();
-			HashMap<Integer, double[]> result = kriging.outData;
-			outData.put(idToCheck, result.get(idToCheck));
-            inData.put(idToCheck, tmpValue);
+			if (inData.containsKey(idToCheck)) {
+				double[] tmpValue = inData.get(idToCheck);
+				inData.remove(idToCheck);
+				kriging.inData = inData;
+				kriging.executeKriging();
+				HashMap<Integer, double[]> result = kriging.outData;
+				outData.put(idToCheck, result.get(idToCheck));
+				inData.put(idToCheck, tmpValue);
+			}
+			pm.worked(1);
 		}
+		pm.done();
 	}
 }

@@ -513,7 +513,7 @@ public class Krigings extends HMModel {
 			vpGlobal = gParam.getGlobalVariogramParameters();
 			vpGlobalTrend = gParam.getGlobalVariogramParametersDeTrended();
 		}
-		if (nugget == 0 && range == 0 && nugget == 0 && vpGlobal.isValid() && vpGlobalTrend.isValid()) {
+		if ((nugget == 0 && range == 0 && nugget == 0) && (!vpGlobal.isValid() ||!(doDetrended && vpGlobalTrend.isValid()))) {
 			pm.message("Warning: nugget,range and sill will be evaluate only at each timestep");
 		}
 	}
