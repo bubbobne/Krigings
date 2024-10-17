@@ -10,14 +10,13 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.geoframe.blogpost.kriging.pointcase.Kriging;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.feature.SchemaException;
 import org.geotools.filter.text.cql2.CQLException;
 import org.hortonmachine.gears.io.shapefile.OmsShapefileFeatureReader;
 import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorReader;
 import org.junit.Test;
-
-import krigingsPointCase.Krigings;
 
 public class TestKrigingStandardFromR {
 
@@ -64,7 +63,7 @@ public class TestKrigingStandardFromR {
 		predictedFromRReaderValue.initProcess();
 
 		String fId = "id";
-		Krigings kriging = new Krigings();
+		Kriging kriging = new Kriging();
 		URL testGridUrl = this.getClass().getClassLoader().getResource("test.shp");
 		File testGridFile = new File(testGridUrl.toURI());
 		OmsShapefileFeatureReader testReader = new OmsShapefileFeatureReader();
@@ -162,7 +161,7 @@ public class TestKrigingStandardFromR {
 		predictedFromRReaderValue.initProcess();
 
 		String fId = "id";
-		Krigings kriging = new Krigings();
+		Kriging kriging = new Kriging();
 		URL testGridUrl = this.getClass().getClassLoader().getResource("test.shp");
 		File testGridFile = new File(testGridUrl.toURI());
 		OmsShapefileFeatureReader testReader = new OmsShapefileFeatureReader();

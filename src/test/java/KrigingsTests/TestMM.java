@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.geoframe.blogpost.kriging.pointcase.Kriging;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.feature.SchemaException;
 import org.geotools.filter.text.cql2.CQL;
@@ -17,8 +18,6 @@ import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorReader;
 import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorWriter;
 import org.junit.Test;
 import org.opengis.filter.Filter;
-
-import krigingsPointCase.Krigings;
 
 public class TestMM {
 	@Test
@@ -54,7 +53,7 @@ public class TestMM {
 		w.fileNovalue = "-9999.0";
 		w.inTablename = "ID";
 	   
-		Krigings kriging = new Krigings();
+		Kriging kriging = new Kriging();
 		File pointGridFile = new File(baseUrl+"2170/centroid_ID_2170.shp");
 		OmsShapefileFeatureReader pointReader = new OmsShapefileFeatureReader();
 		pointReader.file = pointGridFile.getAbsolutePath();

@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.geoframe.blogpost.kriging.pointcase.Kriging;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.feature.SchemaException;
 import org.geotools.filter.text.cql2.CQL;
@@ -19,8 +20,6 @@ import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorReader;
 import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorWriter;
 import org.junit.Test;
 import org.opengis.filter.Filter;
-
-import krigingsPointCase.Krigings;
 
 public class TestValDiNon {
 	@Test
@@ -47,7 +46,7 @@ public class TestValDiNon {
 		reader.initProcess();
 
 		String fId = "ID";
-		Krigings kriging = new Krigings();
+		Kriging kriging = new Kriging();
 
 		int idToCheck = 25;
 		Filter filter = CQL.toFilter("ID = " + idToCheck);
@@ -147,7 +146,7 @@ public class TestValDiNon {
 		reader.initProcess();
 
 		String fId = "ID";
-		Krigings kriging = new Krigings();
+		Kriging kriging = new Kriging();
 
 		URL predictUrl = this.getClass().getClassLoader().getResource("centroid_ID_1881.shp");
 		File predictFile = new File(predictUrl.toURI());
