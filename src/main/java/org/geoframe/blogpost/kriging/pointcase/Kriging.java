@@ -158,7 +158,7 @@ public class Kriging extends HMModel {
 	/** transform to log. */
 	@In
 	public boolean boundedToZero = false;
-	@Description("The hashmap withe the interpolated results")
+	@Description("The hashmap with the interpolated results")
 	@Out
 	public HashMap<Integer, double[]> outData = null;
 
@@ -238,11 +238,16 @@ public class Kriging extends HMModel {
 
 	@Execute
 	public void executeKriging() throws Exception {
+		VariogramParameters vp = new VariogramParameters(pSemivariogramType, nugget, range, sill);
+		vp.setIsLocal(false);
+		vp.setIsTrend(doDetrended);
 
 		if (step == 0) {
 			try {
 				verifyInput();
-				this.createDefaulParams();
+				if (!vp.isValid()) {
+					this.createDefaulParams();
+				}
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				pm.errorMessage(e.toString());
@@ -250,9 +255,6 @@ public class Kriging extends HMModel {
 		}
 		step = step + 1;
 
-//		nugget = 0;
-//		sill = 0;
-//		range = 0;
 		LinkedHashMap<Integer, Coordinate> pointsToInterpolateId2Coordinates = null;
 
 		pointsToInterpolateId2Coordinates = Utility.getCoordinate(inInterpolate, fInterpolateid, fPointZ, pm, msg);
@@ -278,9 +280,7 @@ public class Kriging extends HMModel {
 		stations.fStationsZ = fStationsZ;
 		stations.doLogarithmic = doLogarithmic;
 		stations.doIncludezero = doIncludeZero;
-		VariogramParameters vp = new VariogramParameters(pSemivariogramType, nugget, range, sill);
-		vp.setIsLocal(false);
-		vp.setIsTrend(doDetrended);
+
 		if (!vp.isValid() && inTheoreticalVariogram == null) {
 			stations.inNumCloserStations = 0;
 			stations.inData = inData;
@@ -291,10 +291,12 @@ public class Kriging extends HMModel {
 			variogramParameters = vpcalCulator.execute();
 
 		} else {
-			if (inTheoreticalVariogram.get(0)[0] != -9999) {
+			if (inTheoreticalVariogram != null && inTheoreticalVariogram.get(0)[0] != -9999) {
 				variogramParameters = new VariogramParameters(inTheoreticalVariogram.get(5)[0],
 						inTheoreticalVariogram.get(0)[0], inTheoreticalVariogram.get(2)[0],
 						inTheoreticalVariogram.get(1)[0]);
+			} else if (vp.isValid()) {
+				variogramParameters = vp;
 			} else if (doDetrended && vpGlobalTrend.isValid()) {
 				variogramParameters = vpGlobalTrend;
 			} else if (vpGlobal.isValid()) {
@@ -515,7 +517,8 @@ public class Kriging extends HMModel {
 			vpGlobal = gParam.getGlobalVariogramParameters();
 			vpGlobalTrend = gParam.getGlobalVariogramParametersDeTrended();
 		}
-		if ((nugget == 0 && range == 0 && nugget == 0) && (!vpGlobal.isValid() ||!(doDetrended && vpGlobalTrend.isValid()))) {
+		if ((nugget == 0 && range == 0 && nugget == 0)
+				&& (!vpGlobal.isValid() || !(doDetrended && vpGlobalTrend.isValid()))) {
 			pm.message("Warning: nugget,range and sill will be evaluate only at each timestep");
 		}
 	}
