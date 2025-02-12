@@ -15,33 +15,33 @@ public class TestGlobalParam {
 	@Test
 	public void testGlobalParam() throws URISyntaxException, SchemaException, CQLException, IOException {
 		//
-		String stationIdField = "ID_shp";
-		// 100 station to training model
-		String baseUrl = "/home/andreisd/Documents/project/checkKrihingMartin/";
-		File stazioniGridFile = new File(baseUrl+"/data/Meteo/Meteo_rain_stations_sel_rem.shp");
-		OmsShapefileFeatureReader stationsReader = new OmsShapefileFeatureReader();
-		stationsReader.file = stazioniGridFile.getAbsolutePath();
-		stationsReader.readFeatureCollection();
-		SimpleFeatureCollection stationsFC = stationsReader.geodata;
-
-	//	URL observedRain4Url = this.getClass().getClassLoader().getResource("precipitation_cleaned12h.csv");
-	//	File observedFile = new File("/home/andreisd/Documents/project/GEOFRAME/Krigings/resources/Input/krigings/sic97/precipitation_cleaned12h.csv");
-		GlobalParameterEvaluator gbEval = new GlobalParameterEvaluator();
-		gbEval.pSemivariogramType = null;
-		gbEval.inStations = stationsFC;
-		gbEval.fStationsid = stationIdField;
-	//	kriging.inHValuesPath = observedFile.getAbsolutePath();
-		gbEval.cutoffDivide = 15;
-		gbEval.doDetrended = true;
-		gbEval.fStationsZ = "elev";
-		gbEval.tStart = "2010-01-01 00:00";
-		gbEval.tTimeStep = 60;
-		gbEval.inExperimentalVariogramFile = baseUrl+"/data/Meteo/variogram.csv";
-//		kriging.inNumCloserStations = 5;
-		gbEval.doLogarithmic = false;
-		gbEval.inHValuesPath = baseUrl+"/data/Meteo//Rain_OMS_format_10_sel_rem.csv";
-
-		gbEval.execute();
+//		String stationIdField = "ID_shp";
+//		// 100 station to training model
+//		String baseUrl = "/home/andreisd/Documents/project/checkKrihingMartin/";
+//		File stazioniGridFile = new File(baseUrl+"/data/Meteo/Meteo_rain_stations_sel_rem.shp");
+//		OmsShapefileFeatureReader stationsReader = new OmsShapefileFeatureReader();
+//		stationsReader.file = stazioniGridFile.getAbsolutePath();
+//		stationsReader.readFeatureCollection();
+//		SimpleFeatureCollection stationsFC = stationsReader.geodata;
+//
+//	//	URL observedRain4Url = this.getClass().getClassLoader().getResource("precipitation_cleaned12h.csv");
+//	//	File observedFile = new File("/home/andreisd/Documents/project/GEOFRAME/Krigings/resources/Input/krigings/sic97/precipitation_cleaned12h.csv");
+//		GlobalParameterEvaluator gbEval = new GlobalParameterEvaluator();
+//		gbEval.pSemivariogramType = null;
+//		gbEval.inStations = stationsFC;
+//		gbEval.fStationsid = stationIdField;
+//	//	kriging.inHValuesPath = observedFile.getAbsolutePath();
+//		gbEval.cutoffDivide = 15;
+//		gbEval.doDetrended = true;
+//		gbEval.fStationsZ = "elev";
+//		gbEval.tStart = "2010-01-01 00:00";
+//		gbEval.tTimeStep = 60;
+//		gbEval.inExperimentalVariogramFile = baseUrl+"/data/Meteo/variogram.csv";
+////		kriging.inNumCloserStations = 5;
+//		gbEval.doLogarithmic = false;
+//		gbEval.inHValuesPath = baseUrl+"/data/Meteo//Rain_OMS_format_10_sel_rem.csv";
+//
+//		gbEval.execute();
 
 		// writer.close();
 	}

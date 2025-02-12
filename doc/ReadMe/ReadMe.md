@@ -4,6 +4,9 @@
 
 `@author` Francesco Serafin (sidereus3), francesco.serafin.3@gmail.com
 
+`@author` Daniele Andreis, daniele.andreis@gmail.com
+
+
 `@copyright` GNU Public License v3 AboutHydrology (Riccardo Rigon)
 
 ## Description

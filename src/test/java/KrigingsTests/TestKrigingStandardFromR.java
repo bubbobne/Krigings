@@ -78,9 +78,9 @@ public class TestKrigingStandardFromR {
 		kriging.fInterpolateid = stationIdField;
 		kriging.inHValuesPath = observedFile.getAbsolutePath();
 		kriging.cutoffDivide = 20;
-//		kriging.nugget = 0;
-//		kriging.sill = 15292.38;
-//		kriging.range = 82946.36;
+		kriging.nugget = 0;
+		kriging.sill = 15292.38;
+		kriging.range = 82946.36;
 
 		while (reader.doProcess) {
 			try {
@@ -125,6 +125,7 @@ public class TestKrigingStandardFromR {
 		// 100 station to training model
 		URL stazioniGridUrl = getClass().getClassLoader().getResource("observed.shp");
 		File stazioniGridFile = new File(stazioniGridUrl.toURI());
+		
 		OmsShapefileFeatureReader stationsReader = new OmsShapefileFeatureReader();
 		stationsReader.file = stazioniGridFile.getAbsolutePath();
 		stationsReader.readFeatureCollection();
