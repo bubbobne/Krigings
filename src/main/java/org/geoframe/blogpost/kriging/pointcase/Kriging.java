@@ -138,7 +138,7 @@ public class Kriging extends HMModel {
 
 	@Description("Type of linear system solver")
 	@In
-	public String linearSystemSolverType = "default";
+	public String linearSystemSolverType = "math3";
 
 	@Description("Specified cutoff")
 	@In
@@ -274,6 +274,8 @@ public class Kriging extends HMModel {
 		 * distance from the considered point.
 		 */
 		StationsSelection stations = new StationsSelection();
+		double[] xStations = null, yStations = null, zStations = null, hResiduals = null;
+
 		stations.inStations = inStations;
 		stations.maxdist = maxdist;
 		stations.fStationsid = fStationsid;
@@ -308,7 +310,6 @@ public class Kriging extends HMModel {
 			double sum = 0.;
 			id = idIterator.next();
 			idArray[j] = id;
-			double[] xStations = null, yStations = null, zStations = null, hResiduals = null;
 			int n1 = 0;
 			double trendCoeff = 0;
 			double trendIntercept = 0;

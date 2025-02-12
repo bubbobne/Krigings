@@ -28,7 +28,10 @@ public class TestKrigingStandardFromR {
 		URL stazioniGridUrl = this.getClass().getClassLoader().getResource("observed.shp");
 		File stazioniGridFile = new File(stazioniGridUrl.toURI());
 		OmsShapefileFeatureReader stationsReader = new OmsShapefileFeatureReader();
-		stationsReader.file = stazioniGridFile.getAbsolutePath();
+		
+		
+//		stationsReader.file = stazioniGridFile.getAbsolutePath();
+		stationsReader.file = "/home/andreisd/Documents/project/uni/GEOFrame/kriging/resources/Input/krigings/sic97/observed.shp";
 		stationsReader.readFeatureCollection();
 		SimpleFeatureCollection stationsFC = stationsReader.geodata;
 
@@ -68,6 +71,7 @@ public class TestKrigingStandardFromR {
 		File testGridFile = new File(testGridUrl.toURI());
 		OmsShapefileFeatureReader testReader = new OmsShapefileFeatureReader();
 		testReader.file = testGridFile.getAbsolutePath();
+		testReader.file ="/home/andreisd/Documents/project/uni/GEOFrame/kriging/resources/Input/krigings/sic97/test.shp";
 		testReader.readFeatureCollection();
 		SimpleFeatureCollection testFC = testReader.geodata;
 
@@ -86,6 +90,7 @@ public class TestKrigingStandardFromR {
 			try {
 				reader.nextRecord();
 				testReaderValue.nextRecord();
+			
 				HashMap<Integer, double[]> id2ValueMap = reader.outData;
 				kriging.inData = id2ValueMap;
 				kriging.executeKriging();
@@ -125,7 +130,6 @@ public class TestKrigingStandardFromR {
 		// 100 station to training model
 		URL stazioniGridUrl = getClass().getClassLoader().getResource("observed.shp");
 		File stazioniGridFile = new File(stazioniGridUrl.toURI());
-		
 		OmsShapefileFeatureReader stationsReader = new OmsShapefileFeatureReader();
 		stationsReader.file = stazioniGridFile.getAbsolutePath();
 		stationsReader.readFeatureCollection();
