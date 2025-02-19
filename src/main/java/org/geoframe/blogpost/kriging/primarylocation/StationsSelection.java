@@ -25,11 +25,13 @@ import org.opengis.feature.simple.SimpleFeature;
 
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
+
 /**
  * The Class StationsSelection.
  * 
- * This class filters stations for kriging by selecting only the nearest stations
- * based on either a distance threshold or a specified number of closer stations.
+ * This class filters stations for kriging by selecting only the nearest
+ * stations based on either a distance threshold or a specified number of closer
+ * stations.
  */
 public class StationsSelection {
 
@@ -95,16 +97,16 @@ public class StationsSelection {
 	/** The model selection for the choice of the stations. */
 	Model modelSelection;
 
-    /**
-     * Executes the station selection process.
-     * <p>
-     * The method extracts station data from the input feature collection,
-     * filters out invalid stations (e.g., with no measured data or novalues),
-     * and then sorts the stations based on their distance to the interpolation point.
-     * </p>
-     *
-     * @throws Exception if an error occurs during processing.
-     */
+	/**
+	 * Executes the station selection process.
+	 * <p>
+	 * The method extracts station data from the input feature collection, filters
+	 * out invalid stations (e.g., with no measured data or novalues), and then
+	 * sorts the stations based on their distance to the interpolation point.
+	 * </p>
+	 *
+	 * @throws Exception if an error occurs during processing.
+	 */
 	public void execute() throws Exception {
 
 		// create the arraylist containing the station with the measurements
@@ -144,11 +146,11 @@ public class StationsSelection {
 					continue;
 				}
 
-                double h0 = doLogarithmic ? Utility.getLog(h[0]) : h[0];
-		
-                // If zeros are allowed, add all values; otherwise, skip zero values.
+				double h0 = doLogarithmic ? Utility.getLog(h[0]) : h[0];
+
+				// If zeros are allowed, add all values; otherwise, skip zero values.
 				if (doIncludezero) {
-                    // Note: Math.abs(h0) >= 0 is always true, so this block always executes.
+					// Note: Math.abs(h0) >= 0 is always true, so this block always executes.
 					if (Math.abs(h0) >= 0.0) { // TOLL
 						xStationList.add(coordinate.x);
 						yStationList.add(coordinate.y);
@@ -181,7 +183,7 @@ public class StationsSelection {
 		 * stations. xStationInitialSet has the dimensions of the coordinates of the
 		 * measurements points plus 1 (the station where it is going to interpolate)
 		 */
-
+		// Allocate arrays with one extra element (for the interpolation point).
 		xStationInitialSet = new double[nStaz + 1];
 		yStationInitialSet = new double[nStaz + 1];
 		zStationInitialSet = new double[nStaz + 1];

@@ -126,10 +126,8 @@ public class VariogramParamsEvaluator {
 		relError = Double.MAX_VALUE;
 		for (int j = 0; j < variogramType.length; j++) {
 			try {
-
 				VariogramFunction variogramFunction = new VariogramFunction(variogramType[j]);
 				VariogramFitter fitter = new VariogramFitter(variogramFunction);
-
 				ArrayList<WeightedObservedPoint> filteresPoints = variogramFunction.filterPoint(points);
 				double coeffs[] = fitter.fit(filteresPoints);
 
