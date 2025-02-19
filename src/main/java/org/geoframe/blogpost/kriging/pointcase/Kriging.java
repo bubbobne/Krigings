@@ -345,7 +345,7 @@ public class Kriging extends HMModel {
 
 			xStations[n1] = coordinate.x;
 			yStations[n1] = coordinate.y;
-			// zStations[n1] = Double.NaN;
+			zStations[n1] = coordinate.z;
 			boolean areAllEquals = stations.areAllEquals;
 
 			if (n1 != 0) {

@@ -50,6 +50,7 @@ public class TestKrigingStandardFromR {
 		testReaderValue.tStart = "2022-12-06 17:00";
 		testReaderValue.tTimestep = 60;
 		testReaderValue.fileNovalue = "-9999";
+		
 		testReaderValue.initProcess();
 
 		OmsTimeSeriesIteratorReader predictedFromRReaderValue = new OmsTimeSeriesIteratorReader();
@@ -78,6 +79,7 @@ public class TestKrigingStandardFromR {
 		kriging.fInterpolateid = stationIdField;
 		kriging.inHValuesPath = observedFile.getAbsolutePath();
 		kriging.cutoffDivide = 20;
+		kriging.inNumCloserStations=200;
 		kriging.nugget = 0;
 		kriging.sill = 15292.38;
 		kriging.range = 82946.36;
@@ -180,11 +182,20 @@ public class TestKrigingStandardFromR {
 		kriging.doDetrended = true;
 		kriging.fPointZ = "z1";
 		kriging.fStationsZ = "z1";
+		kriging.inNumCloserStations = 200;
 
-//		kriging.nugget = 0;
-//		kriging.sill = 15292.38;
-//		kriging.range = 82946.36;
 
+		
+		kriging.globalDetrendedVariogramType = "exponential";
+		kriging.globalVariogramType = "exponential";
+
+		kriging.pNugGlobal = 0;
+		kriging.pSGlobal = 15292.38;
+		kriging.pAGlobal = 82946.36;
+		kriging.pAGlobalDeTrended = 0;
+		kriging.pSGlobalDeTrended = 15292.38;
+		kriging.pAGlobalDeTrended = 82946.36;
+		
 		while (reader.doProcess) {
 			try {
 				reader.nextRecord();
