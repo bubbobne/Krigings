@@ -42,7 +42,7 @@ import org.hortonmachine.gears.libs.monitor.LogProgressMonitor;
 
 @Description("Experimental semivariogram algorithm.")
 @Documentation("Experimental semivariogram")
-@Author(name = "Giuseppe Formetta, Francesco Adami, Silvia Franceschi & Marialaura Bancheri")
+@Author(name = "Giuseppe Formetta, Francesco Adami, Silvia Franceschi & Marialaura Bancheri, Daniele Andreis")
 @Keywords("Experimental semivariogram, Kriging, Hydrology")
 @Label(HMConstants.STATISTICS)
 @Name("variogram")
@@ -140,7 +140,8 @@ public class ExperimentalVariogram extends HMModel {
 	 * @param yStation    the vector containing the y value of the station
 	 * @param hStation    the vector containing the variable value of the station
 	 * @param Cutoffinput the cutoff input
-	 * @return the double[][] matrix of the results of the processing
+	 * @retur			double[] xStations = null, yStations = null, zStations = null, hResiduals = null;
+n the double[][] matrix of the results of the processing
 	 */
 	private double[][] processAlgorithm(double[] xStation, double yStation[], double[] hStation, double Cutoffinput) {
 

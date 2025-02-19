@@ -9,8 +9,8 @@ import org.geoframe.blogpost.kriging.primarylocation.StationsSelection;
 import org.geoframe.blogpost.kriging.variogram.experimental.ExperimentalVariogram;
 
 public class VariogramParametersCalculator {
-	private VariogramParameters globalVP = new VariogramParameters();
-	private VariogramParameters globalDeTrendedVP = new VariogramParameters();
+	private VariogramParameters globalVP;
+	private VariogramParameters globalDeTrendedVP;
 	private StationsSelection stations = null;
 	private boolean doDetrend = false;
 	private String semivariogramType = null;
@@ -54,11 +54,14 @@ public class VariogramParametersCalculator {
 			boolean variogramOk = variogramParamsEvaluator.nugget >= 0 && variogramParamsEvaluator.sill > 0
 					&& variogramParamsEvaluator.range > 0 && variogramParamsEvaluator.isFitGood;
 			if (variogramOk || (!globalVP.isValid()) || (doDetrend && globalDeTrendedVP.isValid())) {
-				VariogramParameters myVariogramParam = new VariogramParameters(
+				VariogramParameters myVariogramParam = new VariogramParameters.Builder(
 						variogramParamsEvaluator.outSemivariogramType, variogramParamsEvaluator.nugget,
-						variogramParamsEvaluator.range, variogramParamsEvaluator.sill);
+						variogramParamsEvaluator.range, variogramParamsEvaluator.sill).build();
 				myVariogramParam.setIsLocal(true);
 				myVariogramParam.setIsTrend(rEvaluator.isPValueOk);
+				myVariogramParam.setTrendIntercept(rEvaluator.trend_intercept);
+				myVariogramParam.setTrendSlope(rEvaluator.trend_coefficient);
+
 				return myVariogramParam;
 			}
 		}

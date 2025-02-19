@@ -14,15 +14,24 @@ import org.opengis.feature.simple.SimpleFeature;
 
 public class Utility {
 
-//	public static String[] availableTheorethicalVariogra = new String[] { "exponential", "gaussian", "linear",
-//			 "power", "spherical" };
-
-
-
+	/**
+	 * Applies a log transformation to the given value, adding 1.0 to avoid issues
+	 * with zero or negative values.
+	 *
+	 * @param h the input value.
+	 * @return the log-transformed value.
+	 */
 	public final static double getLog(double h) {
 		return Math.log(h + 1.0);
 	}
 
+	/**
+	 * Applies a log transformation to each element in the provided map. Negative
+	 * values are converted to NaN.
+	 *
+	 * @param h a map where each key maps to an array of double values.
+	 * @return a new map with log-transformed arrays.
+	 */
 	public final static HashMap<Integer, double[]> getLog(HashMap<Integer, double[]> h) {
 		HashMap<Integer, double[]> logMap = new HashMap<>();
 		for (Map.Entry<Integer, double[]> entry : h.entrySet()) {
@@ -44,19 +53,29 @@ public class Utility {
 		return logMap;
 	}
 
+	/**
+	 * Reverses the log transformation.
+	 *
+	 * @param h the log-transformed value.
+	 * @return the original value.
+	 */
 	public final static double getInverseLog(double h) {
 		return Math.exp(h) - 1.0;
 	}
 
 	/**
-	 * Extract the coordinate of a FeatureCollection in a HashMap with an ID as a
-	 * key.
+	 * Extracts the coordinates of features from a FeatureCollection into a map,
+	 * using the specified id field as the key.
 	 *
-	 * @param nStaz      the number of the stations
-	 * @param collection is the collection of the considered points
-	 * @param idField    the field containing the id of the stations
-	 * @return the coordinate of the station
-	 * @throws Exception if a field of elevation isn't the same of the collection
+	 * @param collection the collection of features.
+	 * @param idField    the field containing the ID of the features.
+	 * @param fPointZ    the field containing the elevation (z-value) of the
+	 *                   features.
+	 * @param pm         the progress monitor.
+	 * @param msg        the message handler.
+	 * @return a LinkedHashMap mapping feature IDs to their corresponding
+	 *         coordinates.
+	 * @throws Exception if the elevation field is missing.
 	 */
 	public final static LinkedHashMap<Integer, Coordinate> getCoordinate(SimpleFeatureCollection collection,
 			String idField, String fPointZ, IHMProgressMonitor pm, HortonMessageHandler msg) throws Exception {

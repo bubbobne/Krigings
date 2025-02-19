@@ -4,49 +4,113 @@ import java.util.HashMap;
 
 import org.hortonmachine.gears.libs.modules.HMConstants;
 
+/**
+ * This class represents the parameters of a theoretical variogram. It includes
+ * nugget, range, sill, and model type, along with options for trend and
+ * locality.
+ */
 public class VariogramParameters {
+	/** Available theoretical variogram models */
+	public static final String[] AVAILABLE_THEORETICAL_VARIOGRAMS = new String[] { "exponential", "linear", "power",
+			"spherical" };
 	private double nugget;
 	private double range;
 	private double sill;
-	private String modelName = null;
+	private String modelName;
 	private boolean isTrend;
+	private boolean isLocal;
+	private double trendIntercept = 0;
+	private double trendSlope = 0;
 
+
+
+	public static class Builder {
+	    private String modelName;
+	    private double nugget;
+	    private double range;
+	    private double sill;
+	    private boolean isTrend = false;
+	    private boolean isLocal = false;
+	    private double trendIntercept = 0;
+	    private double trendSlope = 0;
+
+	    public Builder(String modelName, double nugget, double range, double sill) {
+	        this.modelName = modelName;
+	        this.nugget = nugget;
+	        this.range = range;
+	        this.sill = sill;
+	    }
+
+	    public Builder setTrend(boolean isTrend) {
+	        this.isTrend = isTrend;
+	        return this;
+	    }
+
+	    public Builder setLocal(boolean isLocal) {
+	        this.isLocal = isLocal;
+	        return this;
+	    }
+
+	    public Builder setTrendIntercept(double trendIntercept) {
+	        this.trendIntercept = trendIntercept;
+	        return this;
+	    }
+
+	    public Builder setTrendSlope(double trendSlope) {
+	        this.trendSlope = trendSlope;
+	        return this;
+	    }
+
+	    public VariogramParameters build() {
+	        return new VariogramParameters(this);
+	    }
+	}
+
+	private VariogramParameters(Builder builder) {
+	    this.modelName = builder.modelName;
+	    this.nugget = builder.nugget;
+	    this.range = builder.range;
+	    this.sill = builder.sill;
+	    this.isTrend = builder.isTrend;
+	    this.isLocal = builder.isLocal;
+	    this.trendIntercept = builder.trendIntercept;
+	    this.trendSlope = builder.trendSlope;
+	}
+
+	/**
+	 * Gets whether a trend is considered.
+	 * 
+	 * @return true if a trend is used, false otherwise.
+	 */
 	public boolean getIsTrend() {
 		return isTrend;
 	}
 
+	/**
+	 * Sets whether a trend should be used.
+	 * 
+	 * @param isTrend true to enable trend, false otherwise.
+	 */
 	public void setIsTrend(boolean isTrend) {
 		this.isTrend = isTrend;
 	}
 
-	private boolean isLocal;
-
+	/**
+	 * Gets whether the variogram is local.
+	 * 
+	 * @return true if local, false otherwise.
+	 */
 	public boolean getIsLocal() {
 		return isLocal;
 	}
 
+	/**
+	 * Sets whether the variogram should be local.
+	 * 
+	 * @param isLocal true to set local, false otherwise.
+	 */
 	public void setIsLocal(boolean isLocal) {
 		this.isLocal = isLocal;
-	}
-
-	public VariogramParameters(String modelName, double nugget, double range, double sill) {
-//		if(Arrays.asList(availableTheorethicalVariogra).contains(modelName)) 
-			this.modelName = modelName;
-		
-		this.nugget = nugget;
-		this.range = range;
-		this.sill = sill;
-	}
-
-	public VariogramParameters() {
-		// TODO Auto-generated constructor stub
-	}
-
-	public VariogramParameters(double d, double nugget, double range, double sill) {
-		this.modelName = getVariogramType(d);
-		this.nugget = nugget;
-		this.range = range;
-		this.sill = sill;
 	}
 
 	public double getNugget() {
@@ -65,8 +129,13 @@ public class VariogramParameters {
 		return modelName;
 	}
 
+	/**
+	 * Converts the variogram parameters into a HashMap.
+	 * 
+	 * @return HashMap containing variogram parameters.
+	 */
 	public HashMap<Integer, double[]> toHashMap() {
-		HashMap<Integer, double[]> outVariogramParams = new HashMap<Integer, double[]>();
+		HashMap<Integer, double[]> outVariogramParams = new HashMap<>();
 		if (modelName != null) {
 			outVariogramParams.put(0, new double[] { nugget });
 			outVariogramParams.put(1, new double[] { sill });
@@ -74,35 +143,76 @@ public class VariogramParameters {
 			outVariogramParams.put(3, new double[] { isLocal ? 0.0 : 1.0 });
 			outVariogramParams.put(4, new double[] { isTrend ? 0.0 : 1.0 });
 			outVariogramParams.put(5, new double[] { getVariogramCode(modelName) });
+			outVariogramParams.put(6, new double[] { trendIntercept });
+			outVariogramParams.put(7, new double[] { trendSlope });
 		} else {
-			outVariogramParams = new HashMap<Integer, double[]>();
-			outVariogramParams.put(0, new double[] { HMConstants.doubleNovalue });
-			outVariogramParams.put(1, new double[] { HMConstants.doubleNovalue });
-			outVariogramParams.put(2, new double[] { HMConstants.doubleNovalue });
-			outVariogramParams.put(3, new double[] { HMConstants.doubleNovalue });
-			outVariogramParams.put(4, new double[] { HMConstants.doubleNovalue });
-			outVariogramParams.put(5, new double[] { HMConstants.doubleNovalue });
+			for (int i = 0; i <= 7; i++) {
+				outVariogramParams.put(i, new double[] { HMConstants.doubleNovalue });
+			}
 		}
 		return outVariogramParams;
 	}
 
-	public static String[] availableTheorethicalVariogra = new String[] { "exponential", "linear", "power",
-			"spherical" };
-
-	public final static int getVariogramCode(String name) {
-		for (int i = 0; i < availableTheorethicalVariogra.length; i++) {
-			if (availableTheorethicalVariogra[i] == name) {
+	/**
+	 * Retrieves the variogram code corresponding to a given model name.
+	 * 
+	 * @param name The model name.
+	 * @return The variogram code, or -9999 if not found.
+	 */
+	public static int getVariogramCode(String name) {
+		for (int i = 0; i < AVAILABLE_THEORETICAL_VARIOGRAMS.length; i++) {
+			if (AVAILABLE_THEORETICAL_VARIOGRAMS[i].equals(name)) {
 				return i;
 			}
 		}
 		return -9999;
 	}
 
+	/**
+	 * Retrieves the variogram type based on an index.
+	 * 
+	 * @param d The index.
+	 * @return The corresponding variogram type, or "unknown" if index is out of
+	 *         range.
+	 */
 	public static String getVariogramType(double d) {
-		return availableTheorethicalVariogra[(int) d];
+		int index = (int) d;
+		return VariogramParameters.getVariogramType(index);
 	}
+
+	/**
+	 * Retrieves the variogram type based on an index.
+	 * 
+	 * @param d The index.
+	 * @return The corresponding variogram type, or "unknown" if index is out of
+	 *         range.
+	 */
+	public static String getVariogramType(int index) {
+		if (index >= 0 && index < AVAILABLE_THEORETICAL_VARIOGRAMS.length) {
+			return AVAILABLE_THEORETICAL_VARIOGRAMS[index];
+		}
+		return "unknown";
+	}
+
+	/**
+	 * Checks if the variogram parameters are valid.
+	 * 
+	 * @return true if valid, false otherwise.
+	 */
 
 	public boolean isValid() {
 		return nugget >= 0 && range >= 0 && sill >= 0 && modelName != null;
 	}
+
+	public void setTrendIntercept(double trendIntercept) {
+		this.trendIntercept = trendIntercept;
+	}
+
+	public void setTrendSlope(double trendSlope) {
+		this.trendSlope = trendSlope;
+	}
+	
 }
+
+
+

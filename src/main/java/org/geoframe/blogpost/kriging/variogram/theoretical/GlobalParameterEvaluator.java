@@ -277,10 +277,8 @@ public class GlobalParameterEvaluator {
 			vEvaluator.n = n;
 
 			vEvaluator.proces();
-			vpGlobal = new VariogramParameters(vEvaluator.outSemivariogramType, vEvaluator.nugget, vEvaluator.range,
-					vEvaluator.sill);
-			vpGlobal.setIsLocal(false);
-			vpGlobal.setIsTrend(false);
+			vpGlobal = new VariogramParameters.Builder(vEvaluator.outSemivariogramType, vEvaluator.nugget, vEvaluator.range,
+					vEvaluator.sill).setLocal(false).setTrend(false).build();
 			pm.message("Global value for nugget: " + vpGlobal.getNugget() + " sill:" + vpGlobal.getSill() + " range: "
 					+ vpGlobal.getRange() + "  semivariogram type:" + vpGlobal.getModelName());
 
@@ -305,10 +303,8 @@ public class GlobalParameterEvaluator {
 					vEvaluator.y = varianceDeTrended;
 					vEvaluator.n = nDeTrended;
 					vEvaluator.proces();
-					vpGlobalDetrended = new VariogramParameters(vEvaluator.outSemivariogramType, vEvaluator.nugget,
-							vEvaluator.range, vEvaluator.sill);
-					vpGlobalDetrended.setIsLocal(false);
-					vpGlobalDetrended.setIsTrend(true);
+					vpGlobalDetrended = new VariogramParameters.Builder(vEvaluator.outSemivariogramType, vEvaluator.nugget,
+							vEvaluator.range, vEvaluator.sill).setLocal(false).setTrend(true).build();
 					pm.message("Global value with TREND for nugget: " + vpGlobalDetrended.getNugget() + " sill:"
 							+ vpGlobalDetrended.getSill() + " range: " + vpGlobalDetrended.getRange()
 							+ "  semivariogram type:" + vpGlobalDetrended.getModelName());

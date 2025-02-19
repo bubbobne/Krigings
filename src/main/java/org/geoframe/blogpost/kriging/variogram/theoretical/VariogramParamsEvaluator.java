@@ -92,7 +92,7 @@ public class VariogramParamsEvaluator {
 			if (pSemivariogramType != null) {
 				variogramType = new String[] { pSemivariogramType };
 			} else {
-				variogramType = VariogramParameters.availableTheorethicalVariogra;
+				variogramType = VariogramParameters.AVAILABLE_THEORETICAL_VARIOGRAMS;
 			}
 
 			performEvaluation(variogramType, points);
