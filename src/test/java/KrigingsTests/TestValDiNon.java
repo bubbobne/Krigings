@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.geoframe.blogpost.kriging.utilities.Kriging;
+import org.geoframe.blogpost.kriging.pointcase.Kriging;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.feature.SchemaException;
 import org.geotools.filter.text.cql2.CQL;

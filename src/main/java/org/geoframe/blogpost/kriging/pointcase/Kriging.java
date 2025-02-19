@@ -26,6 +26,7 @@ import java.util.Set;
 
 import org.geoframe.blogpost.kriging.linearsystemsolver.SimpleLinearSystemSolverFactory;
 import org.geoframe.blogpost.kriging.primarylocation.ResidualsEvaluator;
+import org.geoframe.blogpost.kriging.primarylocation.StationProcessor;
 import org.geoframe.blogpost.kriging.primarylocation.StationsSelection;
 import org.geoframe.blogpost.kriging.utilities.Utility;
 import org.geoframe.blogpost.kriging.variogram.theoretical.GlobalParameterEvaluator;
@@ -39,6 +40,7 @@ import org.hortonmachine.gears.libs.modules.HMModel;
 import org.hortonmachine.gears.libs.monitor.IHMProgressMonitor;
 import org.hortonmachine.gears.libs.monitor.LogProgressMonitor;
 import org.hortonmachine.gears.utils.math.matrixes.ColumnVector;
+import org.hortonmachine.gears.utils.math.matrixes.MatrixException;
 import org.hortonmachine.hmachine.i18n.HortonMessageHandler;
 import org.locationtech.jts.geom.Coordinate;
 
@@ -225,45 +227,25 @@ public class Kriging extends HMModel {
 	private VariogramParameters vpGlobalTrend;
 
 	/**
-	 * Executing ordinary kriging.
-	 * <p>
-	 * <li>Verify if the parameters are correct.
-	 * <li>Calculating the matrix of the covariance (a).
-	 * <li>For each point to interpolated, evalutate the know term vector (b) and
-	 * solve the system (a x)=b where x is the weight.
-	 * </p>
+	 * Executes the Ordinary Kriging algorithm following these steps: 1. Input
+	 * verification and variogram parameter setup. 2. Station selection based on
+	 * distance and other criteria. 3. Calculation of the covariance matrix and the
+	 * known terms vector. 4. Solving the linear system to obtain the weights. 5.
+	 * Computing the interpolated value, applying the trend if detrending is
+	 * enabled. 6. Final validation and storage of the results.
 	 *
-	 * @throws Exception the exception
+	 * @throws Exception if any error occurs during the kriging execution.
 	 */
 
 	@Execute
 	public void executeKriging() throws Exception {
-		VariogramParameters vp = new VariogramParameters(pSemivariogramType, nugget, range, sill);
-		vp.setIsLocal(false);
-		vp.setIsTrend(doDetrended);
-
-		if (step == 0) {
-			try {
-				verifyInput();
-				if (!vp.isValid()) {
-					this.createDefaulParams();
-				}
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				pm.errorMessage(e.toString());
-			}
-		}
-		step = step + 1;
-
+		// Initialization and verification
+		VariogramParameters vp = initializeKrigingParameters();
+		// Extract interpolation points from input feature collection
 		LinkedHashMap<Integer, Coordinate> pointsToInterpolateId2Coordinates = null;
-
 		pointsToInterpolateId2Coordinates = Utility.getCoordinate(inInterpolate, fInterpolateid, fPointZ, pm, msg);
-
 		Set<Integer> pointsToInterpolateIdSet = pointsToInterpolateId2Coordinates.keySet();
 		Iterator<Integer> idIterator = pointsToInterpolateIdSet.iterator();
-
-		int j = 0;
-
 		double[] result = new double[pointsToInterpolateId2Coordinates.size()];
 		int[] idArray = new int[pointsToInterpolateId2Coordinates.size()];
 
@@ -273,16 +255,132 @@ public class Kriging extends HMModel {
 		 * stations with zero values, station in a define neighborhood or within a max
 		 * distance from the considered point.
 		 */
-		StationsSelection stations = new StationsSelection();
-		double[] xStations = null, yStations = null, zStations = null, hResiduals = null;
+		StationsSelection stations = this.createAndConfigureStationSelection();
+		determineVariogram(vp, stations);
+		StationProcessor sp = new StationProcessor(stations);
+		if (maxdist == 0 && inNumCloserStations == 0) {
+			sp.updateForCoordinate(null, inData, 0, 0, doDetrended);
+		}
+		int j = 0;
+		while (idIterator.hasNext()) {
+			id = idIterator.next();
+			idArray[j] = id;
+			double[] xStations = null, yStations = null, zStations = null, hResiduals = null;
+			Coordinate coordinate = (Coordinate) pointsToInterpolateId2Coordinates.get(id);
+			if (maxdist > 0 || inNumCloserStations > 0) {
+				sp.updateForCoordinate(coordinate, inData, inNumCloserStations, maxdist, doDetrended);
+			}
+			double trendIntercept = sp.getTrendIntercept();
+			double trendCoeff = sp.getTrendCoeff();
+			if (trendCoeff == 0 && trendIntercept == 0 && variogramParameters.getIsTrend()) {
+				variogramParameters = vpGlobal;
+			}
 
-		stations.inStations = inStations;
-		stations.maxdist = maxdist;
-		stations.fStationsid = fStationsid;
-		stations.fStationsZ = fStationsZ;
-		stations.doLogarithmic = doLogarithmic;
-		stations.doIncludezero = doIncludeZero;
+			int n1 = sp.getCount();
+			boolean areAllEquals = sp.areAllEquals();
+			double interpolatedValue = 0;
 
+			// zStations[n1] = Double.NaN;
+			if (n1 != 0) {
+
+				if (!areAllEquals && n1 > 1) {
+
+					interpolatedValue = intepolateValue(sp,coordinate);
+					// pm.worked(1);
+				} else if (n1 == 1 || areAllEquals) {
+
+					interpolatedValue = hResiduals[0];
+					// pm.message(msg.message("kriging.setequalsvalue"));
+					// pm.beginTask(msg.message("kriging.working"),
+					// pointsToInterpolateId2Coordinates.size());
+					n1 = 0;
+					// pm.worked(1);
+				}
+
+				// pm.done();
+
+			} else {
+
+				pm.errorMessage("No value for this time step");
+
+				interpolatedValue = inData.values().iterator().next()[0];
+
+			}
+			result[j] = postProcessResult(interpolatedValue);
+			j++;
+		}
+		storeResult(result, idArray);
+
+	}
+
+	private double intepolateValue(StationProcessor sp, Coordinate coordinate) throws MatrixException {
+		double interpolatedValue;
+		double[] xStations = sp.getXStations();
+		double[] yStations = sp.getYStations();
+		double[] zStations = sp.getZStations();
+		double[] hResiduals = sp.getHResiduals();
+		double trendCoeff = sp.getTrendCoeff();
+		double trendIntercept = sp.getTrendIntercept();
+		int n1 = sp.getCount();
+		xStations[n1] = coordinate.x;
+		yStations[n1] = coordinate.y;
+		zStations[n1] = coordinate.z;
+		// pm.beginTask(msg.message("kriging.working"),
+		// pointsToInterpolateId2Coordinates.size());
+
+		double h0 = 0.0;
+
+		/*
+		 * calculating the covariance matrix.
+		 */
+		double[][] covarianceMatrix = covMatrixCalculating(xStations, yStations, zStations, n1);
+
+		double[] knownTerm = knownTermsCalculation(xStations, yStations, zStations, n1);
+
+		/*
+		 * solve the linear system, where the result is the weight
+		 * (moltiplicativeFactor).
+		 */
+		ColumnVector solution = SimpleLinearSystemSolverFactory.solve(knownTerm, covarianceMatrix,
+				linearSystemSolverType);
+
+		double[] moltiplicativeFactor = solution.copyValues1D();
+		double sum = 0;
+		for (int k = 0; k < n1; k++) {
+			h0 = h0 + moltiplicativeFactor[k] * hResiduals[k];
+
+			// sum is computed to check that
+			// the sum of all the weights is 1
+			sum = sum + moltiplicativeFactor[k];
+
+		}
+
+		// System.out.println(doDetrended);
+		if (doDetrended) {
+			double trend = coordinate.z * trendCoeff + trendIntercept;
+			h0 = h0 + trend;
+		}
+		interpolatedValue = h0;
+
+		if (Math.abs(sum - 1) >= TOLL) {
+			throw new ModelsRuntimeException("Error in the coffeicients calculation", this.getClass().getSimpleName());
+		}
+		return interpolatedValue;
+	}
+
+	private double postProcessResult(double interpolatedValue) {
+		if (!isNovalue(interpolatedValue)) {
+			if (doLogarithmic) {
+				interpolatedValue = Utility.getInverseLog(interpolatedValue);
+			}
+			if (boundedToZero && interpolatedValue < 0) {
+				interpolatedValue = 0;
+			}
+		}
+		return interpolatedValue;
+	}
+
+	private void determineVariogram(VariogramParameters vp, StationsSelection stations) {
 		if (!vp.isValid() && inTheoreticalVariogram == null) {
 			stations.inNumCloserStations = 0;
 			stations.inData = inData;
@@ -294,9 +392,10 @@ public class Kriging extends HMModel {
 
 		} else {
 			if (inTheoreticalVariogram != null && inTheoreticalVariogram.get(0)[0] != -9999) {
-				variogramParameters = new VariogramParameters(inTheoreticalVariogram.get(5)[0],
+				variogramParameters = new VariogramParameters.Builder(
+						VariogramParameters.getVariogramType(inTheoreticalVariogram.get(5)[0]),
 						inTheoreticalVariogram.get(0)[0], inTheoreticalVariogram.get(2)[0],
-						inTheoreticalVariogram.get(1)[0]);
+						inTheoreticalVariogram.get(1)[0]).build();
 			} else if (vp.isValid()) {
 				variogramParameters = vp;
 			} else if (doDetrended && vpGlobalTrend.isValid()) {
@@ -305,146 +404,43 @@ public class Kriging extends HMModel {
 				variogramParameters = vpGlobal;
 			}
 		}
-
-		while (idIterator.hasNext()) {
-			double sum = 0.;
-			id = idIterator.next();
-			idArray[j] = id;
-			int n1 = 0;
-			double trendCoeff = 0;
-			double trendIntercept = 0;
-			Coordinate coordinate = (Coordinate) pointsToInterpolateId2Coordinates.get(id);
-			if (maxdist > 0 || inNumCloserStations > 0) {
-				if (inNumCloserStations > 0) {
-					stations.inNumCloserStations = inNumCloserStations;
-				}
-				if (maxdist > 0) {
-					stations.maxdist = maxdist;
-
-				}
-				stations.idx = coordinate.x;
-				stations.idy = coordinate.y;
-				stations.doIncludezero = doIncludeZero;
-				stations.doLogarithmic = doLogarithmic;
-				stations.inData = inData;
-
-				stations.execute();
-				xStations = stations.xStationInitialSet;
-				yStations = stations.yStationInitialSet;
-				zStations = stations.zStationInitialSet;
-				double[] hStations = stations.hStationInitialSet;
-				n1 = xStations.length - 1;
-				ResidualsEvaluator residualsEvaluator = getResidualsEvaluator(Arrays.copyOfRange(zStations, 0, n1),
-						Arrays.copyOfRange(hStations, 0, n1));
-				hResiduals = residualsEvaluator.hResiduals;
-				trendCoeff = residualsEvaluator.trend_coefficient;
-				trendIntercept = residualsEvaluator.trend_intercept;
-				if (trendCoeff == 0 && trendIntercept == 0 && variogramParameters.getIsTrend()) {
-					variogramParameters = vpGlobal;
-				}
-			}
-
-			xStations[n1] = coordinate.x;
-			yStations[n1] = coordinate.y;
-			// zStations[n1] = Double.NaN;
-			boolean areAllEquals = stations.areAllEquals;
-
-			if (n1 != 0) {
-
-				if (!areAllEquals && n1 > 1) {
-
-					// pm.beginTask(msg.message("kriging.working"),
-					// pointsToInterpolateId2Coordinates.size());
-
-					double h0 = 0.0;
-
-					/*
-					 * calculating the covariance matrix.
-					 */
-					double[][] covarianceMatrix = covMatrixCalculating(xStations, yStations, zStations, n1);
-
-					double[] knownTerm = knownTermsCalculation(xStations, yStations, zStations, n1);
-
-					/*
-					 * solve the linear system, where the result is the weight
-					 * (moltiplicativeFactor).
-					 */
-					ColumnVector solution = SimpleLinearSystemSolverFactory.solve(knownTerm, covarianceMatrix,
-							linearSystemSolverType);
-
-					double[] moltiplicativeFactor = solution.copyValues1D();
-
-					for (int k = 0; k < n1; k++) {
-						h0 = h0 + moltiplicativeFactor[k] * hResiduals[k];
-
-						// sum is computed to check that
-						// the sum of all the weights is 1
-						sum = sum + moltiplicativeFactor[k];
-
-					}
-
-					// System.out.println(doDetrended);
-					if (doDetrended) {
-						double trend = coordinate.z * trendCoeff + trendIntercept;
-						h0 = h0 + trend;
-					}
-					result[j] = h0;
-					j++;
-
-					if (Math.abs(sum - 1) >= TOLL) {
-						throw new ModelsRuntimeException("Error in the coffeicients calculation",
-								this.getClass().getSimpleName());
-					}
-					// pm.worked(1);
-				} else if (n1 == 1 || areAllEquals) {
-
-					double tmp = hResiduals[0];
-					// pm.message(msg.message("kriging.setequalsvalue"));
-					// pm.beginTask(msg.message("kriging.working"),
-					// pointsToInterpolateId2Coordinates.size());
-					result[j] = tmp;
-					j++;
-					n1 = 0;
-					// pm.worked(1);
-
-				}
-
-				// pm.done();
-
-			} else {
-
-				pm.errorMessage("No value for this time step");
-
-				double[] value = inData.values().iterator().next();
-				result[j] = value[0];
-				j++;
-
-			}
-			if (!isNovalue(result[j - 1])) {
-				if (doLogarithmic) {
-					result[j - 1] = Utility.getInverseLog(result[j - 1]);
-				}
-				if (boundedToZero && result[j - 1] < 0) {
-					result[j - 1] = 0;
-				}
-			}
-		}
-		storeResult(result, idArray);
-
-	}
-
-	private ResidualsEvaluator getResidualsEvaluator(double[] zStations, double[] hStations) {
-		ResidualsEvaluator residualsEvaluator = new ResidualsEvaluator();
-		residualsEvaluator.doDetrended = this.doDetrended;
-		residualsEvaluator.hStations = hStations;
-		residualsEvaluator.zStations = zStations;
-		residualsEvaluator.regressionOrder = Kriging.REGRESSION_ORDER;
-		residualsEvaluator.process();
-		return residualsEvaluator;
 	}
 
 	/**
-	 * Verify the input of the model.
+	 * Initializes kriging parameters and verifies input.
+	 */
+	private VariogramParameters initializeKrigingParameters() {
+		VariogramParameters vp = new VariogramParameters.Builder(pSemivariogramType, nugget, range, sill)
+				.setLocal(false).setTrend(doDetrended).build();
+		if (step == 0) {
+			try {
+				verifyInput();
+				if (!vp.isValid()) {
+					this.createDefaulParams();
+				}
+			} catch (Exception e) {
+				pm.errorMessage("Error during input verification: " + e.toString());
+			}
+		}
+		step = step + 1;
+		return vp;
+	}
+
+	private StationsSelection createAndConfigureStationSelection() {
+		StationsSelection stations = new StationsSelection();
+		stations.inStations = inStations;
+		stations.maxdist = maxdist;
+		stations.fStationsid = fStationsid;
+		stations.fStationsZ = fStationsZ;
+		stations.doLogarithmic = doLogarithmic;
+		stations.doIncludezero = doIncludeZero;
+		return stations;
+
+	}
+
+	/**
+	 * Validates the essential inputs for the kriging model. In detrended mode, both
+	 * station and interpolation point elevation fields must be provided.
 	 */
 	private void verifyInput() {
 		if (inData == null || inStations == null) {
@@ -471,10 +467,10 @@ public class Kriging extends HMModel {
 	}
 
 	private void createDefaulParams() throws Exception {
-		vpGlobal = new VariogramParameters(globalVariogramType, pNugGlobal, pAGlobal, pSGlobal);
+		vpGlobal = new VariogramParameters.Builder(globalVariogramType, pNugGlobal, pAGlobal, pSGlobal).build();
 
-		vpGlobalTrend = new VariogramParameters(globalDetrendedVariogramType, pNugGlobalDeTrended, pAGlobalDeTrended,
-				pSGlobalDeTrended);
+		vpGlobalTrend = new VariogramParameters.Builder(globalDetrendedVariogramType, pNugGlobalDeTrended,
+				pAGlobalDeTrended, pSGlobalDeTrended).build();
 		vpGlobal.setIsLocal(false);
 		vpGlobal.setIsTrend(false);
 		vpGlobalTrend.setIsLocal(false);
@@ -518,7 +514,7 @@ public class Kriging extends HMModel {
 			vpGlobal = gParam.getGlobalVariogramParameters();
 			vpGlobalTrend = gParam.getGlobalVariogramParametersDeTrended();
 		}
-		if ((nugget == 0 && range == 0 && nugget == 0)
+		if ((nugget == 0 && range == 0 && sill == 0)
 				&& (!vpGlobal.isValid() || !(doDetrended && vpGlobalTrend.isValid()))) {
 			pm.message("Warning: nugget,range and sill will be evaluate only at each timestep");
 		}
@@ -542,7 +538,9 @@ public class Kriging extends HMModel {
 	}
 
 	/**
-	 * Covariance matrix calculation.
+	 * Calculates the covariance matrix using the theoretical variogram. Each
+	 * element [i][j] is computed via TheoreticalVariogram.calculateVGMxyz, which
+	 * measures the spatial dissimilarity between points.
 	 *
 	 * @param x the x coordinates.
 	 * @param y the y coordinates.
@@ -577,7 +575,6 @@ public class Kriging extends HMModel {
 	 * @return the double[] vector of the known terms
 	 */
 	private double[] knownTermsCalculation(double[] x, double[] y, double[] z, int n) {
-
 		// known terms vector
 		double[] gamma = new double[n + 1];
 		for (int i = 0; i < n; i++) {
@@ -585,7 +582,6 @@ public class Kriging extends HMModel {
 		}
 		gamma[n] = 1.0;
 		return gamma;
-
 	}
 
 	/**
