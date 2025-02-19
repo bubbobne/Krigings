@@ -86,7 +86,7 @@ public class TheoreticalVariogram extends HMModel {
 	@Description("the output hashmap withe the semivariance")
 	@Out
 	public double[] observation;
-
+	
 	@Description("the output hashmap withe the semivariance")
 	@Out
 	public HashMap<Integer, double[]> outHMtheoreticalVariogram = new HashMap<Integer, double[]>();;

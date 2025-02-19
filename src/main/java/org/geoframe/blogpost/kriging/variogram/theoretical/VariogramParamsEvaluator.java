@@ -11,10 +11,26 @@ import org.geoframe.blogpost.kriging.variogram.theoretical.curvefitter.Variogram
 import org.geoframe.blogpost.kriging.variogram.theoretical.model.SimpleModelFactory;
 import org.hortonmachine.gears.libs.modules.HMConstants;
 
+import oms3.annotations.Author;
+import oms3.annotations.Description;
+import oms3.annotations.Documentation;
 import oms3.annotations.Execute;
 import oms3.annotations.In;
+import oms3.annotations.Keywords;
+import oms3.annotations.Label;
+import oms3.annotations.License;
+import oms3.annotations.Name;
 import oms3.annotations.Out;
-
+import oms3.annotations.Status;
+@Description("Teorethical semivariogram evaluator.")
+@Documentation("vgm.html")
+@Author(name = "Daniele Andreis", contact = " http://www.ing.unitn.it/dica/hp/?user=rigon")
+@Keywords("Kriging, Hydrology")
+@Label(HMConstants.STATISTICS)
+@Name("VariogramParametersEvaluator")
+@Status(Status.EXPERIMENTAL)
+@License("General Public License Version 3 (GPLv3)")
+@SuppressWarnings("nls")
 public class VariogramParamsEvaluator {
 
 	private static final double TRESHOLD = 0.5;
@@ -100,7 +116,7 @@ public class VariogramParamsEvaluator {
 			// System.out.println("calculated value " + nugget + " sill " + sill + " range "
 			// + range);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
+			// TODO Auto-generated catch block    private final IVariogramFitter variogramFitter;
 			System.out.println(e.getMessage());
 			isFitGood = false;
 		}

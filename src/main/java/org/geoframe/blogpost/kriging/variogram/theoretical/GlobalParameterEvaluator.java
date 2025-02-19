@@ -68,24 +68,6 @@ public class GlobalParameterEvaluator {
 	@In
 	public boolean doLogarithmic = false;
 
-//	@Out
-//	public double pAGlobal;
-//	@Out
-//
-//	public double pSGlogal;
-//
-//	@Out
-//	public double pNugGlogal;
-//
-//	@Out
-//	public double pAGlobalDeTrended;
-//
-//	@Out
-//	public double pSGlogalDeTrended;
-//
-//	@Out
-//	public double pNugGlogalDeTrended;
-
 	@Out
 	public StationsSelection stations;
 	@Description("The Experimental Variogram.")
@@ -98,8 +80,6 @@ public class GlobalParameterEvaluator {
 
 	@In
 	public String fileNoValue = "-9999";
-//	public String outGlobalVariogramType;
-//	public String outGlobalDetrendedVariogramType;
 
 	private VariogramParameters vpGlobal = null;
 	private VariogramParameters vpGlobalDetrended = null;

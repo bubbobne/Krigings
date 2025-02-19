@@ -87,30 +87,12 @@ public class VariogramParameters {
 	}
 
 	/**
-	 * Sets whether a trend should be used.
-	 * 
-	 * @param isTrend true to enable trend, false otherwise.
-	 */
-	public void setIsTrend(boolean isTrend) {
-		this.isTrend = isTrend;
-	}
-
-	/**
 	 * Gets whether the variogram is local.
 	 * 
 	 * @return true if local, false otherwise.
 	 */
 	public boolean getIsLocal() {
 		return isLocal;
-	}
-
-	/**
-	 * Sets whether the variogram should be local.
-	 * 
-	 * @param isLocal true to set local, false otherwise.
-	 */
-	public void setIsLocal(boolean isLocal) {
-		this.isLocal = isLocal;
 	}
 
 	public double getNugget() {
@@ -204,13 +186,6 @@ public class VariogramParameters {
 		return nugget >= 0 && range >= 0 && sill >= 0 && modelName != null;
 	}
 
-	public void setTrendIntercept(double trendIntercept) {
-		this.trendIntercept = trendIntercept;
-	}
-
-	public void setTrendSlope(double trendSlope) {
-		this.trendSlope = trendSlope;
-	}
 	
 }
 

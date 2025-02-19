@@ -37,7 +37,6 @@ public class VariogramParametersCalculator {
 	public VariogramParameters execute() {
 		if (!stations.areAllEquals && stations.n1 > 2) {
 			int n1 = stations.hStationInitialSet.length - 1;
-			n1 = stations.hStationInitialSet.length - 1;
 			ResidualsEvaluator rEvaluator = new ResidualsEvaluator();
 			rEvaluator.doDetrended = doDetrend;
 			rEvaluator.hStations = Arrays.copyOfRange(stations.hStationInitialSet, 0, n1);
@@ -56,11 +55,9 @@ public class VariogramParametersCalculator {
 			if (variogramOk || (!globalVP.isValid()) || (doDetrend && globalDeTrendedVP.isValid())) {
 				VariogramParameters myVariogramParam = new VariogramParameters.Builder(
 						variogramParamsEvaluator.outSemivariogramType, variogramParamsEvaluator.nugget,
-						variogramParamsEvaluator.range, variogramParamsEvaluator.sill).build();
-				myVariogramParam.setIsLocal(true);
-				myVariogramParam.setIsTrend(rEvaluator.isPValueOk);
-				myVariogramParam.setTrendIntercept(rEvaluator.trend_intercept);
-				myVariogramParam.setTrendSlope(rEvaluator.trend_coefficient);
+						variogramParamsEvaluator.range, variogramParamsEvaluator.sill).setLocal(true)
+						.setTrend(rEvaluator.isPValueOk).setTrendIntercept(rEvaluator.trendIntercept)
+						.setTrendSlope(rEvaluator.trendCoefficient).build();
 
 				return myVariogramParam;
 			}

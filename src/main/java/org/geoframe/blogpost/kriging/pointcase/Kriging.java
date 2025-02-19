@@ -285,7 +285,7 @@ public class Kriging extends HMModel {
 
 				if (!areAllEquals && n1 > 1) {
 
-					interpolatedValue = intepolateValue(sp,coordinate);
+					interpolatedValue = intepolateValue(sp, coordinate);
 					// pm.worked(1);
 				} else if (n1 == 1 || areAllEquals) {
 
@@ -467,14 +467,10 @@ public class Kriging extends HMModel {
 	}
 
 	private void createDefaulParams() throws Exception {
-		vpGlobal = new VariogramParameters.Builder(globalVariogramType, pNugGlobal, pAGlobal, pSGlobal).build();
-
+		vpGlobal = new VariogramParameters.Builder(globalVariogramType, pNugGlobal, pAGlobal, pSGlobal).setLocal(false)
+				.setTrend(false).build();
 		vpGlobalTrend = new VariogramParameters.Builder(globalDetrendedVariogramType, pNugGlobalDeTrended,
-				pAGlobalDeTrended, pSGlobalDeTrended).build();
-		vpGlobal.setIsLocal(false);
-		vpGlobal.setIsTrend(false);
-		vpGlobalTrend.setIsLocal(false);
-		vpGlobalTrend.setIsTrend(true);
+				pAGlobalDeTrended, pSGlobalDeTrended).setLocal(false).setTrend(true).build();
 		boolean noEvaluationGlobalParams = (inHValuesPath == null || inHValuesPath.isEmpty());
 
 		if (noEvaluationGlobalParams && !vpGlobal.isValid()) {

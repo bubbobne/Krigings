@@ -84,6 +84,7 @@ public class VariogramFitter extends AbstractCurveFitter {
 
 	}
 
+	@Override
 	public double[] fit(Collection<WeightedObservedPoint> points) {
 		double[] optimalValues = null;
 		LevenbergMarquardtOptimizer lmo = new LevenbergMarquardtOptimizer();

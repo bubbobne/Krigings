@@ -54,8 +54,8 @@ public class StationProcessor {
 					Arrays.copyOfRange(this.zStations, 0, this.count),
 					Arrays.copyOfRange(this.hStations, 0, this.count), doDetrended);
 			this.hResiduals = residualsEvaluator.hResiduals;
-			this.trendCoeff = residualsEvaluator.trend_coefficient;
-			this.trendIntercept = residualsEvaluator.trend_intercept;
+			this.trendCoeff = residualsEvaluator.trendCoefficient;
+			this.trendIntercept = residualsEvaluator.trendIntercept;
 		}
 	}
 
