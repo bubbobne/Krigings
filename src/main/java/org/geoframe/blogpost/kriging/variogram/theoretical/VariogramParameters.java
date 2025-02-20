@@ -22,59 +22,57 @@ public class VariogramParameters {
 	private double trendIntercept = 0;
 	private double trendSlope = 0;
 
-
-
 	public static class Builder {
-	    private String modelName;
-	    private double nugget;
-	    private double range;
-	    private double sill;
-	    private boolean isTrend = false;
-	    private boolean isLocal = false;
-	    private double trendIntercept = 0;
-	    private double trendSlope = 0;
+		private String modelName;
+		private double nugget;
+		private double range;
+		private double sill;
+		private boolean isTrend = false;
+		private boolean isLocal = false;
+		private double trendIntercept = 0;
+		private double trendSlope = 0;
 
-	    public Builder(String modelName, double nugget, double range, double sill) {
-	        this.modelName = modelName;
-	        this.nugget = nugget;
-	        this.range = range;
-	        this.sill = sill;
-	    }
+		public Builder(String modelName, double nugget, double range, double sill) {
+			this.modelName = modelName;
+			this.nugget = nugget;
+			this.range = range;
+			this.sill = sill;
+		}
 
-	    public Builder setTrend(boolean isTrend) {
-	        this.isTrend = isTrend;
-	        return this;
-	    }
+		public Builder setTrend(boolean isTrend) {
+			this.isTrend = isTrend;
+			return this;
+		}
 
-	    public Builder setLocal(boolean isLocal) {
-	        this.isLocal = isLocal;
-	        return this;
-	    }
+		public Builder setLocal(boolean isLocal) {
+			this.isLocal = isLocal;
+			return this;
+		}
 
-	    public Builder setTrendIntercept(double trendIntercept) {
-	        this.trendIntercept = trendIntercept;
-	        return this;
-	    }
+		public Builder setTrendIntercept(double trendIntercept) {
+			this.trendIntercept = trendIntercept;
+			return this;
+		}
 
-	    public Builder setTrendSlope(double trendSlope) {
-	        this.trendSlope = trendSlope;
-	        return this;
-	    }
+		public Builder setTrendSlope(double trendSlope) {
+			this.trendSlope = trendSlope;
+			return this;
+		}
 
-	    public VariogramParameters build() {
-	        return new VariogramParameters(this);
-	    }
+		public VariogramParameters build() {
+			return new VariogramParameters(this);
+		}
 	}
 
 	private VariogramParameters(Builder builder) {
-	    this.modelName = builder.modelName;
-	    this.nugget = builder.nugget;
-	    this.range = builder.range;
-	    this.sill = builder.sill;
-	    this.isTrend = builder.isTrend;
-	    this.isLocal = builder.isLocal;
-	    this.trendIntercept = builder.trendIntercept;
-	    this.trendSlope = builder.trendSlope;
+		this.modelName = builder.modelName;
+		this.nugget = builder.nugget;
+		this.range = builder.range;
+		this.sill = builder.sill;
+		this.isTrend = builder.isTrend;
+		this.isLocal = builder.isLocal;
+		this.trendIntercept = builder.trendIntercept;
+		this.trendSlope = builder.trendSlope;
 	}
 
 	/**
@@ -109,6 +107,14 @@ public class VariogramParameters {
 
 	public String getModelName() {
 		return modelName;
+	}
+
+	public double getIntercept() {
+		return this.trendIntercept;
+	}
+
+	public double getSlope() {
+		return this.trendSlope;
 	}
 
 	/**
@@ -186,8 +192,4 @@ public class VariogramParameters {
 		return nugget >= 0 && range >= 0 && sill >= 0 && modelName != null;
 	}
 
-	
 }
-
-
-

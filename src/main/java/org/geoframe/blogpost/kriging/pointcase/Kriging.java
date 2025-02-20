@@ -18,11 +18,15 @@ package org.geoframe.blogpost.kriging.pointcase;
 
 import static org.hortonmachine.gears.libs.modules.HMConstants.isNovalue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.geoframe.blogpost.kriging.linearsystemsolver.SimpleLinearSystemSolverFactory;
 import org.geoframe.blogpost.kriging.primarylocation.ResidualsEvaluator;
@@ -192,22 +196,6 @@ public class Kriging extends HMModel {
 	int id;
 
 	@In
-	public double pAGlobal;
-	@In
-	public double pSGlobal;
-
-	@In
-	public double pNugGlobal;
-
-	@In
-	public double pAGlobalDeTrended;
-
-	@In
-	public double pSGlobalDeTrended;
-
-	@In
-	public double pNugGlobalDeTrended;
-	@In
 	public String fileNoValue = "-9999";
 
 	@In
@@ -215,16 +203,8 @@ public class Kriging extends HMModel {
 
 	@In
 	public int tTimeStep = 60;
-	@In
-	public String globalDetrendedVariogramType;
-	@In
-	public String globalVariogramType;
 
 	private VariogramParameters variogramParameters;
-
-	private VariogramParameters vpGlobal;
-
-	private VariogramParameters vpGlobalTrend;
 
 	/**
 	 * Executes the Ordinary Kriging algorithm following these steps: 1. Input
@@ -257,25 +237,18 @@ public class Kriging extends HMModel {
 		 */
 		StationsSelection stations = this.createAndConfigureStationSelection();
 		determineVariogram(vp, stations);
-		StationProcessor sp = new StationProcessor(stations);
+		StationProcessor sp = new StationProcessor(stations, variogramParameters);
 		if (maxdist == 0 && inNumCloserStations == 0) {
-			sp.updateForCoordinate(null, inData, 0, 0, doDetrended);
+			sp.updateForCoordinate(null, inData, 0, 0);
 		}
 		int j = 0;
 		while (idIterator.hasNext()) {
 			id = idIterator.next();
 			idArray[j] = id;
-			double[] xStations = null, yStations = null, zStations = null, hResiduals = null;
 			Coordinate coordinate = (Coordinate) pointsToInterpolateId2Coordinates.get(id);
 			if (maxdist > 0 || inNumCloserStations > 0) {
-				sp.updateForCoordinate(coordinate, inData, inNumCloserStations, maxdist, doDetrended);
+				sp.updateForCoordinate(coordinate, inData, inNumCloserStations, maxdist);
 			}
-			double trendIntercept = sp.getTrendIntercept();
-			double trendCoeff = sp.getTrendCoeff();
-			if (trendCoeff == 0 && trendIntercept == 0 && variogramParameters.getIsTrend()) {
-				variogramParameters = vpGlobal;
-			}
-
 			int n1 = sp.getCount();
 			boolean areAllEquals = sp.areAllEquals();
 			double interpolatedValue = 0;
@@ -288,8 +261,7 @@ public class Kriging extends HMModel {
 					interpolatedValue = intepolateValue(sp, coordinate);
 					// pm.worked(1);
 				} else if (n1 == 1 || areAllEquals) {
-
-					interpolatedValue = hResiduals[0];
+					interpolatedValue = sp.getHResiduals()[0];
 					// pm.message(msg.message("kriging.setequalsvalue"));
 					// pm.beginTask(msg.message("kriging.working"),
 					// pointsToInterpolateId2Coordinates.size());
@@ -311,6 +283,76 @@ public class Kriging extends HMModel {
 		}
 		storeResult(result, idArray);
 
+	}
+
+	public void executeKrigingParallel() throws Exception {
+		// Initialization and verification (assumed to be thread-safe or immutable)
+		VariogramParameters vp = initializeKrigingParameters();
+		LinkedHashMap<Integer, Coordinate> pointsMap = Utility.getCoordinate(inInterpolate, fInterpolateid, fPointZ, pm,
+				msg);
+		int size = pointsMap.size();
+
+		// Prepare arrays to store results.
+		double[] result = new double[size];
+		int[] idArray = new int[size];
+
+		// Convert the entry set to a list for parallel processing.
+		List<Map.Entry<Integer, Coordinate>> entries = new ArrayList<>(pointsMap.entrySet());
+
+		// Use an AtomicInteger to safely assign indices across parallel tasks.
+		AtomicInteger indexCounter = new AtomicInteger(0);
+
+		entries.parallelStream().forEach(entry -> {
+			int currentIndex = indexCounter.getAndIncrement();
+			int id = entry.getKey();
+			Coordinate coordinate = entry.getValue();
+
+			// Each thread creates its own instance of StationsSelection.
+			StationsSelection stations = createAndConfigureStationSelection();
+			// Variogram parameters might need to be recalculated per thread if mutable.
+			determineVariogram(vp, stations);
+			StationProcessor sp = new StationProcessor(stations, variogramParameters);
+
+			try { // Update the station processor for the current coordinate.
+				if (maxdist > 0 || inNumCloserStations > 0) {
+					sp.updateForCoordinate(coordinate, inData, inNumCloserStations, maxdist);
+				} else {
+					sp.updateForCoordinate(null, inData, 0, 0);
+				}
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			double interpolatedValue;
+			int n1 = sp.getCount();
+			boolean areAllEquals = sp.areAllEquals();
+
+			if (n1 != 0) {
+				if (!areAllEquals && n1 > 1) {
+					try {
+						interpolatedValue = intepolateValue(sp, coordinate);
+					} catch (MatrixException e) {
+						// Handle exception appropriately (e.g., log the error)
+						interpolatedValue = Double.NaN;
+					}
+				} else if (n1 == 1 || areAllEquals) {
+					interpolatedValue = sp.getHResiduals()[0];
+				} else {
+					// Fallback case
+					interpolatedValue = inData.values().iterator().next()[0];
+				}
+			} else {
+				pm.errorMessage("No value for this time step");
+				interpolatedValue = inData.values().iterator().next()[0];
+			}
+
+			// Post-process and store the result.
+			result[currentIndex] = postProcessResult(interpolatedValue);
+			idArray[currentIndex] = id;
+		});
+
+		// Store results after all parallel tasks have completed.
+		storeResult(result, idArray);
 	}
 
 	private double intepolateValue(StationProcessor sp, Coordinate coordinate) throws MatrixException {
@@ -354,10 +396,9 @@ public class Kriging extends HMModel {
 			sum = sum + moltiplicativeFactor[k];
 
 		}
-
 		// System.out.println(doDetrended);
-		if (doDetrended) {
-			double trend = coordinate.z * trendCoeff + trendIntercept;
+		if (sp.getIsTrend()) {
+			double trend = coordinate.z * sp.getTrendCoeff() + sp.getTrendIntercept();
 			h0 = h0 + trend;
 		}
 		interpolatedValue = h0;
@@ -381,29 +422,22 @@ public class Kriging extends HMModel {
 	}
 
 	private void determineVariogram(VariogramParameters vp, StationsSelection stations) {
-		if (!vp.isValid() && inTheoreticalVariogram == null) {
-			stations.inNumCloserStations = 0;
-			stations.inData = inData;
-			VariogramParametersCalculator vpcalCulator = new VariogramParametersCalculator(stations, doDetrended,
-					doIncludeZero);
-			vpcalCulator.setGlobalVp(vpGlobal);
-			vpcalCulator.setGlobalDeTrendedVp(vpGlobalTrend);
-			variogramParameters = vpcalCulator.execute();
 
+		if (inTheoreticalVariogram != null && inTheoreticalVariogram.get(0)[0] != -9999) {
+			variogramParameters = new VariogramParameters.Builder(
+					VariogramParameters.getVariogramType(inTheoreticalVariogram.get(5)[0]),
+					inTheoreticalVariogram.get(0)[0], inTheoreticalVariogram.get(2)[0],
+					inTheoreticalVariogram.get(1)[0]).setLocal(inTheoreticalVariogram.get(3)[0] == 0.0)
+					.setTrend(inTheoreticalVariogram.get(4)[0] == 0.0)
+					.setTrendIntercept(inTheoreticalVariogram.get(6)[0]).setTrendSlope(inTheoreticalVariogram.get(7)[0])
+					.build();
+		} else if (vp.isValid()) {
+			variogramParameters = vp;
 		} else {
-			if (inTheoreticalVariogram != null && inTheoreticalVariogram.get(0)[0] != -9999) {
-				variogramParameters = new VariogramParameters.Builder(
-						VariogramParameters.getVariogramType(inTheoreticalVariogram.get(5)[0]),
-						inTheoreticalVariogram.get(0)[0], inTheoreticalVariogram.get(2)[0],
-						inTheoreticalVariogram.get(1)[0]).build();
-			} else if (vp.isValid()) {
-				variogramParameters = vp;
-			} else if (doDetrended && vpGlobalTrend.isValid()) {
-				variogramParameters = vpGlobalTrend;
-			} else if (vpGlobal.isValid()) {
-				variogramParameters = vpGlobal;
-			}
+			pm.errorMessage("no variogram provided");
 		}
+		;
+
 	}
 
 	/**
@@ -415,9 +449,6 @@ public class Kriging extends HMModel {
 		if (step == 0) {
 			try {
 				verifyInput();
-				if (!vp.isValid()) {
-					this.createDefaulParams();
-				}
 			} catch (Exception e) {
 				pm.errorMessage("Error during input verification: " + e.toString());
 			}
@@ -435,7 +466,6 @@ public class Kriging extends HMModel {
 		stations.doLogarithmic = doLogarithmic;
 		stations.doIncludezero = doIncludeZero;
 		return stations;
-
 	}
 
 	/**
@@ -463,56 +493,6 @@ public class Kriging extends HMModel {
 					"You provide incomplete fixed parameter check: nugget, sill, range or pSemivariogramType");
 		} else {
 
-		}
-	}
-
-	private void createDefaulParams() throws Exception {
-		vpGlobal = new VariogramParameters.Builder(globalVariogramType, pNugGlobal, pAGlobal, pSGlobal).setLocal(false)
-				.setTrend(false).build();
-		vpGlobalTrend = new VariogramParameters.Builder(globalDetrendedVariogramType, pNugGlobalDeTrended,
-				pAGlobalDeTrended, pSGlobalDeTrended).setLocal(false).setTrend(true).build();
-		boolean noEvaluationGlobalParams = (inHValuesPath == null || inHValuesPath.isEmpty());
-
-		if (noEvaluationGlobalParams && !vpGlobal.isValid()) {
-			throw new NullPointerException(
-					"You provide incomplete fixed parameter for global: nugGlobal, sGlobal, rGlobal or globalVariogramType");
-		}
-
-		if (noEvaluationGlobalParams && doDetrended && !vpGlobalTrend.isValid()) {
-			throw new NullPointerException(
-					"You provide incomplete fixed parameter for global de trended: nugGlobal, sGlobal, rGlobal or globalVariogramType");
-		}
-
-		if (!doDetrended) {
-			noEvaluationGlobalParams = noEvaluationGlobalParams || vpGlobal.isValid();
-		} else {
-			noEvaluationGlobalParams = noEvaluationGlobalParams || (vpGlobal.isValid() && vpGlobalTrend.isValid());
-		}
-
-		if (!noEvaluationGlobalParams) {
-
-			GlobalParameterEvaluator gParam = new GlobalParameterEvaluator();
-			gParam.inStations = inStations;
-			gParam.doIncludeZero = doIncludeZero;
-			gParam.maxdist = maxdist;
-			gParam.fStationsid = fStationsid;
-			gParam.fStationsZ = fStationsZ;
-			gParam.doLogarithmic = doLogarithmic;
-			gParam.cutoffDivide = cutoffDivide;
-			gParam.inHValuesPath = this.inHValuesPath;
-			gParam.fileNoValue = fileNoValue;
-			gParam.tStart = tStart;
-			gParam.tTimeStep = tTimeStep;
-			gParam.pSemivariogramType = pSemivariogramType;
-			gParam.doDetrended = doDetrended;
-			gParam.cutoffInput = cutoffInput;
-			gParam.execute();
-			vpGlobal = gParam.getGlobalVariogramParameters();
-			vpGlobalTrend = gParam.getGlobalVariogramParametersDeTrended();
-		}
-		if ((nugget == 0 && range == 0 && sill == 0)
-				&& (!vpGlobal.isValid() || !(doDetrended && vpGlobalTrend.isValid()))) {
-			pm.message("Warning: nugget,range and sill will be evaluate only at each timestep");
 		}
 	}
 

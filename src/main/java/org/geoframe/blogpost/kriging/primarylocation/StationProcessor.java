@@ -1,11 +1,9 @@
 package org.geoframe.blogpost.kriging.primarylocation;
 
-import java.util.Arrays;
 import java.util.HashMap;
 
-import org.geoframe.blogpost.kriging.pointcase.Kriging;
+import org.geoframe.blogpost.kriging.variogram.theoretical.VariogramParameters;
 import org.locationtech.jts.geom.Coordinate;
-
 
 public class StationProcessor {
 	private StationsSelection stations;
@@ -15,26 +13,26 @@ public class StationProcessor {
 	private double[] hStations;
 	private double[] hResiduals;
 	private int count;
-	private double trendCoeff;
-	private double trendIntercept;
 	private boolean areAllEquals;
+	private VariogramParameters vp;
 
-	public StationProcessor(StationsSelection stations) {
+	public StationProcessor(StationsSelection stations, VariogramParameters vp) {
+		this.vp = vp;
 		this.stations = stations;
 	}
-	
+
 	/**
 	 * Execute station selection for the given coordinate.
 	 */
 	public void updateForCoordinate(Coordinate coordinate, HashMap<Integer, double[]> inData, int inNumCloserStations,
-			double maxdist, boolean doDetrended) throws Exception {
+			double maxdist) throws Exception {
 		if (inNumCloserStations > 0) {
 			stations.inNumCloserStations = inNumCloserStations;
 		}
 		if (maxdist > 0) {
 			stations.maxdist = maxdist;
 		}
-		if (coordinate!=null && (maxdist > 0 || inNumCloserStations > 0)) {
+		if (coordinate != null && (maxdist > 0 || inNumCloserStations > 0)) {
 			stations.idx = coordinate.x;
 			stations.idy = coordinate.y;
 		}
@@ -48,15 +46,6 @@ public class StationProcessor {
 		this.count = xStations.length - 1;
 		this.areAllEquals = stations.areAllEquals;
 
-		// Compute residuals and trends if applicable
-		if (this.count > 0) {
-			ResidualsEvaluator residualsEvaluator = getResidualsEvaluator(
-					Arrays.copyOfRange(this.zStations, 0, this.count),
-					Arrays.copyOfRange(this.hStations, 0, this.count), doDetrended);
-			this.hResiduals = residualsEvaluator.hResiduals;
-			this.trendCoeff = residualsEvaluator.trendCoefficient;
-			this.trendIntercept = residualsEvaluator.trendIntercept;
-		}
 	}
 
 	// Getters for the various station data fields
@@ -85,25 +74,19 @@ public class StationProcessor {
 	}
 
 	public double getTrendCoeff() {
-		return trendCoeff;
+		return vp.getSlope();
 	}
 
 	public double getTrendIntercept() {
-		return trendIntercept;
+		return vp.getIntercept();
+	}
+
+	public boolean getIsTrend() {
+		return vp.getIsTrend();
 	}
 
 	public boolean areAllEquals() {
 		return areAllEquals;
-	}
-
-	private ResidualsEvaluator getResidualsEvaluator(double[] zStations, double[] hStations, boolean doDetrended) {
-		ResidualsEvaluator residualsEvaluator = new ResidualsEvaluator();
-		residualsEvaluator.doDetrended = doDetrended;
-		residualsEvaluator.hStations = hStations;
-		residualsEvaluator.zStations = zStations;
-		residualsEvaluator.regressionOrder = Kriging.REGRESSION_ORDER;
-		residualsEvaluator.process();
-		return residualsEvaluator;
 	}
 
 }

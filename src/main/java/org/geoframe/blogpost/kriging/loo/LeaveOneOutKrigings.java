@@ -139,14 +139,7 @@ public class LeaveOneOutKrigings extends HMModel {
 		outData = new HashMap<Integer, double[]>();
 
 		Kriging kriging = new Kriging();
-		kriging.pAGlobal = pAGlobal;
-		kriging.pNugGlobal = pNugGlobal;
-		kriging.pSGlobal = pSGlobal;
-		kriging.pSGlobalDeTrended = pSGlobalDeTrended;
-		kriging.pNugGlobalDeTrended = pNugGlobalDeTrended;
-		kriging.pAGlobalDeTrended = pAGlobalDeTrended;
-		kriging.globalVariogramType = globalVariogramType;
-		kriging.globalDetrendedVariogramType = globalDetrendedVariogramType;
+
 //      evaluate before the parameters		
 //		kriging.inHValuesPath = inHValuesPath;
 		kriging.inTheoreticalVariogram = inTheoreticalVariogram;
