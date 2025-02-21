@@ -14,12 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.geoframe.blogpost.kriging.pointcase;
+package org.geoframe.blogpost.kriging;
 
 import static org.hortonmachine.gears.libs.modules.HMConstants.isNovalue;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -28,15 +27,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.geoframe.blogpost.kriging.interpolationdata.InterpolationDataProvider;
 import org.geoframe.blogpost.kriging.linearsystemsolver.SimpleLinearSystemSolverFactory;
-import org.geoframe.blogpost.kriging.primarylocation.ResidualsEvaluator;
 import org.geoframe.blogpost.kriging.primarylocation.StationProcessor;
 import org.geoframe.blogpost.kriging.primarylocation.StationsSelection;
 import org.geoframe.blogpost.kriging.utilities.Utility;
-import org.geoframe.blogpost.kriging.variogram.theoretical.GlobalParameterEvaluator;
 import org.geoframe.blogpost.kriging.variogram.theoretical.TheoreticalVariogram;
 import org.geoframe.blogpost.kriging.variogram.theoretical.VariogramParameters;
-import org.geoframe.blogpost.kriging.variogram.theoretical.VariogramParametersCalculator;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.feature.SchemaException;
 import org.hortonmachine.gears.libs.exceptions.ModelsRuntimeException;
@@ -47,6 +44,8 @@ import org.hortonmachine.gears.utils.math.matrixes.ColumnVector;
 import org.hortonmachine.gears.utils.math.matrixes.MatrixException;
 import org.hortonmachine.hmachine.i18n.HortonMessageHandler;
 import org.locationtech.jts.geom.Coordinate;
+import org.opengis.geometry.MismatchedDimensionException;
+import org.opengis.referencing.operation.TransformException;
 
 import oms3.annotations.Author;
 import oms3.annotations.Description;
@@ -60,6 +59,29 @@ import oms3.annotations.Name;
 import oms3.annotations.Out;
 import oms3.annotations.Status;
 
+/**
+ * Abstract class implementing the core Ordinary Kriging algorithm.
+ *
+ * <p>
+ * This class performs the following steps:
+ * <ol>
+ * <li>Input verification and variogram parameter setup</li>
+ * <li>Station selection based on distance and other criteria</li>
+ * <li>Calculation of the covariance matrix and known terms vector</li>
+ * <li>Solving the linear system to obtain the kriging weights</li>
+ * <li>Computing the interpolated value (including trend adjustment, if
+ * enabled)</li>
+ * <li>Final validation and storage of results</li>
+ * </ol>
+ * </p>
+ *
+ * <p>
+ * <strong>SUGGESTION:</strong> Consider refining exception handling throughout
+ * the class to use custom exceptions (e.g.,
+ * <code>InterpolationDataException</code>) instead of generic
+ * NullPointerException.
+ * </p>
+ */
 @Description("Ordinary kriging algorithm.")
 @Documentation("Kriging.html")
 @Author(name = "Giuseppe Formetta, Daniele Andreis, Silvia Franceschi, Andrea Antonello, Marialaura Bancheri & Francesco Serafin")
@@ -69,7 +91,7 @@ import oms3.annotations.Status;
 @Status()
 @License("General Public License Version 3 (GPLv3)")
 @SuppressWarnings("nls")
-public class Kriging extends HMModel {
+public abstract class Kriging extends HMModel {
 
 	@Description("The .shp of the measurement point, containing the position of the stations.")
 	@In
@@ -91,18 +113,6 @@ public class Kriging extends HMModel {
 	@Description("The HM with the measured data to be interpolated.")
 	@In
 	public HashMap<Integer, double[]> inData = null;
-
-	@Description("The vector of the points in which the data have to be interpolated.")
-	@In
-	public SimpleFeatureCollection inInterpolate = null;
-
-	@Description("The field of the interpolated vector points, defining the id.")
-	@In
-	public String fInterpolateid = null;
-
-	@Description("The field of the interpolated vector points, defining the elevation.")
-	@In
-	public String fPointZ = null;
 
 	@Description("The progress monitor.")
 	@In
@@ -146,17 +156,6 @@ public class Kriging extends HMModel {
 	@In
 	public String linearSystemSolverType = "math3";
 
-	@Description("Specified cutoff")
-	@In
-	public double cutoffInput;
-
-	@Description("Number of bins to consider in the anlysis")
-	@In
-	public int cutoffDivide;
-	@Description("Distances input path")
-	@In
-	public String inHValuesPath;
-
 	/** transform to log. */
 	@In
 	public boolean doLogarithmic = false;
@@ -164,33 +163,16 @@ public class Kriging extends HMModel {
 	/** transform to log. */
 	@In
 	public boolean boundedToZero = false;
-	@Description("The hashmap with the interpolated results")
-	@Out
-	public HashMap<Integer, double[]> outData = null;
 
-	@Description("The hashmap withe the parameter for each time step: 0=>nugget, 1=>sill, 2=> range, 3 => is local (0 if used local parameter 1 if use global, 4 => is detrended (0 no trend, 1 with trend)")
-	@Out
-	public HashMap<Integer, double[]> outVariogramParams = null;
-	@Description("The Experimental Distances.")
-	@Out
-	public HashMap<Integer, double[]> outDistances;
-
-	@Description("The Experimental Variogram.")
-	@Out
-	public HashMap<Integer, double[]> outTheoreticalVariogram;
 	@Description("The Experimental Variogram.")
 	@In
 	public HashMap<Integer, double[]> inTheoreticalVariogram;
-
-	@Description("The numbers of pairs at certain lag.")
-	@Out
-	public HashMap<Integer, double[]> outNumberPairsPerBin;
 
 	private static final double TOLL = 1.0d * 10E-8;
 
 	private int step = 0;
 
-	private HortonMessageHandler msg = HortonMessageHandler.getInstance();
+	protected HortonMessageHandler msg = HortonMessageHandler.getInstance();
 
 	/** The id of the cosidered station */
 	int id;
@@ -206,28 +188,36 @@ public class Kriging extends HMModel {
 
 	private VariogramParameters variogramParameters;
 
+	protected InterpolationDataProvider provider = null;
+
 	/**
-	 * Executes the Ordinary Kriging algorithm following these steps: 1. Input
-	 * verification and variogram parameter setup. 2. Station selection based on
-	 * distance and other criteria. 3. Calculation of the covariance matrix and the
-	 * known terms vector. 4. Solving the linear system to obtain the weights. 5.
-	 * Computing the interpolated value, applying the trend if detrending is
-	 * enabled. 6. Final validation and storage of the results.
+	 * Executes the Ordinary Kriging algorithm.
+	 * <p>
+	 * Steps:
+	 * <ol>
+	 * <li>Initialize parameters and verify inputs.</li>
+	 * <li>Extract interpolation points using the provider.</li>
+	 * <li>Select stations using a StationsSelection object.</li>
+	 * <li>Determine variogram parameters.</li>
+	 * <li>Compute weights by solving the linear system.</li>
+	 * <li>Calculate the interpolated value.</li>
+	 * <li>Post-process and store results.</li>
+	 * </ol>
+	 * </p>
 	 *
 	 * @throws Exception if any error occurs during the kriging execution.
 	 */
-
 	@Execute
 	public void executeKriging() throws Exception {
+		// SUGGESTION: Consider logging the start of execution.
 		// Initialization and verification
 		VariogramParameters vp = initializeKrigingParameters();
 		// Extract interpolation points from input feature collection
-		LinkedHashMap<Integer, Coordinate> pointsToInterpolateId2Coordinates = null;
-		pointsToInterpolateId2Coordinates = Utility.getCoordinate(inInterpolate, fInterpolateid, fPointZ, pm, msg);
-		Set<Integer> pointsToInterpolateIdSet = pointsToInterpolateId2Coordinates.keySet();
+
+		LinkedHashMap<Integer, Coordinate> pointsToInterpolate = provider.getCoordinates();
+		Set<Integer> pointsToInterpolateIdSet = pointsToInterpolate.keySet();
 		Iterator<Integer> idIterator = pointsToInterpolateIdSet.iterator();
-		double[] result = new double[pointsToInterpolateId2Coordinates.size()];
-		int[] idArray = new int[pointsToInterpolateId2Coordinates.size()];
+		double[] result = new double[pointsToInterpolate.size()];
 
 		/**
 		 * StationsSelection is an external class that allows the selection of the
@@ -238,14 +228,14 @@ public class Kriging extends HMModel {
 		StationsSelection stations = this.createAndConfigureStationSelection();
 		determineVariogram(vp, stations);
 		StationProcessor sp = new StationProcessor(stations, variogramParameters);
+		// If no neighborhood criteria is provided, update without spatial filtering.
 		if (maxdist == 0 && inNumCloserStations == 0) {
 			sp.updateForCoordinate(null, inData, 0, 0);
 		}
 		int j = 0;
 		while (idIterator.hasNext()) {
 			id = idIterator.next();
-			idArray[j] = id;
-			Coordinate coordinate = (Coordinate) pointsToInterpolateId2Coordinates.get(id);
+			Coordinate coordinate = (Coordinate) pointsToInterpolate.get(id);
 			if (maxdist > 0 || inNumCloserStations > 0) {
 				sp.updateForCoordinate(coordinate, inData, inNumCloserStations, maxdist);
 			}
@@ -265,6 +255,7 @@ public class Kriging extends HMModel {
 					// pm.message(msg.message("kriging.setequalsvalue"));
 					// pm.beginTask(msg.message("kriging.working"),
 					// pointsToInterpolateId2Coordinates.size());
+					// (SUGGESTION: Clarify purpose of this reset).
 					n1 = 0;
 					// pm.worked(1);
 				}
@@ -281,20 +272,20 @@ public class Kriging extends HMModel {
 			result[j] = postProcessResult(interpolatedValue);
 			j++;
 		}
-		storeResult(result, idArray);
+		storeResult(result, pointsToInterpolate);
 
 	}
 
 	public void executeKrigingParallel() throws Exception {
 		// Initialization and verification (assumed to be thread-safe or immutable)
 		VariogramParameters vp = initializeKrigingParameters();
-		LinkedHashMap<Integer, Coordinate> pointsMap = Utility.getCoordinate(inInterpolate, fInterpolateid, fPointZ, pm,
-				msg);
+
+		LinkedHashMap<Integer, Coordinate> pointsMap = provider.getCoordinates();
+		// Prepare arrays to store results.
+
 		int size = pointsMap.size();
 
-		// Prepare arrays to store results.
 		double[] result = new double[size];
-		int[] idArray = new int[size];
 
 		// Convert the entry set to a list for parallel processing.
 		List<Map.Entry<Integer, Coordinate>> entries = new ArrayList<>(pointsMap.entrySet());
@@ -304,7 +295,6 @@ public class Kriging extends HMModel {
 
 		entries.parallelStream().forEach(entry -> {
 			int currentIndex = indexCounter.getAndIncrement();
-			int id = entry.getKey();
 			Coordinate coordinate = entry.getValue();
 
 			// Each thread creates its own instance of StationsSelection.
@@ -348,11 +338,10 @@ public class Kriging extends HMModel {
 
 			// Post-process and store the result.
 			result[currentIndex] = postProcessResult(interpolatedValue);
-			idArray[currentIndex] = id;
 		});
 
 		// Store results after all parallel tasks have completed.
-		storeResult(result, idArray);
+		storeResult(result, pointsMap);
 	}
 
 	private double intepolateValue(StationProcessor sp, Coordinate coordinate) throws MatrixException {
@@ -361,8 +350,6 @@ public class Kriging extends HMModel {
 		double[] yStations = sp.getYStations();
 		double[] zStations = sp.getZStations();
 		double[] hResiduals = sp.getHResiduals();
-		double trendCoeff = sp.getTrendCoeff();
-		double trendIntercept = sp.getTrendIntercept();
 		int n1 = sp.getCount();
 		xStations[n1] = coordinate.x;
 		yStations[n1] = coordinate.y;
@@ -409,6 +396,13 @@ public class Kriging extends HMModel {
 		return interpolatedValue;
 	}
 
+	/**
+	 * Applies post-processing to the interpolated value. This includes reversing a
+	 * logarithmic transformation and bounding negative values to zero.
+	 *
+	 * @param interpolatedValue The raw interpolated value.
+	 * @return The post-processed interpolated value.
+	 */
 	private double postProcessResult(double interpolatedValue) {
 		if (!isNovalue(interpolatedValue)) {
 			if (doLogarithmic) {
@@ -421,6 +415,13 @@ public class Kriging extends HMModel {
 		return interpolatedValue;
 	}
 
+	/**
+	 * Determines the variogram parameters based on the provided theoretical
+	 * variogram data.
+	 *
+	 * @param vp       The variogram parameters built from user input.
+	 * @param stations The StationsSelection object containing station information.
+	 */
 	private void determineVariogram(VariogramParameters vp, StationsSelection stations) {
 
 		if (inTheoreticalVariogram != null && inTheoreticalVariogram.get(0)[0] != -9999) {
@@ -442,6 +443,8 @@ public class Kriging extends HMModel {
 
 	/**
 	 * Initializes kriging parameters and verifies input.
+	 *
+	 * @return The constructed VariogramParameters.
 	 */
 	private VariogramParameters initializeKrigingParameters() {
 		VariogramParameters vp = new VariogramParameters.Builder(pSemivariogramType, nugget, range, sill)
@@ -454,9 +457,17 @@ public class Kriging extends HMModel {
 			}
 		}
 		step = step + 1;
+		if (provider == null) {
+			provider = initializeInterpolatorData();
+		}
 		return vp;
 	}
 
+	/**
+	 * Creates and configures a StationsSelection object using the input stations.
+	 *
+	 * @return A configured StationsSelection object.
+	 */
 	private StationsSelection createAndConfigureStationSelection() {
 		StationsSelection stations = new StationsSelection();
 		stations.inStations = inStations;
@@ -472,19 +483,17 @@ public class Kriging extends HMModel {
 	 * Validates the essential inputs for the kriging model. In detrended mode, both
 	 * station and interpolation point elevation fields must be provided.
 	 */
-	private void verifyInput() {
+	protected void verifyInput() {
 		if (inData == null || inStations == null) {
 			throw new NullPointerException(msg.message("kriging.stationProblem"));
 		}
 		if (doDetrended) {
-			if (fPointZ == null || fStationsZ == null) {
+			if (fStationsZ == null) {
 				throw new NullPointerException("z field not found");
 			}
-
 			int ff = inStations.getSchema().indexOf(fStationsZ);
-			int ff2 = inInterpolate.getSchema().indexOf(fPointZ);
 
-			if (ff < 0 || ff2 < 0) {
+			if (ff < 0) {
 				throw new NullPointerException("check if the z field name is correct");
 			}
 		}
@@ -561,18 +570,21 @@ public class Kriging extends HMModel {
 	}
 
 	/**
-	 * Store the result in a HashMcovarianceMatrix (if the mode is 0 or 1).
+	 * Abstract method to store the interpolation result. Implementations should
+	 * store the result array mapped by unique point IDs.
 	 *
-	 * @param result the result
-	 * @param id     the associated id of the calculating points.
-	 * @throws SchemaException the schema exception
+	 * @param result                     The array of interpolated values.
+	 * @param interpolatedCoordinatesMap A HashMap of interpolated coordinates.
 	 */
-	private void storeResult(double[] result, int[] id) throws SchemaException {
-		outData = new HashMap<Integer, double[]>();
-		for (int i = 0; i < result.length; i++) {
-			outData.put(id[i], new double[] { result[i] });
-		}
-		outTheoreticalVariogram = variogramParameters.toHashMap();
-	}
+	protected abstract void storeResult(double[] result, HashMap<Integer, Coordinate> interpolatedCoordinatesMap);
+
+	/**
+	 * Abstract method to initialize the interpolation data provider.
+	 * Implementations should return a provider that extracts coordinates from the
+	 * input data.
+	 *
+	 * @return An InterpolationDataProvider instance.
+	 */
+	protected abstract InterpolationDataProvider initializeInterpolatorData();
 
 }

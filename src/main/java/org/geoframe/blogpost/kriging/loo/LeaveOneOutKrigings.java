@@ -18,7 +18,7 @@ package org.geoframe.blogpost.kriging.loo;
 
 import java.util.HashMap;
 
-import org.geoframe.blogpost.kriging.pointcase.Kriging;
+import org.geoframe.blogpost.kriging.pointcase.KrigingPointCase;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.filter.text.cql2.CQL;
@@ -138,7 +138,7 @@ public class LeaveOneOutKrigings extends HMModel {
 	public void executeKriging() throws Exception {
 		outData = new HashMap<Integer, double[]>();
 
-		Kriging kriging = new Kriging();
+		KrigingPointCase kriging = new KrigingPointCase();
 
 //      evaluate before the parameters		
 //		kriging.inHValuesPath = inHValuesPath;

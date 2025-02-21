@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.geoframe.blogpost.kriging.pointcase.Kriging;
+import org.geoframe.blogpost.kriging.pointcase.KrigingPointCase;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.feature.SchemaException;
 import org.geotools.filter.text.cql2.CQL;
@@ -46,7 +46,7 @@ public class TestValDiNon {
 		reader.initProcess();
 
 		String fId = "ID";
-		Kriging kriging = new Kriging();
+		KrigingPointCase kriging = new KrigingPointCase();
 
 		int idToCheck = 25;
 		Filter filter = CQL.toFilter("ID = " + idToCheck);
@@ -56,8 +56,8 @@ public class TestValDiNon {
 		kriging.inStations = stationsFC;
 		kriging.fStationsid = stationIdField;
 		kriging.fInterpolateid = stationIdField;
-        kriging.inHValuesPath= observedFile.getAbsolutePath();
-		kriging.cutoffDivide = 10;
+//        kriging.inHValuesPath= observedFile.getAbsolutePath();
+//		kriging.cutoffDivide = 10;
 		kriging.doDetrended = true;
 		kriging.fPointZ = "z_dem";
 		kriging.fStationsZ = "z_dem";
@@ -99,7 +99,7 @@ public class TestValDiNon {
 				}
 
 				writer.inData = kriging.outData;
-				writer2.inData = kriging.outVariogramParams;
+//				writer2.inData = kriging.outVariogramParams;
 				writer2.writeNextLine();
 
 				writer.writeNextLine();
@@ -146,7 +146,7 @@ public class TestValDiNon {
 		reader.initProcess();
 
 		String fId = "ID";
-		Kriging kriging = new Kriging();
+		KrigingPointCase kriging = new KrigingPointCase();
 
 		URL predictUrl = this.getClass().getClassLoader().getResource("centroid_ID_1881.shp");
 		File predictFile = new File(predictUrl.toURI());
@@ -159,8 +159,8 @@ public class TestValDiNon {
 		kriging.inStations = stationsFC;
 		kriging.fStationsid = stationIdField;
 		kriging.fInterpolateid = "basinid";
-		kriging.inHValuesPath = observedFile.getAbsolutePath();
-		kriging.cutoffDivide = 15;
+//		kriging.inHValuesPath = observedFile.getAbsolutePath();
+//		kriging.cutoffDivide = 15;
 		kriging.doDetrended = true;
 		kriging.fPointZ = "elev_m";
 		kriging.fStationsZ = "z_dem";
@@ -168,7 +168,7 @@ public class TestValDiNon {
 		kriging.doLogarithmic = false;
 		kriging.boundedToZero = true;
 
-		kriging.inHValuesPath = observedFile.getAbsolutePath();
+//		kriging.inHValuesPath = observedFile.getAbsolutePath();
 		OmsTimeSeriesIteratorWriter writer = new OmsTimeSeriesIteratorWriter();
 		writer.tStart = reader.tStart;
 		writer.file = "resources/Output/krigings/PointCase/basin1881_2.csv";
@@ -176,10 +176,7 @@ public class TestValDiNon {
 		writer.tTimestep = reader.tTimestep;
 		
 		
-		kriging.pSGlobal = 1.4;
-		kriging.pNugGlobal = 0;
-		kriging.pAGlobal = 5600;
-		kriging.globalVariogramType  ="exponential";
+
 		while (reader.doProcess) {
 			try {
 				reader.nextRecord();

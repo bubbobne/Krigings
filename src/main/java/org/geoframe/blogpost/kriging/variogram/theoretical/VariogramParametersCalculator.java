@@ -3,7 +3,7 @@ package org.geoframe.blogpost.kriging.variogram.theoretical;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import org.geoframe.blogpost.kriging.pointcase.Kriging;
+import org.geoframe.blogpost.kriging.pointcase.KrigingPointCase;
 import org.geoframe.blogpost.kriging.primarylocation.ResidualsEvaluator;
 import org.geoframe.blogpost.kriging.primarylocation.StationsSelection;
 import org.geoframe.blogpost.kriging.variogram.experimental.ExperimentalVariogram;
@@ -41,7 +41,7 @@ public class VariogramParametersCalculator {
 			rEvaluator.doDetrended = doDetrend;
 			rEvaluator.hStations = Arrays.copyOfRange(stations.hStationInitialSet, 0, n1);
 			rEvaluator.zStations = Arrays.copyOfRange(stations.zStationInitialSet, 0, n1);
-			rEvaluator.regressionOrder = Kriging.REGRESSION_ORDER;
+			rEvaluator.regressionOrder = KrigingPointCase.REGRESSION_ORDER;
 			rEvaluator.process();
 			int[] idStations = Arrays.copyOfRange(stations.idStationInitialSet, 0, n1);
 			double[] hResiduals = rEvaluator.hResiduals;

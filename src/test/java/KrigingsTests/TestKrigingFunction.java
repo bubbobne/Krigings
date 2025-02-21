@@ -5,7 +5,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import org.junit.Test;
-import org.geoframe.blogpost.kriging.pointcase.Kriging;
+import org.geoframe.blogpost.kriging.pointcase.KrigingPointCase;
 import org.geoframe.blogpost.kriging.variogram.theoretical.VariogramParameters;
 
 public class TestKrigingFunction {
@@ -27,20 +27,20 @@ public class TestKrigingFunction {
             int n = 2; // number of stations
 
             // Instantiate your Kriging class and set the variogram parameters.
-            Kriging kriging = new Kriging();
+            KrigingPointCase kriging = new KrigingPointCase();
             VariogramParameters vp = new VariogramParameters.Builder("exponential", 0.0, 1.0, 1.0)
                     .setLocal(false)
                     .setTrend(false)
                     .build();
 
             // Get the private field 'variogramParameters' from the Kriging class
-            Field vpField = Kriging.class.getDeclaredField("variogramParameters");
+            Field vpField = KrigingPointCase.class.getDeclaredField("variogramParameters");
             // Allow access to the private field
             vpField.setAccessible(true);
             // Set the field's value to our vp object
             vpField.set(kriging, vp);
             // Use reflection to access the non-public covMatrixCalculating method.
-            Method method = Kriging.class.getDeclaredMethod("covMatrixCalculating", double[].class, double[].class, double[].class, int.class);
+            Method method = KrigingPointCase.class.getDeclaredMethod("covMatrixCalculating", double[].class, double[].class, double[].class, int.class);
             method.setAccessible(true);  // Allow access to the non-public method
 
             // Invoke the method

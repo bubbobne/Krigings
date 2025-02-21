@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.geoframe.blogpost.kriging.pointcase.Kriging;
+import org.geoframe.blogpost.kriging.pointcase.KrigingPointCase;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.feature.SchemaException;
 import org.geotools.filter.text.cql2.CQLException;
@@ -66,7 +66,7 @@ public class TestKrigingStandardFromR {
 		predictedFromRReaderValue.initProcess();
 
 		String fId = "id";
-		Kriging kriging = new Kriging();
+		KrigingPointCase kriging = new KrigingPointCase();
 		URL testGridUrl = this.getClass().getClassLoader().getResource("test.shp");
 		File testGridFile = new File(testGridUrl.toURI());
 		OmsShapefileFeatureReader testReader = new OmsShapefileFeatureReader();
@@ -80,8 +80,8 @@ public class TestKrigingStandardFromR {
 		kriging.inStations = stationsFC;
 		kriging.fStationsid = stationIdField;
 		kriging.fInterpolateid = stationIdField;
-		kriging.inHValuesPath = observedFile.getAbsolutePath();
-		kriging.cutoffDivide = 20;
+//		kriging.inHValuesPath = observedFile.getAbsolutePath();
+//		kriging.cutoffDivide = 20;
 		kriging.nugget = 0;
 		kriging.sill = 15292.38;
 		kriging.range = 82946.36;
@@ -166,7 +166,7 @@ public class TestKrigingStandardFromR {
 		predictedFromRReaderValue.initProcess();
 
 		String fId = "id";
-		Kriging kriging = new Kriging();
+		KrigingPointCase kriging = new KrigingPointCase();
 		URL testGridUrl = this.getClass().getClassLoader().getResource("test.shp");
 		File testGridFile = new File(testGridUrl.toURI());
 		OmsShapefileFeatureReader testReader = new OmsShapefileFeatureReader();
@@ -179,8 +179,8 @@ public class TestKrigingStandardFromR {
 		kriging.inStations = stationsFC;
 		kriging.fStationsid = stationIdField;
 		kriging.fInterpolateid = stationIdField;
-		kriging.inHValuesPath = observedFile.getAbsolutePath();
-		kriging.cutoffDivide = 20;
+//		kriging.inHValuesPath = observedFile.getAbsolutePath();
+//		kriging.cutoffDivide = 20;
 		kriging.doDetrended = true;
 		kriging.fPointZ = "z1";
 		kriging.fStationsZ = "z1";
