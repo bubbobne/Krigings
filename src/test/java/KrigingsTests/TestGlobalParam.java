@@ -1,14 +1,10 @@
 package KrigingsTests;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-import org.geoframe.blogpost.kriging.variogram.theoretical.GlobalParameterEvaluator;
-import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.feature.SchemaException;
 import org.geotools.filter.text.cql2.CQLException;
-import org.hortonmachine.gears.io.shapefile.OmsShapefileFeatureReader;
 import org.junit.Test;
 
 public class TestGlobalParam {
