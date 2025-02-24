@@ -32,26 +32,23 @@ import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorWriter;
 
 import org.junit.Test;
 
-
 import static org.junit.Assert.*;
 
-
-
-public class TestKrigingPointCase{
-
+public class TestKrigingPointCase {
 
 	/**
 	 * Run the kriging models.
 	 *
 	 * <p>
-	 * This is the case which all the station have the same value.
+	 * This is the case which all the station have the same value equal to -9999, no values.
 	 * </p>
+	 * 
 	 * @throws Exception
 	 * @throws Exception
 	 */
-	
+
 	@Test
-	public void testKriging2() throws Exception {
+	public void testKrigingAllNoVAlue() throws Exception {
 		OmsShapefileFeatureReader stationsReader = new OmsShapefileFeatureReader();
 		stationsReader.file = "resources/Input/krigings/PointCase/rainstations.shp";
 		stationsReader.readFeatureCollection();
@@ -63,7 +60,7 @@ public class TestKrigingPointCase{
 		SimpleFeatureCollection interpolatedPointsFC = interpolatedPointsReader.geodata;
 		//
 		OmsTimeSeriesIteratorReader reader = new OmsTimeSeriesIteratorReader();
-		reader.file ="resources/Input/krigings/PointCase/rain_test2A_allNoValue.csv";
+		reader.file = "resources/Input/krigings/PointCase/rain_test2A_allNoValue.csv";
 		reader.idfield = "ID";
 		reader.tStart = "2000-01-01 00:00";
 		reader.tTimestep = 60;
@@ -77,16 +74,15 @@ public class TestKrigingPointCase{
 		//
 		kriging.inStations = stationsFC;
 		kriging.fStationsid = "ID_PUNTI_M";
-		kriging.doDetrended=false;
+		kriging.doDetrended = false;
 		kriging.inInterpolate = interpolatedPointsFC;
 		kriging.fInterpolateid = "netnum";
-        kriging.maxdist=40368.0;
+		kriging.maxdist = 40368.0;
 
-        kriging.range = 123537.0;
-        kriging.nugget = 0.0;
-        kriging.sill= 1.678383;
-        kriging.pSemivariogramType="linear";
-        
+		kriging.range = 123537.0;
+		kriging.nugget = 0.0;
+		kriging.sill = 1.678383;
+		kriging.pSemivariogramType = "linear";
 
 		//
 		OmsTimeSeriesIteratorWriter writer = new OmsTimeSeriesIteratorWriter();
@@ -95,7 +91,7 @@ public class TestKrigingPointCase{
 		writer.tStart = reader.tStart;
 		writer.tTimestep = reader.tTimestep;
 		//
-		while( reader.doProcess ) {
+		while (reader.doProcess) {
 			reader.nextRecord();
 			HashMap<Integer, double[]> id2ValueMap = reader.outData;
 			kriging.inData = id2ValueMap;
@@ -103,21 +99,20 @@ public class TestKrigingPointCase{
 			/*
 			 * Extract the result.
 			 */
-	
-	
-			HashMap<Integer, double[]> result = kriging.outData;	
+
+			HashMap<Integer, double[]> result = kriging.outData;
 			Set<Integer> pointsToInterpolateResult = result.keySet();
 			Iterator<Integer> iterator = pointsToInterpolateResult.iterator();
-			while( iterator.hasNext() ) {
+			while (iterator.hasNext()) {
 				int id = iterator.next();
 				double[] actual = result.get(id);
 				assertEquals(1.0, actual[0], 0);
 			}
-			
+
 			writer.inData = result;
 			writer.writeNextLine();
 		}
-			
+
 		//
 		reader.close();
 		writer.close();
@@ -140,7 +135,7 @@ public class TestKrigingPointCase{
 	// * @throws Exception
 	// * @throws Exception
 	// */
-	
+
 	@Test
 	public void testKriging4() throws Exception {
 		OmsShapefileFeatureReader stationsReader = new OmsShapefileFeatureReader();
@@ -164,35 +159,31 @@ public class TestKrigingPointCase{
 		reader.initProcess();
 		//
 		Kriging kriging = new Kriging();
-		//kriging.pm = pm;
+		// kriging.pm = pm;
 		//
 		kriging.inStations = stationsFC;
 		kriging.fStationsid = "ID_PUNTI_M";
-		kriging.doDetrended=true;
+		kriging.doDetrended = true;
 
 		kriging.inInterpolate = interpolatedPointsFC;
 		kriging.fInterpolateid = "netnum";
 
-		
-		kriging.pSemivariogramType="linear";
+		kriging.pSemivariogramType = "linear";
 
-        kriging.range = 123537.0;
-        kriging.nugget = 0.0;
-        kriging.sill= 1.678383;
-        kriging.maxdist=1000;
-
-
-
+		kriging.range = 123537.0;
+		kriging.nugget = 0.0;
+		kriging.sill = 1.678383;
+		kriging.maxdist = 1000;
 
 		//
 		kriging.doIncludeZero = false;
 		OmsTimeSeriesIteratorWriter writer = new OmsTimeSeriesIteratorWriter();
-		writer.file =  "resources/Output/krigings/PointCase/kriging_interpolated_2.csv";
+		writer.file = "resources/Output/krigings/PointCase/kriging_interpolated_2.csv";
 		//
 		writer.tStart = reader.tStart;
 		writer.tTimestep = reader.tTimestep;
 		//
-		while( reader.doProcess ) {
+		while (reader.doProcess) {
 			reader.nextRecord();
 			HashMap<Integer, double[]> id2ValueMap = reader.outData;
 			kriging.inData = id2ValueMap;
@@ -201,7 +192,6 @@ public class TestKrigingPointCase{
 			 * Extract the result.
 			 */
 			HashMap<Integer, double[]> result = kriging.outData;
-			
 
 			//
 			writer.inData = result;
@@ -212,20 +202,25 @@ public class TestKrigingPointCase{
 		writer.close();
 	}
 
-
-
 	/**
 	 * Run the kriging models.
 	 *
 	 * <p>
 	 * This is the case which there is only one station.
+	 * 
+	 * Pay attention, there are several points to evaluate. For the first point,
+	 * kriging enters the first if condition (n1 != 0), which checks if there is at
+	 * least one station. Then, areAllEqual is true since only one value is
+	 * available. In this section, n1 is set to 0 (I suppose it's a design choice).
+	 * 
 	 * </p>
+	 * 
 	 * @throws Exception
 	 * @throws Exception
 	 */
-	
+
 	@Test
-	public void testKriging5() throws Exception {
+	public void testKrigingOnlyOneStation() throws Exception {
 		OmsShapefileFeatureReader stationsReader = new OmsShapefileFeatureReader();
 		stationsReader.file = "resources/Input/krigings/PointCase/rainstations.shp";
 		stationsReader.readFeatureCollection();
@@ -247,47 +242,35 @@ public class TestKrigingPointCase{
 		reader.initProcess();
 
 		Kriging kriging = new Kriging();
-		//kriging.pm = pm;
+		// kriging.pm = pm;
 		//
 		kriging.inStations = stationsFC;
 		kriging.fStationsid = "ID_PUNTI_M";
-		kriging.doDetrended=true;
-
+		kriging.doDetrended = false;
 		kriging.inInterpolate = interpolatedPointsFC;
 		kriging.fInterpolateid = "netnum";
-		
-
-		
-		 // Set up the model in order to use the variogram with an explicit integral scale and
-        //variance.
-		 
-		kriging.pSemivariogramType="linear";
-        kriging.range = 123537.0;
-        kriging.nugget = 0.0;
-        kriging.sill= 1.678383;
-        //kriging.maxdist=1000;
-        
-
-		 
-		//
+		// Set up the model in order to use the variogram with an explicit integral
+		// scale and
+		// variance.
+		kriging.pSemivariogramType = "linear";
+		kriging.range = 123537.0;
+		kriging.nugget = 0.0;
+		kriging.sill = 1.678383;
+		// kriging.maxdist=1000;
 		OmsTimeSeriesIteratorWriter writer = new OmsTimeSeriesIteratorWriter();
 		writer.file = "resources/Output/krigings/PointCase/kriging_interpolated_3.csv";
 		//
 		writer.tStart = reader.tStart;
 		writer.tTimestep = reader.tTimestep;
 		int j = 0;
-		while( reader.doProcess ) {
+		while (reader.doProcess) {
+			System.out.println(j);
 			reader.nextRecord();
 			HashMap<Integer, double[]> id2ValueMap = reader.outData;
 			kriging.inData = id2ValueMap;
 			kriging.executeKriging();
-			
-			 // Extract the result.
-			 
+			// Extract the result.
 			HashMap<Integer, double[]> result = kriging.outData;
-			
-			
-			
 			Set<Integer> pointsToInterpolateResult = result.keySet();
 			Iterator<Integer> iteratorTest = pointsToInterpolateResult.iterator();
 			double expected;
@@ -321,14 +304,12 @@ public class TestKrigingPointCase{
 				expected = 1.0;
 			}
 			//
-			while( iteratorTest.hasNext() ) {
+			while (iteratorTest.hasNext()) {
 				int id = iteratorTest.next();
 				double[] actual = result.get(id);
 				//
 				assertEquals(expected, actual[0], 0);
 			}
-			
-			
 			writer.inData = result;
 			writer.writeNextLine();
 			j++;

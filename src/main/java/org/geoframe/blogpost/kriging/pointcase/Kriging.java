@@ -303,17 +303,41 @@ public class Kriging extends HMModel {
 				variogramParameters = vpGlobal;
 			}
 		}
+		int n1 = 0;
 
+		double[] xStations = null, yStations = null, zStations = null, hResiduals = null;
+		double trendCoeff = 0;
+		double trendIntercept = 0;
+		if (doDetrended == false) {
+
+			stations.doIncludezero = doIncludeZero;
+			stations.doLogarithmic = doLogarithmic;
+			stations.inData = inData;
+
+			stations.execute();
+			xStations = stations.xStationInitialSet;
+			yStations = stations.yStationInitialSet;
+			zStations = stations.zStationInitialSet;
+			double[] hStations = stations.hStationInitialSet;
+			n1 = xStations.length - 1;
+			ResidualsEvaluator residualsEvaluator = getResidualsEvaluator(Arrays.copyOfRange(zStations, 0, n1),
+					Arrays.copyOfRange(hStations, 0, n1));
+			hResiduals = residualsEvaluator.hResiduals;
+			trendCoeff = residualsEvaluator.trend_coefficient;
+			trendIntercept = residualsEvaluator.trend_intercept;
+			if (trendCoeff == 0 && trendIntercept == 0 && variogramParameters.getIsTrend()) {
+				variogramParameters = vpGlobal;
+			}
+
+		}
 		while (idIterator.hasNext()) {
 			double sum = 0.;
 			id = idIterator.next();
 			idArray[j] = id;
-			double[] xStations = null, yStations = null, zStations = null, hResiduals = null;
-			int n1 = 0;
-			double trendCoeff = 0;
-			double trendIntercept = 0;
+
 			Coordinate coordinate = (Coordinate) pointsToInterpolateId2Coordinates.get(id);
 			if (maxdist > 0 || inNumCloserStations > 0) {
+				n1 = 0;
 				if (inNumCloserStations > 0) {
 					stations.inNumCloserStations = inNumCloserStations;
 				}
