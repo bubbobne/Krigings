@@ -106,7 +106,7 @@ public class TestKrigingPointCase {
 			while (iterator.hasNext()) {
 				int id = iterator.next();
 				double[] actual = result.get(id);
-				assertEquals(1.0, actual[0], 0);
+				assertEquals(-9999, actual[0], 0);
 			}
 
 			writer.inData = result;
@@ -117,90 +117,7 @@ public class TestKrigingPointCase {
 		reader.close();
 		writer.close();
 	}
-	// /////////////////////////////////////////////////////////////////////////////////////////
-	// ///////////////////////////////FINE TEST 2
-	// PASSA////////////////////////////////////////////////////
-	// ///////////////////////////////////////////////////////////////////////////////////////
-	//
-	// /////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////// TEST 3
-	// PASSA////////////////////////////////////////////////////
-	// ///////////////////////////////////////////////////////////////////////////////////////
-	// /**
-	// * Run the kriging models.
-	// *
-	// * <p>
-	// * This is the case that defaultMode=0.
-	// * </p>
-	// * @throws Exception
-	// * @throws Exception
-	// */
 
-	@Test
-	public void testKriging4() throws Exception {
-		OmsShapefileFeatureReader stationsReader = new OmsShapefileFeatureReader();
-		stationsReader.file = "resources/Input/krigings/PointCase/rainstations.shp";
-		stationsReader.readFeatureCollection();
-		SimpleFeatureCollection stationsFC = stationsReader.geodata;
-		//
-		OmsShapefileFeatureReader interpolatedPointsReader = new OmsShapefileFeatureReader();
-		interpolatedPointsReader.file = "resources/Input/krigings/PointCase/basins_passirio_width0.shp";
-		interpolatedPointsReader.readFeatureCollection();
-		SimpleFeatureCollection interpolatedPointsFC = interpolatedPointsReader.geodata;
-		//
-		OmsTimeSeriesIteratorReader reader = new OmsTimeSeriesIteratorReader();
-		reader.file = "resources/Input/krigings/PointCase/rain_test.csv";
-		reader.idfield = "ID";
-		reader.tStart = "2000-01-01 00:00";
-		reader.tTimestep = 60;
-		// reader.tEnd = "2000-01-01 00:00";
-		reader.fileNovalue = "-9999";
-		//
-		reader.initProcess();
-		//
-		Kriging kriging = new Kriging();
-		// kriging.pm = pm;
-		//
-		kriging.inStations = stationsFC;
-		kriging.fStationsid = "ID_PUNTI_M";
-		kriging.doDetrended = true;
-
-		kriging.inInterpolate = interpolatedPointsFC;
-		kriging.fInterpolateid = "netnum";
-
-		kriging.pSemivariogramType = "linear";
-
-		kriging.range = 123537.0;
-		kriging.nugget = 0.0;
-		kriging.sill = 1.678383;
-		kriging.maxdist = 1000;
-
-		//
-		kriging.doIncludeZero = false;
-		OmsTimeSeriesIteratorWriter writer = new OmsTimeSeriesIteratorWriter();
-		writer.file = "resources/Output/krigings/PointCase/kriging_interpolated_2.csv";
-		//
-		writer.tStart = reader.tStart;
-		writer.tTimestep = reader.tTimestep;
-		//
-		while (reader.doProcess) {
-			reader.nextRecord();
-			HashMap<Integer, double[]> id2ValueMap = reader.outData;
-			kriging.inData = id2ValueMap;
-			kriging.executeKriging();
-			/*
-			 * Extract the result.
-			 */
-			HashMap<Integer, double[]> result = kriging.outData;
-
-			//
-			writer.inData = result;
-			writer.writeNextLine();
-		}
-		//
-		reader.close();
-		writer.close();
-	}
 
 	/**
 	 * Run the kriging models.

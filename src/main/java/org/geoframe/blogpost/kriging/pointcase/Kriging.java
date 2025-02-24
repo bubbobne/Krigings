@@ -308,7 +308,7 @@ public class Kriging extends HMModel {
 		double[] xStations = null, yStations = null, zStations = null, hResiduals = null;
 		double trendCoeff = 0;
 		double trendIntercept = 0;
-		if (doDetrended == false) {
+		if (maxdist == 0 && inNumCloserStations == 0) {
 
 			stations.doIncludezero = doIncludeZero;
 			stations.doLogarithmic = doLogarithmic;
