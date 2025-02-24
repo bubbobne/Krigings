@@ -173,7 +173,6 @@ public class TestKrigingStandardFromR {
 		SimpleFeatureCollection testFC = testReader.geodata;
 
 		kriging.inInterpolate = testFC;
-		kriging.pSemivariogramType = "exponential";
 		kriging.inStations = stationsFC;
 		kriging.fStationsid = stationIdField;
 		kriging.fInterpolateid = stationIdField;
@@ -185,16 +184,14 @@ public class TestKrigingStandardFromR {
 		kriging.inNumCloserStations = 200;
 
 
-		
-		kriging.globalDetrendedVariogramType = "exponential";
-		kriging.globalVariogramType = "exponential";
+		kriging.nugget = 0;
+		kriging.sill = 15292.38;
+		kriging.range = 82946.36;
 
-		kriging.pNugGlobal = 0;
-		kriging.pSGlobal = 15292.38;
-		kriging.pAGlobal = 82946.36;
-		kriging.pAGlobalDeTrended = 0;
-		kriging.pSGlobalDeTrended = 15292.38;
-		kriging.pAGlobalDeTrended = 82946.36;
+		kriging.pSemivariogramType = "exponential";
+
+
+
 		
 		while (reader.doProcess) {
 			try {

@@ -9,7 +9,7 @@ import org.geoframe.blogpost.kriging.linearsystemsolver.SimpleLinearSystemSolver
 import org.geoframe.blogpost.kriging.pointcase.Kriging;
 import org.geoframe.blogpost.kriging.variogram.theoretical.VariogramParameters;
 import org.hortonmachine.gears.utils.math.matrixes.ColumnVector;
-public class KrigingSingleFunctionTest {
+public class TestKrigingFunction {
 	
 	
 	

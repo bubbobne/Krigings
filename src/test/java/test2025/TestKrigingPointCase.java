@@ -21,29 +21,270 @@ package test2025;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 
 import org.geoframe.blogpost.kriging.pointcase.Kriging;
 import org.geotools.data.simple.SimpleFeatureCollection;
+import org.geotools.feature.SchemaException;
+import org.geotools.filter.text.cql2.CQLException;
 import org.hortonmachine.gears.io.shapefile.OmsShapefileFeatureReader;
 import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorReader;
 import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorWriter;
 import org.junit.Test;
 
-
-
 public class TestKrigingPointCase {
-
-
-	
-	
 	/**
 	 * Run the kriging models.
-	 *ex test2
+	 * 
+	 * Test from Sic97 data (Spatial interpolation Comparison). Value are evaluated
+	 * in R with gstat.
+	 * 
+	 * @throws Exception
+	 * @throws Exception
+	 */
+
+	@Test
+	public void testKrigingSic97() throws URISyntaxException, SchemaException, CQLException, IOException {
+		//
+		String stationIdField = "id";
+		// 100 station to training model
+		URL stazioniGridUrl = this.getClass().getClassLoader().getResource("observed.shp");
+		File stazioniGridFile = new File(stazioniGridUrl.toURI());
+		OmsShapefileFeatureReader stationsReader = new OmsShapefileFeatureReader();
+		stationsReader.file = stazioniGridFile.getAbsolutePath();
+		stationsReader.readFeatureCollection();
+		SimpleFeatureCollection stationsFC = stationsReader.geodata;
+
+		URL observedRain4Url = this.getClass().getClassLoader().getResource("observed_H.csv");
+		File observedFile = new File(observedRain4Url.toURI());
+		OmsTimeSeriesIteratorReader reader = new OmsTimeSeriesIteratorReader();
+		reader.file = observedFile.getAbsolutePath();
+		reader.idfield = "ID";
+		reader.tStart = "2022-12-06 17:00";
+		reader.tTimestep = 60;
+		// reader.tEnd = "2000-01-01 00:00";
+		reader.fileNovalue = "-9999";
+		reader.initProcess();
+
+		OmsTimeSeriesIteratorReader predictedFromRReaderValue = new OmsTimeSeriesIteratorReader();
+		URL testRainFromR = this.getClass().getClassLoader().getResource("h_fromR_no_trend.csv");
+		File testFileFromR = new File(testRainFromR.toURI());
+		predictedFromRReaderValue.file = testFileFromR.getAbsolutePath();
+		predictedFromRReaderValue.idfield = "ID";
+		predictedFromRReaderValue.tStart = "2022-12-06 17:00";
+		predictedFromRReaderValue.tTimestep = 60;
+		predictedFromRReaderValue.fileNovalue = "-9999";
+		predictedFromRReaderValue.initProcess();
+
+		String fId = "id";
+		Kriging kriging = new Kriging();
+		URL testGridUrl = this.getClass().getClassLoader().getResource("test.shp");
+		File testGridFile = new File(testGridUrl.toURI());
+		OmsShapefileFeatureReader testReader = new OmsShapefileFeatureReader();
+		testReader.file = testGridFile.getAbsolutePath();
+		testReader.readFeatureCollection();
+		SimpleFeatureCollection testFC = testReader.geodata;
+
+		kriging.inInterpolate = testFC;
+		kriging.inStations = stationsFC;
+		kriging.fStationsid = stationIdField;
+		kriging.fInterpolateid = stationIdField;
+		kriging.inHValuesPath = observedFile.getAbsolutePath();
+		kriging.cutoffDivide = 20;
+		// kriging.inNumCloserStations = 200;
+		kriging.nugget = 0;
+		kriging.sill = 15292.38;
+		kriging.range = 82946.36;
+
+		kriging.sill = 20903.88;
+		kriging.range = 64126.08;
+		kriging.pSemivariogramType = "exponential";
+
+		while (reader.doProcess) {
+			try {
+				reader.nextRecord();
+				HashMap<Integer, double[]> id2ValueMap = reader.outData;
+				kriging.inData = id2ValueMap;
+				kriging.executeKriging();
+				predictedFromRReaderValue.nextRecord();
+				HashMap<Integer, double[]> predictedGstatR = predictedFromRReaderValue.outData;
+				HashMap<Integer, double[]> result = kriging.outData;
+				Set<Integer> pointsToInterpolateResult = result.keySet();
+				Iterator<Integer> iteratorTest = pointsToInterpolateResult.iterator();
+				double maxError = Double.MIN_VALUE;
+				double minError = Double.MAX_VALUE;
+				double meanError = 0;
+				int n = 0;
+				while (iteratorTest.hasNext()) {
+					int id = iteratorTest.next();
+					double[] values = result.get(id);
+					double[] actual = predictedGstatR.get(id);
+					assertEquals(actual[0], values[0], 3);
+					System.out.println("actual is:" + actual[0] + " evaluate " + values[0]);
+					double error = Math.abs(actual[0] - values[0]);
+					meanError += error;
+					if (error < minError) {
+						minError = error;
+					}
+					if (error > maxError) {
+						maxError = error;
+					}
+
+					n++;
+
+				}
+				meanError = meanError / n;
+				System.out.println("mean error is:" + meanError + " max " + maxError + " min:" + minError);
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (CQLException e) {
+				e.printStackTrace();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+
+		try {
+			reader.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		// writer.close();
+	}
+
+	/**
+	 * Run the kriging models.
+	 * 
+	 * Test from Sic97 data (Spatial interpolation Comparison). Value are evaluated
+	 * in R with gstat.
+	 * 
+	 * @throws Exception
+	 * @throws Exception
+	 */
+
+	@Test
+	public void testKrigingSic97Trend() throws URISyntaxException, SchemaException, CQLException, IOException {
+		//
+		String stationIdField = "id";
+		// 100 station to training model
+		URL stazioniGridUrl = this.getClass().getClassLoader().getResource("observed.shp");
+		File stazioniGridFile = new File(stazioniGridUrl.toURI());
+		OmsShapefileFeatureReader stationsReader = new OmsShapefileFeatureReader();
+		stationsReader.file = stazioniGridFile.getAbsolutePath();
+		stationsReader.readFeatureCollection();
+		SimpleFeatureCollection stationsFC = stationsReader.geodata;
+
+		URL observedRain4Url = this.getClass().getClassLoader().getResource("observed_trend.csv");
+		File observedFile = new File(observedRain4Url.toURI());
+		OmsTimeSeriesIteratorReader reader = new OmsTimeSeriesIteratorReader();
+		reader.file = observedFile.getAbsolutePath();
+		reader.idfield = "ID";
+		reader.tStart = "2022-12-06 17:00";
+		reader.tTimestep = 60;
+		// reader.tEnd = "2000-01-01 00:00";
+		reader.fileNovalue = "-9999";
+		reader.initProcess();
+
+		OmsTimeSeriesIteratorReader predictedFromRReaderValue = new OmsTimeSeriesIteratorReader();
+		URL testRainFromR = this.getClass().getClassLoader().getResource("h_from_R_trend.csv");
+		File testFileFromR = new File(testRainFromR.toURI());
+		predictedFromRReaderValue.file = testFileFromR.getAbsolutePath();
+		predictedFromRReaderValue.idfield = "ID";
+		predictedFromRReaderValue.tStart = "2022-12-06 17:00";
+		predictedFromRReaderValue.tTimestep = 60;
+		predictedFromRReaderValue.fileNovalue = "-9999";
+		predictedFromRReaderValue.initProcess();
+
+		String fId = "id";
+		Kriging kriging = new Kriging();
+		URL testGridUrl = this.getClass().getClassLoader().getResource("test.shp");
+		File testGridFile = new File(testGridUrl.toURI());
+		OmsShapefileFeatureReader testReader = new OmsShapefileFeatureReader();
+		testReader.file = testGridFile.getAbsolutePath();
+		testReader.readFeatureCollection();
+		SimpleFeatureCollection testFC = testReader.geodata;
+
+		kriging.inInterpolate = testFC;
+		kriging.inStations = stationsFC;
+		kriging.fStationsid = stationIdField;
+		kriging.fInterpolateid = stationIdField;
+		kriging.fStationsZ ="z1";
+		kriging.fPointZ ="z1";
+
+		kriging.inHValuesPath = observedFile.getAbsolutePath();
+		kriging.cutoffDivide = 20;
+		// kriging.inNumCloserStations = 200;
+		kriging.nugget = 102.99804;
+
+		kriging.sill =  60.07937;
+		kriging.range =  492121.5;
+		kriging.pSemivariogramType = "exponential";
+		kriging.doDetrended = true;
+		while (reader.doProcess) {
+			try {
+				reader.nextRecord();
+				HashMap<Integer, double[]> id2ValueMap = reader.outData;
+				kriging.inData = id2ValueMap;
+				kriging.executeKriging();
+				predictedFromRReaderValue.nextRecord();
+				HashMap<Integer, double[]> predictedGstatR = predictedFromRReaderValue.outData;
+				HashMap<Integer, double[]> result = kriging.outData;
+				Set<Integer> pointsToInterpolateResult = result.keySet();
+				Iterator<Integer> iteratorTest = pointsToInterpolateResult.iterator();
+				double maxError = Double.MIN_VALUE;
+				double minError = Double.MAX_VALUE;
+				double meanError = 0;
+				int n = 0;
+				while (iteratorTest.hasNext()) {
+					int id = iteratorTest.next();
+					double[] values = result.get(id);
+					double[] actual = predictedGstatR.get(id);
+	//				assertEquals(actual[0], values[0], 3);
+					System.out.println(" "+id+"  actual is:" + actual[0] + " evaluate " + values[0]);
+					double error = Math.abs(actual[0] - values[0]);
+					meanError += error;
+					if (error < minError) {
+						minError = error;
+					}
+					if (error > maxError) {
+						maxError = error;
+					}
+
+					n++;
+
+				}
+				meanError = meanError / n;
+				System.out.println("mean error is:" + meanError + " max " + maxError + " min:" + minError);
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (CQLException e) {
+				e.printStackTrace();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+
+		try {
+			reader.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		// writer.close();
+	}
+
+	/**
+	 * Run the kriging models. ex test2
 	 * <p>
-	 * This is the case which all the station have the same value equal to -9999, no values.
+	 * This is the case which all the station have the same value equal to -9999, no
+	 * values.
 	 * </p>
 	 * 
 	 * @throws Exception
@@ -121,10 +362,8 @@ public class TestKrigingPointCase {
 		writer.close();
 	}
 
-
 	/**
-	 * Run the kriging models.
-	 *ex Test5
+	 * Run the kriging models. ex Test5
 	 * <p>
 	 * This is the case which there is only one station.
 	 * 
