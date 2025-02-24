@@ -2,6 +2,7 @@ package org.geoframe.blogpost.kriging.linearsystemsolver;
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.CholeskyDecomposition;
 import org.apache.commons.math3.linear.DecompositionSolver;
 import org.apache.commons.math3.linear.QRDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -47,6 +48,11 @@ public class SimpleLinearSystemSolverFactory {
             RealMatrix pseudoInverse = svd.getVT().multiply(S.transpose()).multiply(svd.getU().transpose());
             RealVector solution = pseudoInverse.operate(b);
             return  new ColumnVector(solution.toArray());
+        }else if(type.equals("Cholesky")) {
+        	RealMatrix A = new Array2DRowRealMatrix(covarianceMatrix);
+        	CholeskyDecomposition cholesky = new CholeskyDecomposition(A);
+        	RealVector solution = cholesky.getSolver().solve(new ArrayRealVector(knownTerm));
+        	return new ColumnVector(solution.toArray());
         }
         return null;
     }
