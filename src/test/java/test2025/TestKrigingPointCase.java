@@ -19,26 +19,29 @@
 
 package test2025;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geoframe.blogpost.kriging.pointcase.Kriging;
-
+import org.geotools.data.simple.SimpleFeatureCollection;
 import org.hortonmachine.gears.io.shapefile.OmsShapefileFeatureReader;
 import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorReader;
 import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorWriter;
-
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+
 
 public class TestKrigingPointCase {
 
+
+	
+	
 	/**
 	 * Run the kriging models.
-	 *
+	 *ex test2
 	 * <p>
 	 * This is the case which all the station have the same value equal to -9999, no values.
 	 * </p>
@@ -60,7 +63,7 @@ public class TestKrigingPointCase {
 		SimpleFeatureCollection interpolatedPointsFC = interpolatedPointsReader.geodata;
 		//
 		OmsTimeSeriesIteratorReader reader = new OmsTimeSeriesIteratorReader();
-		reader.file = "resources/Input/krigings/PointCase/rain_test2A_allNoValue.csv";
+		reader.file = "resources/Input/krigings/PointCase/rain_test_all_NoValue.csv";
 		reader.idfield = "ID";
 		reader.tStart = "2000-01-01 00:00";
 		reader.tTimestep = 60;
@@ -121,7 +124,7 @@ public class TestKrigingPointCase {
 
 	/**
 	 * Run the kriging models.
-	 *
+	 *ex Test5
 	 * <p>
 	 * This is the case which there is only one station.
 	 * 
@@ -149,7 +152,7 @@ public class TestKrigingPointCase {
 		SimpleFeatureCollection interpolatedPointsFC = interpolatedPointsReader.geodata;
 		//
 		OmsTimeSeriesIteratorReader reader = new OmsTimeSeriesIteratorReader();
-		reader.file = "resources/Input/krigings/PointCase/rain_test3A.csv";
+		reader.file = "resources/Input/krigings/PointCase/rain_test_one_value.csv";
 		reader.idfield = "ID";
 		reader.tStart = "2000-01-01 00:00";
 		reader.tTimestep = 60;
