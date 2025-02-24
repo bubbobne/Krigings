@@ -45,6 +45,9 @@ public class TestKrigingPointCase {
 	 * Test from Sic97 data (Spatial interpolation Comparison). Value are evaluated
 	 * in R with gstat.
 	 * 
+	 * <script src="https://gist.github.com/bubbobne/0e029b541c6f30d8ce7ff95c55608c8b.js"></script>
+	 * 
+	 * 
 	 * @throws Exception
 	 * @throws Exception
 	 */
@@ -163,7 +166,14 @@ public class TestKrigingPointCase {
 	 * Run the kriging models.
 	 * 
 	 * Test from Sic97 data (Spatial interpolation Comparison). Value are evaluated
-	 * in R with gstat.
+	 * in R with gstat. N.B. data are generated in Rwith a slop of 0.05 and the
+	 * intercept the mean value of original h pf sic97.
+	 * 
+	 * Crete the data with:
+	 * <script src="https://gist.github.com/bubbobne/320dc6145ec89e73e8feaae40102773c.js"></script>
+	 * 
+	 * Detrended kriging:
+	 * <script src="https://gist.github.com/bubbobne/924bc09f6c580f0d2ee95614d0b5f59c.js"></script>
 	 * 
 	 * @throws Exception
 	 * @throws Exception
@@ -215,16 +225,16 @@ public class TestKrigingPointCase {
 		kriging.inStations = stationsFC;
 		kriging.fStationsid = stationIdField;
 		kriging.fInterpolateid = stationIdField;
-		kriging.fStationsZ ="z1";
-		kriging.fPointZ ="z1";
+		kriging.fStationsZ = "z1";
+		kriging.fPointZ = "z1";
 
 		kriging.inHValuesPath = observedFile.getAbsolutePath();
 		kriging.cutoffDivide = 20;
 		// kriging.inNumCloserStations = 200;
 		kriging.nugget = 102.99804;
 
-		kriging.sill =  60.07937;
-		kriging.range =  492121.5;
+		kriging.sill = 60.07937;
+		kriging.range = 492121.5;
 		kriging.pSemivariogramType = "exponential";
 		kriging.doDetrended = true;
 		while (reader.doProcess) {
@@ -246,8 +256,8 @@ public class TestKrigingPointCase {
 					int id = iteratorTest.next();
 					double[] values = result.get(id);
 					double[] actual = predictedGstatR.get(id);
-	//				assertEquals(actual[0], values[0], 3);
-					System.out.println(" "+id+"  actual is:" + actual[0] + " evaluate " + values[0]);
+					// assertEquals(actual[0], values[0], 3);
+					System.out.println(" " + id + "  actual is:" + actual[0] + " evaluate " + values[0]);
 					double error = Math.abs(actual[0] - values[0]);
 					meanError += error;
 					if (error < minError) {
