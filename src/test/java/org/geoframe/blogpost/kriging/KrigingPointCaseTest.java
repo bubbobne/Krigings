@@ -80,6 +80,7 @@ public class KrigingPointCaseTest {
 		File testFileFromR = new File(testRainFromR.toURI());
 		predictedFromRReaderValue.file = testFileFromR.getAbsolutePath();
 		predictedFromRReaderValue.idfield = "ID";
+		
 		predictedFromRReaderValue.tStart = "2022-12-06 17:00";
 		predictedFromRReaderValue.tTimestep = 60;
 		predictedFromRReaderValue.fileNovalue = "-9999";
@@ -203,8 +204,6 @@ public class KrigingPointCaseTest {
 		predictedFromRReaderValue.tTimestep = 60;
 		predictedFromRReaderValue.fileNovalue = "-9999";
 		predictedFromRReaderValue.initProcess();
-
-		String fId = "id";
 		KrigingPointCase kriging = new KrigingPointCase();
 		URL testGridUrl = this.getClass().getClassLoader().getResource("Input/krigings/PointCase/sic97/test.shp");
 		File testGridFile = new File(testGridUrl.toURI());
@@ -224,6 +223,8 @@ public class KrigingPointCaseTest {
 
 		kriging.sill = 60.07937;
 		kriging.range = 492121.5;
+		kriging.inIntercept = 181.79;
+		kriging.inSlope =0.049;
 		kriging.pSemivariogramType = "exponential";
 		kriging.doDetrended = true;
 		while (reader.doProcess) {
@@ -245,7 +246,7 @@ public class KrigingPointCaseTest {
 					int id = iteratorTest.next();
 					double[] values = result.get(id);
 					double[] actual = predictedGstatR.get(id);
-				 assertEquals(actual[0], values[0], 3);
+				    assertEquals(actual[0], values[0], 3);
 					System.out.println(" " + id + "  actual is:" + actual[0] + " evaluate " + values[0]);
 					double error = Math.abs(actual[0] - values[0]);
 					meanError += error;

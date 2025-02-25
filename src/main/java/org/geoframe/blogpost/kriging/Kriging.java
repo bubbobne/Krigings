@@ -186,6 +186,12 @@ public abstract class Kriging extends HMModel {
 	@In
 	public int tTimeStep = 60;
 
+	@In
+	public double inIntercept = 0.0;
+	@In
+	public double inSlope = 0;
+	
+	
 	private VariogramParameters variogramParameters;
 
 	protected InterpolationDataProvider provider = null;
@@ -448,7 +454,7 @@ public abstract class Kriging extends HMModel {
 	 */
 	private VariogramParameters initializeKrigingParameters() {
 		VariogramParameters vp = new VariogramParameters.Builder(pSemivariogramType, nugget, range, sill)
-				.setLocal(false).setTrend(doDetrended).build();
+				.setLocal(false).setTrend(doDetrended).setTrendIntercept(inIntercept).setTrendSlope(inSlope).build();
 		if (step == 0) {
 			try {
 				verifyInput();
@@ -484,7 +490,7 @@ public abstract class Kriging extends HMModel {
 	 * station and interpolation point elevation fields must be provided.
 	 */
 	protected void verifyInput() {
-		if (inData == null || inStations == null) {
+		if (inData == null || inStations == null || fStationsid == null) {
 			throw new NullPointerException(msg.message("kriging.stationProblem"));
 		}
 		if (doDetrended) {

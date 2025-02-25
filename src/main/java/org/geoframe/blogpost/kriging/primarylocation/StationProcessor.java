@@ -45,7 +45,20 @@ public class StationProcessor {
 		this.hStations = stations.hStationInitialSet;
 		this.count = xStations.length - 1;
 		this.areAllEquals = stations.areAllEquals;
+		this.hResiduals = this.evaluateResidual();
 
+	}
+
+	private double[] evaluateResidual() {
+		if (vp.getIsTrend() || (vp.getIntercept() == 0 && vp.getSlope() == 0)) {
+			double[] residuals = new double[this.hStations.length];
+			for (int i = 0; i < this.hStations.length; i++) {
+				residuals[i] = this.hStations[i] - vp.getIntercept() - vp.getSlope() * this.zStations[i];
+			}
+			return residuals;
+		}
+
+		return this.hStations;
 	}
 
 	// Getters for the various station data fields

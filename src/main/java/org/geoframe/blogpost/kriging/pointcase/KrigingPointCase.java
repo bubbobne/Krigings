@@ -91,6 +91,9 @@ public class KrigingPointCase extends Kriging {
 	 */
 	protected void verifyInput() {
 		super.verifyInput();
+		if (fInterpolateid == null) {
+			throw new NullPointerException("id field not found");
+		}
 		if (doDetrended) {
 			if (fPointZ == null) {
 				throw new NullPointerException("z field not found");
@@ -120,7 +123,7 @@ public class KrigingPointCase extends Kriging {
     @Override
 	protected InterpolationDataProvider initializeInterpolatorData() {
 		// TODO Auto-generated method stub
-		return new VectorInterpolationProvider(inInterpolate, fPointZ, fInterpolateid, pm, msg);
+		return new VectorInterpolationProvider(inInterpolate, fInterpolateid,fPointZ, pm, msg);
 	}
 
 	  /**
