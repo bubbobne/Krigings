@@ -51,18 +51,6 @@ First version from [@Formetta2014-zn] and [@Bancheri2018-x]
 
 ---
 
-## Overview
-Krigings is a **Java-based spatial interpolation library** implementing various **kriging methods** for hydrological and geostatistical applications.
-
-### Features
-- Point and raster interpolation using kriging
-- Support for multiple theoretical variograms (exponential, spherical, Gaussian, etc.)
-- Cross-validation with Leave-One-Out (LOO)
-- Integration with PostgreSQL/PostGIS for spatial data management
-- Support for raster formats (GeoTIFF, CSV)
-
----
-
 ## Package Structure
 
 ### `interpolationdata`
