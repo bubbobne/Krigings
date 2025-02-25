@@ -48,7 +48,7 @@ public class NumberOfStations implements Model{
 	@Override
 	public int numberOfStations() {
 
-		return inNumCloserStations+1;
+		return inNumCloserStations;
 	}
 
 

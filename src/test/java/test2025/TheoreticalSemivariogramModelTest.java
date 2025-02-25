@@ -4,7 +4,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import org.geoframe.blogpost.kriging.variogram.theoretical.model.*;
 
-public class TestTheoreticalSemivariogramModel {
+public class TheoreticalSemivariogramModelTest {
 	double dist1 = 5.0;
 	double dist2 = 25.0;
 

@@ -31,7 +31,7 @@ import org.geotools.filter.text.cql2.CQLException;
 import org.hortonmachine.gears.io.shapefile.OmsShapefileFeatureReader;
 import org.junit.Test;
 
-public class TestVAriogramSelection {
+public class VariogramSelectionTest {
 
 	/**
 	 * Run the kriging models.
@@ -85,7 +85,7 @@ public class TestVAriogramSelection {
 		parameterEvaluator.inStations = stationsFC;
 		parameterEvaluator.fStationsid = stationIdField;
 		parameterEvaluator.inHValuesPath = observedFile.getAbsolutePath();
-		parameterEvaluator.cutoffDivide = 30;
+		parameterEvaluator.cutoffDivide = 15;
 		parameterEvaluator.doDetrended = false;
 		parameterEvaluator.doIncludeZero = true;
 		parameterEvaluator.pSemivariogramType = "exponential";

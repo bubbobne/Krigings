@@ -33,7 +33,7 @@ import org.junit.Test;
 
 
 
-public class TestExperimentalVariogram{
+public class ExperimentalVariogramTest{
 	@SuppressWarnings("nls")
 	
 	@Test

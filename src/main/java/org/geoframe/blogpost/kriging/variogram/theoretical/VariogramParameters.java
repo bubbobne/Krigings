@@ -31,8 +31,7 @@ public class VariogramParameters {
 
 	public VariogramParameters(String modelName, double nugget, double range, double sill) {
 //		if(Arrays.asList(availableTheorethicalVariogra).contains(modelName)) 
-			this.modelName = modelName;
-		
+		this.modelName = modelName;
 		this.nugget = nugget;
 		this.range = range;
 		this.sill = sill;

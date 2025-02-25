@@ -183,11 +183,11 @@ public class StationsSelection {
 		 * measurements points plus 1 (the station where it is going to interpolate)
 		 */
 
-		xStationInitialSet = new double[nStaz + 1];
-		yStationInitialSet = new double[nStaz + 1];
-		zStationInitialSet = new double[nStaz + 1];
-		hStationInitialSet = new double[nStaz + 1];
-		idStationInitialSet = new int[nStaz + 1];
+		xStationInitialSet = new double[nStaz];
+		yStationInitialSet = new double[nStaz];
+		zStationInitialSet = new double[nStaz ];
+		hStationInitialSet = new double[nStaz];
+		idStationInitialSet = new int[nStaz ];
 
 		if (nStaz != 0) {
 			xStationInitialSet[0] = xStationList.get(0);

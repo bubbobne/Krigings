@@ -38,7 +38,7 @@ import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorReader;
 import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorWriter;
 import org.junit.Test;
 
-public class TestKrigingPointCase {
+public class KrigingPointCaseTest {
 	/**
 	 * Run the kriging models.
 	 * 
@@ -100,11 +100,7 @@ public class TestKrigingPointCase {
 		kriging.fInterpolateid = stationIdField;
 		kriging.inHValuesPath = observedFile.getAbsolutePath();
 		kriging.cutoffDivide = 20;
-		// kriging.inNumCloserStations = 200;
 		kriging.nugget = 0;
-		kriging.sill = 15292.38;
-		kriging.range = 82946.36;
-
 		kriging.sill = 20903.88;
 		kriging.range = 64126.08;
 		kriging.pSemivariogramType = "exponential";
