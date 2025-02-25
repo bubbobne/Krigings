@@ -12,7 +12,7 @@ import org.hortonmachine.gears.libs.modules.HMConstants;
 public class VariogramParameters {
 	/** Available theoretical variogram models */
 	public static final String[] AVAILABLE_THEORETICAL_VARIOGRAMS = new String[] { "exponential", "linear", "power",
-			"spherical" };
+			"spherical","gaussian" };
 	private double nugget;
 	private double range;
 	private double sill;

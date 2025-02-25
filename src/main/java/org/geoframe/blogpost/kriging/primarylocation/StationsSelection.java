@@ -190,6 +190,7 @@ public class StationsSelection {
 		hStationInitialSet = new double[nStaz + 1];
 		idStationInitialSet = new int[nStaz + 1];
 
+
 		if (nStaz != 0) {
 			xStationInitialSet[0] = xStationList.get(0);
 			yStationInitialSet[0] = yStationList.get(0);
@@ -239,10 +240,10 @@ public class StationsSelection {
 
 			double x2, y2;
 			double dDifX, dDifY;
-			double distanceVector[] = new double[xStationInitialSet.length];
-			double pos[] = new double[xStationInitialSet.length];
+			double distanceVector[] = new double[xStationInitialSet.length-1];
+			double pos[] = new double[xStationInitialSet.length-1];
 
-			for (int jj = 0; jj < xStationInitialSet.length; jj++) {
+			for (int jj = 0; jj < xStationInitialSet.length-1; jj++) {
 
 				x2 = xStationInitialSet[jj];
 				y2 = yStationInitialSet[jj];
@@ -255,8 +256,9 @@ public class StationsSelection {
 
 			// sorts the distances
 			QuickSortAlgorithm t = new QuickSortAlgorithm(pm);
-			t.sort(distanceVector, pos);
-
+			if (distanceVector.length > 2) {
+				t.sort(distanceVector, pos);
+			}
 			inNumCloserStations = (inNumCloserStations > nStaz) ? nStaz : inNumCloserStations;
 
 			/*

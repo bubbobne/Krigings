@@ -20,4 +20,14 @@
 		<nature>org.eclipse.jdt.core.javanature</nature>
 		<nature>org.eclipse.buildship.core.gradleprojectnature</nature>
 	</natures>
+	<filteredResources>
+		<filter>
+			<id>1740476002750</id>
+			<name>src/test</name>
+			<type>9</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.andFilterMatcher</id>
+			</matcher>
+		</filter>
+	</filteredResources>
 </projectDescription>
