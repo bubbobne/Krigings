@@ -3,3 +3,47 @@
 /.nb-gradle/
 /.idea/src/main/java/org
 /build/
+
+# Eclipse specific files
+.metadata/
+*.classpath
+*.project
+*.settings/
+
+# Java compiled files
+bin/
+*.class
+
+# Build directories
+build/
+target/
+
+# Maven & Gradle
+.mvn/
+.gradle/
+build/
+
+# Eclipse plugin files
+.factorypath
+.recommenders/
+.apt_generated/
+.antlr_generated/
+.annotation-generated/
+.jacoco/
+.externalToolBuilders/
+
+# Logs & Temp files
+hs_err_pid*
+*.log
+*.tmp
+*.swp
+
+# IDE & OS specific files
+*.iml
+.idea/
+.DS_Store
+Thumbs.db
+
+# Version control & dependency files
+.vscode/
+node_modules/
