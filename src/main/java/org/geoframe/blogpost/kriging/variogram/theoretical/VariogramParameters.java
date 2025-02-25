@@ -86,7 +86,7 @@ public class VariogramParameters {
 	}
 
 	public static String[] availableTheorethicalVariogra = new String[] { "exponential", "linear", "power",
-			"spherical" };
+			"spherical","log","gaussian" };
 
 	public final static int getVariogramCode(String name) {
 		for (int i = 0; i < availableTheorethicalVariogra.length; i++) {

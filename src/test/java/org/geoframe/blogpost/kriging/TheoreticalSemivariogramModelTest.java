@@ -1,4 +1,4 @@
-package test2025;
+package org.geoframe.blogpost.kriging;
 
 import org.junit.Test;
 import static org.junit.Assert.*;

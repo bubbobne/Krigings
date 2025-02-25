@@ -46,7 +46,6 @@ repositories {
 }
 
 
-
 subprojects {
   junitPlatformTest.dependsOn processTestResources
 }

@@ -1,4 +1,4 @@
-package test2025;
+package org.geoframe.blogpost.kriging;
 import static org.junit.Assert.assertEquals;
 
 import java.lang.reflect.Field;

@@ -1,5 +1,6 @@
 package org.geoframe.blogpost.kriging.variogram.theoretical;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -90,12 +91,13 @@ public class GlobalParameterEvaluator {
 	public StationsSelection stations;
 	@Description("The Experimental Variogram.")
 	@In
-	public String inExperimentalVariogramFile;
+	public String inTheoreticalVariogramFile;
 	@Description("In the case of kriging with neighbor, maxdist is the maximum distance "
 			+ "within the algorithm has to consider the stations")
 	@In
 	public double maxdist;
-
+	@In
+	public boolean getExperimentalVariogramData;
 	@In
 	public String fileNoValue = "-9999";
 //	public String outGlobalVariogramType;
@@ -118,7 +120,7 @@ public class GlobalParameterEvaluator {
 
 		try {
 			this.createDefaulParams(stations);
-			if (inExperimentalVariogramFile != null) {
+			if (inTheoreticalVariogramFile != null) {
 
 				this.createFile(stations);
 			}
@@ -132,7 +134,16 @@ public class GlobalParameterEvaluator {
 	private void createFile(StationsSelection stations2) {
 		// TODO Auto-generated method stub
 		OmsTimeSeriesIteratorWriter parameterWriter = getWriter();
+		OmsTimeSeriesIteratorWriter distanceWriter = null;
+		OmsTimeSeriesIteratorWriter hwriter = null;
+		OmsTimeSeriesIteratorWriter nwriter = null;
+
 		OmsTimeSeriesIteratorReader readH = getReader();
+		if (getExperimentalVariogramData) {
+			distanceWriter = getDistanceWriter();
+			hwriter = getHWriter();
+			nwriter = getNWriter();
+		}
 
 		try {
 			while (readH.doProcess) {
@@ -153,8 +164,26 @@ public class GlobalParameterEvaluator {
 				parameterWriter.inData = out;
 				parameterWriter.writeNextLine();
 
+				if (getExperimentalVariogramData) {
+					distanceWriter.inData = vpcalCulator.getDD();
+
+					distanceWriter.writeNextLine();
+					hwriter.inData = vpcalCulator.getHH();
+					hwriter.writeNextLine();
+					nwriter.inData = vpcalCulator.getNN();
+					nwriter.writeNextLine();
+				}
+
 			}
 			parameterWriter.close();
+			if (getExperimentalVariogramData) {
+				distanceWriter.close();
+				;
+				hwriter.close();
+				;
+				nwriter.close();
+				;
+			}
 			readH.close();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -165,7 +194,40 @@ public class GlobalParameterEvaluator {
 
 	private OmsTimeSeriesIteratorWriter getWriter() {
 		OmsTimeSeriesIteratorWriter parameterWriter = new OmsTimeSeriesIteratorWriter();
-		parameterWriter.file = this.inExperimentalVariogramFile;
+		parameterWriter.file = this.inTheoreticalVariogramFile;
+		parameterWriter.fileNovalue = fileNoValue;
+		parameterWriter.tStart = tStart;
+		parameterWriter.tTimestep = tTimeStep;
+		return parameterWriter;
+	}
+
+	private String getParentPath() {
+		String fullFileName = this.inTheoreticalVariogramFile;
+		File file = new File(fullFileName);
+		return file.getParent();
+	}
+
+	private OmsTimeSeriesIteratorWriter getDistanceWriter() {
+		OmsTimeSeriesIteratorWriter parameterWriter = new OmsTimeSeriesIteratorWriter();
+		parameterWriter.file = getParentPath() + "/distance.csv";
+		parameterWriter.fileNovalue = fileNoValue;
+		parameterWriter.tStart = tStart;
+		parameterWriter.tTimestep = tTimeStep;
+		return parameterWriter;
+	}
+
+	private OmsTimeSeriesIteratorWriter getHWriter() {
+		OmsTimeSeriesIteratorWriter parameterWriter = new OmsTimeSeriesIteratorWriter();
+		parameterWriter.file = getParentPath() + "/h.csv";
+		parameterWriter.fileNovalue = fileNoValue;
+		parameterWriter.tStart = tStart;
+		parameterWriter.tTimestep = tTimeStep;
+		return parameterWriter;
+	}
+
+	private OmsTimeSeriesIteratorWriter getNWriter() {
+		OmsTimeSeriesIteratorWriter parameterWriter = new OmsTimeSeriesIteratorWriter();
+		parameterWriter.file = getParentPath() + "/n.csv";
 		parameterWriter.fileNovalue = fileNoValue;
 		parameterWriter.tStart = tStart;
 		parameterWriter.tTimestep = tTimeStep;

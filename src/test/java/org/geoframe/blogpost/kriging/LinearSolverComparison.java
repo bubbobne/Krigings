@@ -1,4 +1,4 @@
-package test2025;
+package org.geoframe.blogpost.kriging;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -52,10 +52,10 @@ public class LinearSolverComparison {
 		 solution = SimpleLinearSystemSolverFactory.solve(knownTerm, covMatrix, "prec");
 		endTime = System.currentTimeMillis();
 		System.out.println("Prec method:" + (endTime - startTime));
-		startTime = System.currentTimeMillis();
-		 solution = SimpleLinearSystemSolverFactory.solve(knownTerm, covMatrix, "Cholesky");
-		endTime = System.currentTimeMillis();
-		System.out.println("Cholesky method:" + (endTime - startTime));
+//		startTime = System.currentTimeMillis();
+//		 solution = SimpleLinearSystemSolverFactory.solve(knownTerm, covMatrix, "Cholesky");
+//		endTime = System.currentTimeMillis();
+//		System.out.println("Cholesky method:" + (endTime - startTime));
 	}
 
 	public static double[] generateRandomArray(int length, double min, double max) {

@@ -16,9 +16,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package test2025;
+package org.geoframe.blogpost.kriging;
 
 
+import java.io.File;
 import java.util.HashMap;
 
 import org.geoframe.blogpost.kriging.variogram.experimental.ExperimentalVariogram;
@@ -45,12 +46,12 @@ public class ExperimentalVariogramTest{
 		String stationIdField = "Id";
 
 		OmsShapefileFeatureReader stationsReader = new OmsShapefileFeatureReader();
-		stationsReader.file = "resources/Input/experimentalVGM/jura.shp";
+		stationsReader.file =  new File(this.getClass().getClassLoader().getResource("Input/experimentalVGM/jura.shp").toURI()).getAbsolutePath();
 		stationsReader.readFeatureCollection();
 		SimpleFeatureCollection stationsFC = stationsReader.geodata;
 
 		OmsTimeSeriesIteratorReader reader = new OmsTimeSeriesIteratorReader();
-		reader.file ="resources/Input/experimentalVGM/variogram_test.csv";
+		reader.file = new File(this.getClass().getClassLoader().getResource("Input/experimentalVGM/variogram_test.csv").toURI()).getAbsolutePath();
 		reader.idfield = "ID";
 		reader.tStart = "2000-01-01 00:00";
 		reader.tTimestep = 60*24;
@@ -68,13 +69,13 @@ public class ExperimentalVariogramTest{
 
 
 		OmsTimeSeriesIteratorWriter writer = new OmsTimeSeriesIteratorWriter();
-		writer.file = "resources/Output/experimentalVGM/experimental_distances.csv";
+		writer.file =  new File(this.getClass().getClassLoader().getResource("Output/experimentalVGM/experimental_distances.csv").toURI()).getAbsolutePath();
 		writer.tStart = reader.tStart;
 		writer.tTimestep = reader.tTimestep;
 		
 
 		OmsTimeSeriesIteratorWriter writerS = new OmsTimeSeriesIteratorWriter();
-		writerS.file = "resources/Output/experimentalVGM/experimental_variogram.csv";
+		writerS.file =  new File(this.getClass().getClassLoader().getResource("Output/experimentalVGM/experimental_variogram.csv").toURI()).getAbsolutePath();
 		writerS.tStart = reader.tStart;
 		writerS.tTimestep = reader.tTimestep;
 

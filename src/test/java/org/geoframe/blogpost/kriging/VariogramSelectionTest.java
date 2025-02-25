@@ -17,7 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package test2025;
+package org.geoframe.blogpost.kriging;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,6 +28,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 
 import org.geoframe.blogpost.kriging.variogram.theoretical.GlobalParameterEvaluator;
+import org.geoframe.blogpost.kriging.variogram.theoretical.VariogramParameters;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.feature.SchemaException;
 import org.geotools.filter.text.cql2.CQLException;
@@ -65,32 +69,39 @@ public class VariogramSelectionTest {
 		//
 		String stationIdField = "id";
 		// 100 station to training model
-		URL stazioniGridUrl = this.getClass().getClassLoader().getResource("observed.shp");
+		URL stazioniGridUrl = this.getClass().getClassLoader()
+				.getResource("Input/krigings/PointCase/sic97/observed.shp");
 		File stazioniGridFile = new File(stazioniGridUrl.toURI());
 		OmsShapefileFeatureReader stationsReader = new OmsShapefileFeatureReader();
 		stationsReader.file = stazioniGridFile.getAbsolutePath();
 		stationsReader.readFeatureCollection();
 		SimpleFeatureCollection stationsFC = stationsReader.geodata;
 
-		URL observedRain4Url = this.getClass().getClassLoader().getResource("observed_H.csv");
+		URL observedRain4Url = this.getClass().getClassLoader()
+				.getResource("Input/krigings/PointCase/sic97/observed_H.csv");
 		File observedFile = new File(observedRain4Url.toURI());
 
 		GlobalParameterEvaluator parameterEvaluator = new GlobalParameterEvaluator();
-		URL testGridUrl = this.getClass().getClassLoader().getResource("test.shp");
-		File testGridFile = new File(testGridUrl.toURI());
-		OmsShapefileFeatureReader testReader = new OmsShapefileFeatureReader();
-		testReader.file = testGridFile.getAbsolutePath();
-		testReader.readFeatureCollection();
+		URL thVariogramUrl = this.getClass().getClassLoader().getResource("Output/krigings/PointCase");
+		File thVariogramFile = new File(thVariogramUrl.toURI());
+
 		parameterEvaluator.inHValuesPath = observedFile.getAbsolutePath();
 		parameterEvaluator.inStations = stationsFC;
 		parameterEvaluator.fStationsid = stationIdField;
-		parameterEvaluator.inHValuesPath = observedFile.getAbsolutePath();
 		parameterEvaluator.cutoffDivide = 15;
 		parameterEvaluator.doDetrended = false;
 		parameterEvaluator.doIncludeZero = true;
-		parameterEvaluator.pSemivariogramType = "exponential";
-		
+		parameterEvaluator.tStart="2022-12-06 17:00";
+		parameterEvaluator.getExperimentalVariogramData = true;
+		parameterEvaluator.inTheoreticalVariogramFile = thVariogramFile.getAbsolutePath()+"/variogram.csv";
 		parameterEvaluator.execute();
+		VariogramParameters vp = parameterEvaluator.getGlobalVariogramParameters();
+		assertTrue("Il nugget deve essere >= 0", vp.getNugget() >= 0);
+		assertTrue("Il sill deve essere >= nugget", vp.getSill() >= vp.getNugget());
+		double expectedSill = 14814.40; // valore da R
+		double tolerance = 0.1 * expectedSill; // 10% di tolleranza
+		assertEquals(expectedSill, vp.getSill(), tolerance);
+
 	}
 
 }

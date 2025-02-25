@@ -16,6 +16,9 @@ public class VariogramParametersCalculator {
 	private String semivariogramType = null;
 	private int cutoffDivide;
 	private double cutoffInput;
+	private HashMap<Integer, double[]> dd;
+	private HashMap<Integer, double[]> nn;
+	private HashMap<Integer, double[]> hh;
 
 	public VariogramParametersCalculator(StationsSelection stations, boolean doDetrend, Boolean doIncludeZero) {
 		this.stations = stations;
@@ -51,6 +54,11 @@ public class VariogramParametersCalculator {
 			variogramParamsEvaluator.expVar = getExperimentalVariogram(hResiduals, idStations);
 			variogramParamsEvaluator.pSemivariogramType = this.semivariogramType;
 			variogramParamsEvaluator.proces();
+
+			dd = variogramParamsEvaluator.expVar.outDistances;
+			hh = variogramParamsEvaluator.expVar.outDistances;
+			nn = variogramParamsEvaluator.expVar.outNumberPairsPerBin;
+
 			boolean variogramOk = variogramParamsEvaluator.nugget >= 0 && variogramParamsEvaluator.sill > 0
 					&& variogramParamsEvaluator.range > 0 && variogramParamsEvaluator.isFitGood;
 			if (variogramOk || (!globalVP.isValid()) || (doDetrend && globalDeTrendedVP.isValid())) {
@@ -68,6 +76,18 @@ public class VariogramParametersCalculator {
 			return globalVP;
 		}
 		return null;
+	}
+
+	public HashMap<Integer, double[]> getHH() {
+		return hh;
+	}
+
+	public HashMap<Integer, double[]> getDD() {
+		return dd;
+	}
+
+	public HashMap<Integer, double[]> getNN() {
+		return nn;
 	}
 
 	private ExperimentalVariogram getExperimentalVariogram(double[] hresiduals, int[] idArray) {
