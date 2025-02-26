@@ -1,8 +1,14 @@
 package org.geoframe.blogpost.kriging;
+
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 
 import org.geoframe.blogpost.kriging.linearsystemsolver.SimpleLinearSystemSolverFactory;
 import org.geoframe.blogpost.kriging.pointcase.KrigingPointCase;
@@ -123,4 +129,120 @@ public class KrigingFunctionTest {
 		assertEquals(0.24917, solution.at(4), 1e-3);
 	}
 
+	@Test
+	public void testFixedVariogram() throws NoSuchMethodException, SecurityException, IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException, NoSuchFieldException {
+
+		Kriging kriging = new KrigingPointCase();
+		// Get the private field 'variogramParameters' from the Kriging class
+		Field vpField = Kriging.class.getDeclaredField("variogramParameters");
+		// Allow access to the private field
+		vpField.setAccessible(true);
+		double intercept = 1;
+		double slope = 0.5;
+		double nugget = 0.0;
+		double sill = 100;
+		double range = 10000;
+		String model = "linear";
+		kriging.nugget = nugget;
+		kriging.pSemivariogramType = model;
+		kriging.doDetrended = true;
+		kriging.sill = sill;
+		kriging.range = range;
+		kriging.inSlope = slope;
+		kriging.inIntercept = intercept;
+		Method method = Kriging.class.getDeclaredMethod("initializeKrigingParameters");
+		method.setAccessible(true);
+		VariogramParameters vp = (VariogramParameters) method.invoke(kriging);
+		assertEquals(vp.getIntercept(), intercept, 1e-3);
+		assertEquals(vp.getSlope(), slope, 1e-3);
+		assertEquals(vp.getSill(), sill, 1e-3);
+		assertEquals(vp.getRange(), range, 1e-3);
+		assertEquals(vp.getNugget(), nugget, 1e-3);
+		assertTrue(vp.getIsTrend());
+		assertEquals(vp.getModelName(), model);
+		Method method2 = Kriging.class.getDeclaredMethod("determineVariogram", VariogramParameters.class);
+		method2.setAccessible(true);
+		method2.invoke(kriging, vp);
+		vp = (VariogramParameters) vpField.get(kriging);
+		assertEquals(vp.getIntercept(), intercept, 1e-3);
+		assertEquals(vp.getSlope(), slope, 1e-3);
+		assertEquals(vp.getSill(), sill, 1e-3);
+		assertEquals(vp.getRange(), range, 1e-3);
+		assertEquals(vp.getNugget(), nugget, 1e-3);
+		assertTrue(vp.getIsTrend());
+		assertEquals(vp.getModelName(), model);
+	}
+
+	@Test
+	public void testVariableVariogram() throws NoSuchMethodException, SecurityException, IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException, NoSuchFieldException {
+
+		Kriging kriging = new KrigingPointCase();
+		// Get the private field 'variogramParameters' from the Kriging class
+		Field vpField = Kriging.class.getDeclaredField("variogramParameters");
+		// Allow access to the private field
+		vpField.setAccessible(true);
+
+		double intercept = 1;
+		double slope = 0.5;
+		double nugget = 0.0;
+		double sill = 100;
+		double range = 10000;
+		String model = "exponential";
+		HashMap<Integer, double[]> variogram = new HashMap();
+
+		variogram.put(0, new double[] { nugget });
+		variogram.put(1, new double[] { sill });
+		variogram.put(2, new double[] { range });
+		variogram.put(3, new double[] { 0 });
+		variogram.put(4, new double[] { 0 });
+		variogram.put(5, new double[] { 0 });
+		variogram.put(6, new double[] { intercept });
+		variogram.put(7, new double[] { slope });
+
+		kriging.inTheoreticalVariogram = variogram;
+		Method method = Kriging.class.getDeclaredMethod("initializeKrigingParameters");
+		method.setAccessible(true);
+		VariogramParameters vp = (VariogramParameters) method.invoke(kriging);
+		Method method2 = Kriging.class.getDeclaredMethod("determineVariogram", VariogramParameters.class);
+		method2.setAccessible(true);
+		method2.invoke(kriging, vp);
+		vp = (VariogramParameters) vpField.get(kriging);
+		assertEquals(vp.getIntercept(), intercept, 1e-3);
+		assertEquals(vp.getSlope(), slope, 1e-3);
+		assertEquals(vp.getSill(), sill, 1e-3);
+		assertEquals(vp.getRange(), range, 1e-3);
+		assertEquals(vp.getNugget(), nugget, 1e-3);
+		assertTrue(vp.getIsTrend());
+		assertEquals(vp.getModelName(), model);
+
+		variogram.put(0, new double[] { nugget });
+		variogram.put(1, new double[] { sill });
+		variogram.put(2, new double[] { range });
+		variogram.put(3, new double[] { 0 });
+		variogram.put(4, new double[] { 1 });
+		variogram.put(5, new double[] { 0 });
+		variogram.put(6, new double[] { intercept });
+		variogram.put(7, new double[] { slope });
+
+		kriging.inTheoreticalVariogram = variogram;
+		vp = (VariogramParameters) method.invoke(kriging);
+		method2.invoke(kriging, vp);
+		vp = (VariogramParameters) vpField.get(kriging);
+		assertEquals(vp.getIntercept(), intercept, 1e-3);
+		assertEquals(vp.getSlope(), slope, 1e-3);
+		assertEquals(vp.getSill(), sill, 1e-3);
+		assertEquals(vp.getRange(), range, 1e-3);
+		assertEquals(vp.getNugget(), nugget, 1e-3);
+		assertFalse(vp.getIsTrend());
+		assertEquals(vp.getModelName(), model);
+
+		HashMap<Integer, double[]> vpHM = vp.toHashMap();
+		for (Integer key : vpHM.keySet()) {
+			assertTrue("Actual map does not contain key: " + key, variogram.containsKey(key));
+			assertArrayEquals("Arrays differ at key " + key, vpHM.get(key), variogram.get(key), 1e-3);
+		}
+
+	}
 }
