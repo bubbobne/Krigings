@@ -36,6 +36,7 @@ repositories {
     maven {
         // hatbox 1.0.b7
         url 'https://maven.geo-solutions.it/'
+        
     }
 
     mavenCentral() //jgt
@@ -49,6 +50,8 @@ repositories {
 subprojects {
   junitPlatformTest.dependsOn processTestResources
 }
+
+
 
 dependencies {
 
@@ -67,14 +70,10 @@ dependencies {
     // https://mvnrepository.com/artifact/org.jgrasstools/jgt-jgrassgears
     implementation group: 'org.hortonmachine', name: 'hm-gears', version: '0.10.7'
     //https://mvnrepository.com/artifact/org.jgrasstools/jgt-modules
-    implementation group: 'org.hortonmachine', name: 'hm-modules', version: '0.10.7'
+    //implementation group: 'org.hortonmachine', name: 'hm-modules', version: '0.10.7'
     implementation group: 'net.sourceforge.hatbox', name: 'hatbox', version: '1.0.b7'
 
         // Use JUnit test framework
-    // **JUnit 5 (Senza JUnit 4)**
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
+    testImplementation 'junit:junit:4.+'
 
-    // **Mockito per JUnit 5**
-    testImplementation 'org.mockito:mockito-core:4.5.1'
-    testImplementation 'org.mockito:mockito-junit-jupiter:4.5.1'}
+  }  

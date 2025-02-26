@@ -25,7 +25,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.geoframe.blogpost.kriging.interpolationdata.InterpolationDataProvider;
 import org.geoframe.blogpost.kriging.linearsystemsolver.SimpleLinearSystemSolverFactory;
@@ -35,7 +34,6 @@ import org.geoframe.blogpost.kriging.utilities.Utility;
 import org.geoframe.blogpost.kriging.variogram.theoretical.TheoreticalVariogram;
 import org.geoframe.blogpost.kriging.variogram.theoretical.VariogramParameters;
 import org.geotools.data.simple.SimpleFeatureCollection;
-import org.geotools.feature.SchemaException;
 import org.hortonmachine.gears.libs.exceptions.ModelsRuntimeException;
 import org.hortonmachine.gears.libs.modules.HMModel;
 import org.hortonmachine.gears.libs.monitor.IHMProgressMonitor;
@@ -44,8 +42,6 @@ import org.hortonmachine.gears.utils.math.matrixes.ColumnVector;
 import org.hortonmachine.gears.utils.math.matrixes.MatrixException;
 import org.hortonmachine.hmachine.i18n.HortonMessageHandler;
 import org.locationtech.jts.geom.Coordinate;
-import org.opengis.geometry.MismatchedDimensionException;
-import org.opengis.referencing.operation.TransformException;
 
 import oms3.annotations.Author;
 import oms3.annotations.Description;
@@ -56,7 +52,6 @@ import oms3.annotations.Keywords;
 import oms3.annotations.Label;
 import oms3.annotations.License;
 import oms3.annotations.Name;
-import oms3.annotations.Out;
 import oms3.annotations.Status;
 
 /**
@@ -231,8 +226,8 @@ public abstract class Kriging extends HMModel {
 		 * distance from the considered point.
 		 */
 		StationsSelection stations = this.createAndConfigureStationSelection();
-		determineVariogram(vp, stations);
-		StationProcessor sp = new StationProcessor(stations, variogramParameters);
+		determineVariogram(vp);
+		StationProcessor sp = this.createStationProcessor(stations, variogramParameters);
 		// If no neighborhood criteria is provided, update without spatial filtering.
 		if (maxdist == 0 && inNumCloserStations == 0) {
 			sp.updateForCoordinate(null, inData, 0, 0);
@@ -295,7 +290,7 @@ public abstract class Kriging extends HMModel {
 
 		// Use an AtomicInteger to safely assign indices across parallel tasks.
 		StationsSelection stations = createAndConfigureStationSelection();
-		determineVariogram(vp, stations);
+		determineVariogram(vp);
 		StationProcessor sp = new StationProcessor(stations, variogramParameters);
 		if (maxdist == 0 && inNumCloserStations == 0) {
 
@@ -303,7 +298,7 @@ public abstract class Kriging extends HMModel {
 		}
 		entries.parallelStream().forEach(entry -> {
 			Coordinate coordinate = entry.getValue();
-			int i =entries.indexOf(entry);
+			int i = entries.indexOf(entry);
 
 			// Each thread creates its own instance of StationsSelection.
 			// Variogram parameters might need to be recalculated per thread if mutable.
@@ -348,6 +343,13 @@ public abstract class Kriging extends HMModel {
 		storeResult(result, pointsMap);
 	}
 
+	
+	
+	protected StationProcessor createStationProcessor(StationsSelection stations, VariogramParameters vp) {
+	    return new StationProcessor(stations, vp);
+	}
+	
+	
 	private double intepolateValue(StationProcessor sp, Coordinate coordinate) throws MatrixException {
 		double interpolatedValue;
 		double[] xStations = sp.getXStations();
@@ -426,7 +428,7 @@ public abstract class Kriging extends HMModel {
 	 * @param vp       The variogram parameters built from user input.
 	 * @param stations The StationsSelection object containing station information.
 	 */
-	private void determineVariogram(VariogramParameters vp, StationsSelection stations) {
+	private void determineVariogram(VariogramParameters vp) {
 
 		if (inTheoreticalVariogram != null && inTheoreticalVariogram.get(0)[0] != -9999) {
 			variogramParameters = new VariogramParameters.Builder(
@@ -472,7 +474,7 @@ public abstract class Kriging extends HMModel {
 	 *
 	 * @return A configured StationsSelection object.
 	 */
-	private StationsSelection createAndConfigureStationSelection() {
+	protected StationsSelection createAndConfigureStationSelection() {
 		StationsSelection stations = new StationsSelection();
 		stations.inStations = inStations;
 		stations.maxdist = maxdist;

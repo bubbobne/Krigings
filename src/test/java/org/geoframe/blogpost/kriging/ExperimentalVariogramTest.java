@@ -18,7 +18,8 @@
  */
 package org.geoframe.blogpost.kriging;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.util.HashMap;
@@ -28,8 +29,8 @@ import org.geotools.data.simple.SimpleFeatureCollection;
 import org.hortonmachine.gears.io.shapefile.OmsShapefileFeatureReader;
 import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorReader;
 import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorWriter;
+import org.junit.Test;
 
-import org.junit.jupiter.api.Test;
 
 public class ExperimentalVariogramTest {
 	@SuppressWarnings("nls")

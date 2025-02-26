@@ -1,12 +1,14 @@
 package org.geoframe.blogpost.kriging;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.jupiter.api.Test;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import org.geoframe.blogpost.kriging.primarylocation.ResidualsEvaluator;
+import org.junit.Test;
 
 public class ResidualsEvaluatorTest {
 
@@ -48,7 +50,7 @@ public class ResidualsEvaluatorTest {
 		ResidualsEvaluator evaluator = ResidualsEvaluator.create(zStations, hStations, doDetrended, regressionOrder);
 
 		// Expect a statistically significant trend.
-		assertTrue(evaluator.isPValueOk,"Expected significant trend (p-value < 0.05)");
+		assertTrue("Expected significant trend (p-value < 0.05)",evaluator.isPValueOk);
 
 		// Check that the estimated intercept and coefficient are close to the true
 		// values.

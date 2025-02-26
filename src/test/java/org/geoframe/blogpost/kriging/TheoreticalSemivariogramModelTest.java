@@ -1,12 +1,11 @@
 package org.geoframe.blogpost.kriging;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
-import org.junit.jupiter.api.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 
 import org.geoframe.blogpost.kriging.variogram.theoretical.model.*;
+import org.junit.Test;
 
 public class TheoreticalSemivariogramModelTest {
 	double dist1 = 5.0;
@@ -20,8 +19,8 @@ public class TheoreticalSemivariogramModelTest {
 	// Helper method to check that the gradient array is valid.
 	private void assertValidGradient(Model model) {
 		double[] gradient = model.computeGradient();
-		assertNotNull(gradient, "Il gradient non deve essere null");
-		assertEquals(3, gradient.length, "Il gradient deve contenere 3 elementi");
+		assertNotNull("Il gradient non deve essere null", gradient);
+		assertEquals("Il gradient deve contenere 3 elementi", 3, gradient.length);
 	}
 
 	@Test
@@ -29,10 +28,10 @@ public class TheoreticalSemivariogramModelTest {
 
 		Linear linear = new Linear(dist1, sill, range, nug);
 		double computed = linear.computeSemivariance();
-		assertEquals(4.33, computed, EPSILON, "Linear semivariance did not match expected value");
+		assertEquals("Linear semivariance did not match expected value", 4.33, computed, EPSILON);
 		linear = new Linear(dist2, sill, range, nug);
 		computed = linear.computeSemivariance();
-		assertEquals(11, computed, EPSILON, "Linear semivariance did not match expected value");
+		assertEquals("Linear semivariance did not match expected value", 11, computed, EPSILON);
 		assertValidGradient(linear);
 	}
 
@@ -65,11 +64,11 @@ public class TheoreticalSemivariogramModelTest {
 	public void testExponentialSemivariance() {
 		Exponential exponential = new Exponential(dist1, sill, range, nug);
 		double computed = exponential.computeSemivariance();
-		assertEquals(3.834, computed, EPSILON, "Exponential semivariance did not match expected value");
+		assertEquals("Exponential semivariance did not match expected value", 3.834, computed, EPSILON);
 		exponential = new Exponential(dist2, sill, range, nug);
 		computed = exponential.computeSemivariance();
-		assertEquals(9.111, computed, EPSILON, "Exponential semivariance did not match expected value");
-		assertFalse(Double.compare(Double.MAX_VALUE, computed) == 0, "Exponential semivariance should be computed");
+		assertEquals("Exponential semivariance did not match expected value", 9.111, computed, EPSILON);
+		assertFalse("Exponential semivariance should be computed", Double.compare(Double.MAX_VALUE, computed) == 0);
 		assertValidGradient(exponential);
 	}
 
@@ -77,13 +76,13 @@ public class TheoreticalSemivariogramModelTest {
 	public void testGaussianSemivariance() {
 		Gaussian gaussian = new Gaussian(dist1, sill, range, nug);
 		double computed = gaussian.computeSemivariance();
-		assertFalse(Double.compare(Double.MAX_VALUE, computed) == 0, "Gaussian semivariance should be computed");
-		assertEquals(2.051, computed, EPSILON, "Gausian semivariance did not match expected value");
+		assertFalse("Gaussian semivariance should be computed", Double.compare(Double.MAX_VALUE, computed) == 0);
+		assertEquals("Gausian semivariance did not match expected value", 2.051, computed, EPSILON);
 
 		gaussian = new Gaussian(dist2, sill, range, nug);
 		computed = gaussian.computeSemivariance();
-		assertFalse(Double.compare(Double.MAX_VALUE, computed) == 0, "Gaussian semivariance should be computed");
-		assertEquals(10.378, computed, EPSILON, "Gaussian semivariance did not match expected value");
+		assertFalse("Gaussian semivariance should be computed", Double.compare(Double.MAX_VALUE, computed) == 0);
+		assertEquals("Gaussian semivariance did not match expected value", 10.378, computed, EPSILON);
 
 		assertValidGradient(gaussian);
 	}
@@ -108,7 +107,7 @@ public class TheoreticalSemivariogramModelTest {
 		double nug = 0.5;
 		Logarithmic logarithmic = new Logarithmic(dist, sill, range, nug);
 		double computed = logarithmic.computeSemivariance();
-		assertFalse(Double.compare(Double.MAX_VALUE, computed) == 0, "Logarithmic semivariance should be computed");
+		assertFalse("Logarithmic semivariance should be computed", Double.compare(Double.MAX_VALUE, computed) == 0);
 		assertValidGradient(logarithmic);
 	}
 
@@ -144,7 +143,7 @@ public class TheoreticalSemivariogramModelTest {
 		double nug = 0.0;
 		Power power = new Power(dist, sill, range, nug);
 		double computed = power.computeSemivariance();
-		assertFalse(Double.compare(Double.MAX_VALUE, computed) == 0, "Power semivariance should be computed");
+		assertFalse("Power semivariance should be computed", Double.compare(Double.MAX_VALUE, computed) == 0);
 		assertValidGradient(power);
 	}
 
@@ -153,11 +152,11 @@ public class TheoreticalSemivariogramModelTest {
 		Spherical spherical = new Spherical(dist1, sill, range, nug);
 		double computed = spherical.computeSemivariance();
 		assertFalse(Double.compare(Double.MAX_VALUE, computed) == 0);
-		assertEquals(5.8148, computed, EPSILON, "Spherical semivariance should be computed");
+		assertEquals("Spherical semivariance should be computed", 5.8148, computed, EPSILON);
 		spherical = new Spherical(dist2, sill, range, nug);
 		computed = spherical.computeSemivariance();
-		assertFalse(Double.compare(Double.MAX_VALUE, computed) == 0, "Spherical semivariance should be computed");
-		assertEquals(11.0, computed, EPSILON, "Spherical semivariance did not match expected value");
+		assertFalse("Spherical semivariance should be computed", Double.compare(Double.MAX_VALUE, computed) == 0);
+		assertEquals("Spherical semivariance did not match expected value", 11.0, computed, EPSILON);
 
 		assertValidGradient(spherical);
 	}

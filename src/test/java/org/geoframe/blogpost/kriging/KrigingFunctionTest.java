@@ -1,13 +1,14 @@
 package org.geoframe.blogpost.kriging;
+import static org.junit.Assert.assertEquals;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import org.junit.jupiter.api.Test;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+
 import org.geoframe.blogpost.kriging.linearsystemsolver.SimpleLinearSystemSolverFactory;
 import org.geoframe.blogpost.kriging.pointcase.KrigingPointCase;
 import org.geoframe.blogpost.kriging.variogram.theoretical.VariogramParameters;
 import org.hortonmachine.gears.utils.math.matrixes.ColumnVector;
+import org.junit.Test;
 
 public class KrigingFunctionTest {
 
