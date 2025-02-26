@@ -145,6 +145,17 @@ public class KrigingFlagTest {
 		assertTrue(" not bounded", secondValue == 400);
 		assertTrue(" not bounded", secondValue > 390);
 
+		kriging.inNumCloserStations = 0;
+		kriging.maxdist = 8.0;
+		kriging.executeKriging();
+		results = kriging.outData;
+		firstValue = results.get(1)[0];
+		assertTrue(" not bounded", firstValue == 100);
+		assertTrue(" not bounded", firstValue > 90);
+		secondValue = results.get(2)[0];
+		assertTrue(" not bounded", secondValue == 400);
+		assertTrue(" not bounded", secondValue > 390);
+
 	}
 
 	private class KrigingTest extends Kriging {
@@ -157,7 +168,7 @@ public class KrigingFlagTest {
 		protected void storeResult(double[] result, HashMap<Integer, Coordinate> interpolatedCoordinatesMap) {
 			outData = new HashMap();
 			for (int i = 1; i <= result.length; i++) {
-				outData.put(i, new double[] { result[i-1] });
+				outData.put(i, new double[] { result[i - 1] });
 			}
 		}
 
