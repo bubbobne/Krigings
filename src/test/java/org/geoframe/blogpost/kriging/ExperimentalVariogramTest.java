@@ -18,6 +18,7 @@
  */
 package org.geoframe.blogpost.kriging;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
 import java.util.HashMap;
@@ -28,70 +29,65 @@ import org.hortonmachine.gears.io.shapefile.OmsShapefileFeatureReader;
 import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorReader;
 import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorWriter;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-
-
-
-public class ExperimentalVariogramTest{
+public class ExperimentalVariogramTest {
 	@SuppressWarnings("nls")
-	
+
 	@Test
 	public void testVariogram() throws Exception {
-
 
 		//
 
 		String stationIdField = "Id";
 
 		OmsShapefileFeatureReader stationsReader = new OmsShapefileFeatureReader();
-		stationsReader.file =  new File(this.getClass().getClassLoader().getResource("Input/experimentalVGM/jura.shp").toURI()).getAbsolutePath();
+		stationsReader.file = new File(
+				this.getClass().getClassLoader().getResource("Input/experimentalVGM/jura.shp").toURI())
+				.getAbsolutePath();
 		stationsReader.readFeatureCollection();
 		SimpleFeatureCollection stationsFC = stationsReader.geodata;
 
 		OmsTimeSeriesIteratorReader reader = new OmsTimeSeriesIteratorReader();
-		reader.file = new File(this.getClass().getClassLoader().getResource("Input/experimentalVGM/variogram_test.csv").toURI()).getAbsolutePath();
+		reader.file = new File(
+				this.getClass().getClassLoader().getResource("Input/experimentalVGM/variogram_test.csv").toURI())
+				.getAbsolutePath();
 		reader.idfield = "ID";
 		reader.tStart = "2000-01-01 00:00";
-		reader.tTimestep = 60*24;
-		//reader.tEnd = "2014-02-15 10:00";
+		reader.tTimestep = 60 * 24;
+		// reader.tEnd = "2014-02-15 10:00";
 		reader.fileNovalue = "-9999.0";
 
 		reader.initProcess();
 
 		ExperimentalVariogram Meuse = new ExperimentalVariogram();
 
-		Meuse.Cutoff_divide=3;
-		//Meuse.Cutoffinput=15000;
+		Meuse.Cutoff_divide = 3;
+		// Meuse.Cutoffinput=15000;
 		Meuse.inStations = stationsFC;
 		Meuse.fStationsid = stationIdField;
 
-
 		OmsTimeSeriesIteratorWriter writer = new OmsTimeSeriesIteratorWriter();
-		writer.file =  new File(this.getClass().getClassLoader().getResource("Output/experimentalVGM/experimental_distances.csv").toURI()).getAbsolutePath();
+		writer.file = new File(this.getClass().getClassLoader()
+				.getResource("Output/experimentalVGM/experimental_distances.csv").toURI()).getAbsolutePath();
 		writer.tStart = reader.tStart;
 		writer.tTimestep = reader.tTimestep;
-		
 
 		OmsTimeSeriesIteratorWriter writerS = new OmsTimeSeriesIteratorWriter();
-		writerS.file =  new File(this.getClass().getClassLoader().getResource("Output/experimentalVGM/experimental_variogram.csv").toURI()).getAbsolutePath();
+		writerS.file = new File(this.getClass().getClassLoader()
+				.getResource("Output/experimentalVGM/experimental_variogram.csv").toURI()).getAbsolutePath();
 		writerS.tStart = reader.tStart;
 		writerS.tTimestep = reader.tTimestep;
 
-		while( reader.doProcess ) {
+		while (reader.doProcess) {
 			reader.nextRecord();
 			HashMap<Integer, double[]> id2ValueMap = reader.outData;
 			Meuse.inData = id2ValueMap;
 
-			
 			Meuse.process();
-			
-			
 
 			HashMap<Integer, double[]> resultD = Meuse.outDistances;
 			HashMap<Integer, double[]> resultS = Meuse.outExperimentalVariogram;
-
 
 			writer.inData = resultD;
 			writer.writeNextLine();
@@ -105,12 +101,8 @@ public class ExperimentalVariogramTest{
 		writerS.close();
 		Double val = 1.0;
 		Double res = 1.0;
-		Assert.assertEquals(res,val);
+		assertEquals(res, val);
 
 	}
 
 }
-
-
-
-

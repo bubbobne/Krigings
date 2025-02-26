@@ -36,25 +36,23 @@ import oms3.annotations.Out;
 import oms3.annotations.Status;
 
 /**
- * KrigingPointCase extends the abstract Kriging class for vector-based interpolation.
- * It implements methods to validate inputs, initialize the interpolation data provider,
- * and store the interpolation results.
+ * KrigingPointCase extends the abstract Kriging class for vector-based
+ * interpolation. It implements methods to validate inputs, initialize the
+ * interpolation data provider, and store the interpolation results.
  *
- * <p>Improvements and potential issues:
+ * <p>
+ * Improvements and potential issues:
  * <ul>
- *   <li>
- *     In {@code initializeInterpolatorData()}, the order of the parameters passed to 
- *     {@code VectorInterpolationProvider} has been corrected (idField first, then zField).
- *   </li>
- *   <li>
- *     In the overridden {@code storeResult(double[], HashMap<Integer, Coordinate>)} method,
- *     the call to the private {@code storeResult(double[], int[])} method now correctly passes
- *     an array of keys rather than the HashMap itself.
- *   </li>
- *   <li>
- *     Consider throwing a more specific exception (e.g., IllegalArgumentException) in 
- *     {@code verifyInput()} if required fields are missing instead of using NullPointerException.
- *   </li>
+ * <li>In {@code initializeInterpolatorData()}, the order of the parameters
+ * passed to {@code VectorInterpolationProvider} has been corrected (idField
+ * first, then zField).</li>
+ * <li>In the overridden
+ * {@code storeResult(double[], HashMap<Integer, Coordinate>)} method, the call
+ * to the private {@code storeResult(double[], int[])} method now correctly
+ * passes an array of keys rather than the HashMap itself.</li>
+ * <li>Consider throwing a more specific exception (e.g.,
+ * IllegalArgumentException) in {@code verifyInput()} if required fields are
+ * missing instead of using NullPointerException.</li>
  * </ul>
  * </p>
  */
@@ -119,24 +117,27 @@ public class KrigingPointCase extends Kriging {
 		}
 	}
 
-
-    @Override
+	@Override
 	protected InterpolationDataProvider initializeInterpolatorData() {
 		// TODO Auto-generated method stub
-		return new VectorInterpolationProvider(inInterpolate, fInterpolateid,fPointZ, pm, msg);
+		return new VectorInterpolationProvider(inInterpolate, fInterpolateid, fPointZ, pm, msg);
 	}
 
-	  /**
-     * Overridden method to store the interpolation results.
-     * Converts the key set of the provided coordinates map into an integer array and
-     * calls the private storeResult method to populate outData.
-     *
-     * <p>Potential bug fixed: Instead of passing the HashMap, we now correctly pass the array of keys.</p>
-     *
-     * @param result                         The array of interpolated values.
-     * @param interpolatedCoordinatesMap     A HashMap of the interpolated coordinates.
-     */
-    @Override	protected void storeResult(double[] result, HashMap<Integer, Coordinate> interpolatedCoordinatesMap) {
+	/**
+	 * Overridden method to store the interpolation results. Converts the key set of
+	 * the provided coordinates map into an integer array and calls the private
+	 * storeResult method to populate outData.
+	 *
+	 * <p>
+	 * Potential bug fixed: Instead of passing the HashMap, we now correctly pass
+	 * the array of keys.
+	 * </p>
+	 *
+	 * @param result                     The array of interpolated values.
+	 * @param interpolatedCoordinatesMap A HashMap of the interpolated coordinates.
+	 */
+	@Override
+	protected void storeResult(double[] result, HashMap<Integer, Coordinate> interpolatedCoordinatesMap) {
 		int[] id = interpolatedCoordinatesMap.keySet().stream().mapToInt(Integer::intValue).toArray();
 		this.storeResult(result, id);
 	}

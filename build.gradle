@@ -71,6 +71,10 @@ dependencies {
     implementation group: 'net.sourceforge.hatbox', name: 'hatbox', version: '1.0.b7'
 
         // Use JUnit test framework
-    testImplementation 'junit:junit:4.+'
+    // **JUnit 5 (Senza JUnit 4)**
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
 
-}
+    // **Mockito per JUnit 5**
+    testImplementation 'org.mockito:mockito-core:4.5.1'
+    testImplementation 'org.mockito:mockito-junit-jupiter:4.5.1'}

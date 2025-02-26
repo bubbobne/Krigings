@@ -1,6 +1,9 @@
 package org.geoframe.blogpost.kriging;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.util.HashMap;
 
 import org.geoframe.blogpost.kriging.primarylocation.StationsSelection;
@@ -8,7 +11,7 @@ import org.geotools.feature.DefaultFeatureCollection;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.opengis.feature.simple.SimpleFeature;
@@ -168,7 +171,7 @@ public class StationsSelectionTest {
         // Expect x0 and x1 to be 1 and 2 (or vice versa)
         boolean condition = ((Math.abs(x0 - 1.0) < 1e-6 && Math.abs(x1 - 2.0) < 1e-6) ||
                              (Math.abs(x0 - 2.0) < 1e-6 && Math.abs(x1 - 1.0) < 1e-6));
-        assertTrue("Expected the two closest stations to be selected", condition);
+        assertTrue( condition,"Expected the two closest stations to be selected");
     }
 }
 

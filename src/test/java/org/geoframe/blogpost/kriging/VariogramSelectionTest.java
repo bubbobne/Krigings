@@ -19,8 +19,8 @@
 
 package org.geoframe.blogpost.kriging;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,7 +33,7 @@ import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.feature.SchemaException;
 import org.geotools.filter.text.cql2.CQLException;
 import org.hortonmachine.gears.io.shapefile.OmsShapefileFeatureReader;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class VariogramSelectionTest {
 
@@ -91,13 +91,13 @@ public class VariogramSelectionTest {
 		parameterEvaluator.cutoffDivide = 15;
 		parameterEvaluator.doDetrended = false;
 		parameterEvaluator.doIncludeZero = true;
-		parameterEvaluator.tStart="2022-12-06 17:00";
+		parameterEvaluator.tStart = "2022-12-06 17:00";
 		parameterEvaluator.getExperimentalVariogramData = true;
-		parameterEvaluator.inTheoreticalVariogramFile = thVariogramFile.getAbsolutePath()+"/variogram.csv";
+		parameterEvaluator.inTheoreticalVariogramFile = thVariogramFile.getAbsolutePath() + "/variogram.csv";
 		parameterEvaluator.execute();
 		VariogramParameters vp = parameterEvaluator.getGlobalVariogramParameters();
-		assertTrue("Il nugget deve essere >= 0", vp.getNugget() >= 0);
-		assertTrue("Il sill deve essere >= nugget", vp.getSill() >= vp.getNugget());
+		assertTrue(vp.getNugget() >= 0,"Il nugget deve essere >= 0");
+		assertTrue( vp.getSill() >= vp.getNugget(),"Il sill deve essere >= nugget");
 		double expectedSill = 14814.40; // valore da R
 		double tolerance = 0.1 * expectedSill; // 10% di tolleranza
 		assertEquals(expectedSill, vp.getSill(), tolerance);

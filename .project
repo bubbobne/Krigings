@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>Krigings</name>
+	<name>kriging</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -22,8 +22,8 @@
 	</natures>
 	<filteredResources>
 		<filter>
-			<id>1740476002750</id>
-			<name>src/test</name>
+			<id>1</id>
+			<name></name>
 			<type>9</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.andFilterMatcher</id>

@@ -190,8 +190,7 @@ public abstract class Kriging extends HMModel {
 	public double inIntercept = 0.0;
 	@In
 	public double inSlope = 0;
-	
-	
+
 	private VariogramParameters variogramParameters;
 
 	protected InterpolationDataProvider provider = null;
@@ -290,35 +289,34 @@ public abstract class Kriging extends HMModel {
 		// Prepare arrays to store results.
 
 		int size = pointsMap.size();
-
-		double[] result = new double[size];
-
 		// Convert the entry set to a list for parallel processing.
 		List<Map.Entry<Integer, Coordinate>> entries = new ArrayList<>(pointsMap.entrySet());
+		double[] result = new double[entries.size()];
 
 		// Use an AtomicInteger to safely assign indices across parallel tasks.
-		AtomicInteger indexCounter = new AtomicInteger(0);
+		StationsSelection stations = createAndConfigureStationSelection();
+		determineVariogram(vp, stations);
+		StationProcessor sp = new StationProcessor(stations, variogramParameters);
+		if (maxdist == 0 && inNumCloserStations == 0) {
 
+			sp.updateForCoordinate(null, inData, 0, 0);
+		}
 		entries.parallelStream().forEach(entry -> {
-			int currentIndex = indexCounter.getAndIncrement();
 			Coordinate coordinate = entry.getValue();
+			int i =entries.indexOf(entry);
 
 			// Each thread creates its own instance of StationsSelection.
-			StationsSelection stations = createAndConfigureStationSelection();
 			// Variogram parameters might need to be recalculated per thread if mutable.
-			determineVariogram(vp, stations);
-			StationProcessor sp = new StationProcessor(stations, variogramParameters);
 
-			try { // Update the station processor for the current coordinate.
-				if (maxdist > 0 || inNumCloserStations > 0) {
+			if (maxdist > 0 || inNumCloserStations > 0) {
+				try {
 					sp.updateForCoordinate(coordinate, inData, inNumCloserStations, maxdist);
-				} else {
-					sp.updateForCoordinate(null, inData, 0, 0);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			}
+
 			double interpolatedValue;
 			int n1 = sp.getCount();
 			boolean areAllEquals = sp.areAllEquals();
@@ -343,7 +341,7 @@ public abstract class Kriging extends HMModel {
 			}
 
 			// Post-process and store the result.
-			result[currentIndex] = postProcessResult(interpolatedValue);
+			result[i] = postProcessResult(interpolatedValue);
 		});
 
 		// Store results after all parallel tasks have completed.

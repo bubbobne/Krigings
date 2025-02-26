@@ -19,7 +19,9 @@
 
 package org.geoframe.blogpost.kriging;
 
-import static org.junit.Assert.assertEquals;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,7 +38,9 @@ import org.geotools.filter.text.cql2.CQLException;
 import org.hortonmachine.gears.io.shapefile.OmsShapefileFeatureReader;
 import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorReader;
 import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorWriter;
-import org.junit.Test;
+
+
+
 
 public class KrigingPointCaseTest {
 	/**
@@ -49,7 +53,24 @@ public class KrigingPointCaseTest {
 	 * 
 	 * 
 	 * @throws Exception
-	 * @throws Exception
+	 * @throws Exceptionimport org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.geotools.data.simple.SimpleFeatureCollection;
+import org.geotools.feature.SchemaException;
+import org.geotools.filter.text.cql2.CQLException;
+import org.hortonmachine.modules.statistics.kriging.KrigingPointCase;
+import org.hortonmachine.utils.features.OmsShapefileFeatureReader;
+import org.hortonmachine.utils.time.OmsTimeSeriesIteratorReader;
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Set;
 	 */
 
 	@Test
