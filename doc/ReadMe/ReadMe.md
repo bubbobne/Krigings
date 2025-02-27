@@ -25,9 +25,8 @@ First version from [@Formetta2014-zn] and [@Bancheri2018-x]
 
 A built version of the lates release is available at the [GitHub release section](https://github.com/geoframecomponents/Krigings/releases).
 
-## Documentation
 
-#### Repository and Compatibility
+## Repository and Compatibility
 
 * The project can be imported into Eclipse.
 * It is available on GitHub and can be cloned or downloaded from: [GitHub Repository](https://github.com/geoframecomponents/Krigings.git)
@@ -35,12 +34,12 @@ A built version of the lates release is available at the [GitHub release section
 * The project uses Java ?? (Oracle JDK ??) for compatibility.
 
 
-### Developers' documentation
+## Developers' documentation
 This project is a **Gradle-based Java project**.
 
 ![Gradle logo](doc/ReadMe/gradle.png)
 
-#### Building the Project
+### Building the Project
 
 To build the project, run the following command in the working directory:
 
@@ -49,7 +48,7 @@ To build the project, run the following command in the working directory:
 in the working directory. You will find the built `.jar` in `build/libs`.
 Once the build process is complete, the generated `.jar` file will be located in the `build/libs` directory.
 
-#### Building the ReadMe File
+### Building the ReadMe File
 
 To convert the ReadMe file from Markdown (`.md`) to RestructuredText (`.rst`), run:
 
@@ -59,15 +58,17 @@ This command ensures proper formatting and inclusion of references from the `bib
 
 
 
-#### The Code
+### Package Structure
 
 **Base Package:** `org.geoframe.blogpost.kriging`
 
 ---
 
-## Package Structure
 
-### `interpolationdata`
+
+#### `interpolationdata`
+
+
 **Description:** Provides interpolation data, including raster and vector input handling.
 **Main Classes:**
 - `InterpolationDataProvider.java` → Interface for providing interpolation data
@@ -76,7 +77,7 @@ This command ensures proper formatting and inclusion of references from the `bib
 
 ---
 
-### `linearsystemsolver`
+#### `linearsystemsolver`
 **Description:** Implements solvers for linear systems required in kriging computations.
 **Main Class:**
 - `SimpleLinearSystemSolverFactory.java` → Factory class for linear system solvers
@@ -90,14 +91,14 @@ This command ensures proper formatting and inclusion of references from the `bib
 
 ---
 
-### `pointcase`
+#### `pointcase`
 **Description:** Implements kriging for point-based interpolation.
 **Main Class:**
 - `KrigingPointCase.java` → Performs kriging interpolation on point data
 
 ---
 
-### `primarylocation`
+#### `primarylocation`
 **Description:** Manages station selection, residual evaluation, and spatial processing.
 **Main Classes:**
 - `MaxDistance.java` → Computes the maximum interpolation distance
@@ -109,27 +110,27 @@ This command ensures proper formatting and inclusion of references from the `bib
 
 ---
 
-### `rastercase`
+#### `rastercase`
 **Description:** Implements kriging for raster datasets.
 **Main Class:**
 - `KrigingRasterCase.java` → Applies kriging on raster data
 
 ---
 
-### `variogram`
+#### `variogram`
 **Description:** Implements variogram modeling, both experimental and theoretical.
 
 #### Subpackages
 
-##### `experimental`
+###### `experimental`
 - `ExperimentalVariogram.java` → Computes the experimental variogram from data
 
-##### `theoretical.curvefitter`
+###### `theoretical.curvefitter`
 - `KrigingParamValidator.java` → Validates kriging parameters
 - `VariogramFitter.java` → Fits variogram models to experimental data
 - `VariogramFunction.java` → Implements mathematical functions for variogram calculations
 
-##### `theoretical.model`
+###### `theoretical.model`
 **Supported theoretical variogram models:**
 - `Bessel.java`
 - `Circular.java`
@@ -142,18 +143,18 @@ This command ensures proper formatting and inclusion of references from the `bib
 
 ---
 
-### `utilities`
+#### `utilities`
 **Description:** Utility functions and helper classes for kriging computations.
 
 ---
 
-### `org.geoframe.blogpost.kriging`
+#### `org.geoframe.blogpost.kriging`
 **Main Class:**
 - `Kriging.java` → Main execution class for kriging interpolation
 
 ---
 
-### Linkers' documentation
+## Linkers' documentation
 
 Integration with OMS3/GEOFrame:
 
@@ -161,12 +162,12 @@ Integration with OMS3/GEOFrame:
     * Input data can be retrieved from existing hydrological simulations for further processing.
 
 
-### Users' documentation
+## Users' documentation
 
 (To be completed, it will be published on a Notion static page or on the blog.)
 
 
-###  Future Improvements
+##  Future Improvements
 
 
 
