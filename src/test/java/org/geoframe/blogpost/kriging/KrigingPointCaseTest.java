@@ -19,8 +19,6 @@
 
 package org.geoframe.blogpost.kriging;
 
-
-
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
@@ -40,38 +38,20 @@ import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorReader;
 import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorWriter;
 import org.junit.Test;
 
-
-
-
 public class KrigingPointCaseTest {
+
 	/**
 	 * Run the kriging models.
 	 * 
 	 * Test from Sic97 data (Spatial interpolation Comparison). Value are evaluated
 	 * in R with gstat.
 	 * 
-	 * <script src="https://gist.github.com/bubbobne/0e029b541c6f30d8ce7ff95c55608c8b.js"></script>
+	 * <script src=
+	 * "https://gist.github.com/bubbobne/0e029b541c6f30d8ce7ff95c55608c8b.js"></script>
 	 * 
 	 * 
 	 * @throws Exception
 	 * @throws Exceptionimport org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.geotools.data.simple.SimpleFeatureCollection;
-import org.geotools.feature.SchemaException;
-import org.geotools.filter.text.cql2.CQLException;
-import org.hortonmachine.modules.statistics.kriging.KrigingPointCase;
-import org.hortonmachine.utils.features.OmsShapefileFeatureReader;
-import org.hortonmachine.utils.time.OmsTimeSeriesIteratorReader;
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Set;
 	 */
 
 	@Test
@@ -79,14 +59,16 @@ import java.util.Set;
 		//
 		String stationIdField = "id";
 		// 100 station to training model
-		URL stazioniGridUrl = this.getClass().getClassLoader().getResource("Input/krigings/PointCase/sic97/observed.shp");
+		URL stazioniGridUrl = this.getClass().getClassLoader()
+				.getResource("Input/krigings/PointCase/sic97/observed.shp");
 		File stazioniGridFile = new File(stazioniGridUrl.toURI());
 		OmsShapefileFeatureReader stationsReader = new OmsShapefileFeatureReader();
 		stationsReader.file = stazioniGridFile.getAbsolutePath();
 		stationsReader.readFeatureCollection();
 		SimpleFeatureCollection stationsFC = stationsReader.geodata;
 
-		URL observedRain4Url = this.getClass().getClassLoader().getResource("Input/krigings/PointCase/sic97/observed_H.csv");
+		URL observedRain4Url = this.getClass().getClassLoader()
+				.getResource("Input/krigings/PointCase/sic97/observed_H.csv");
 		File observedFile = new File(observedRain4Url.toURI());
 		OmsTimeSeriesIteratorReader reader = new OmsTimeSeriesIteratorReader();
 		reader.file = observedFile.getAbsolutePath();
@@ -98,11 +80,12 @@ import java.util.Set;
 		reader.initProcess();
 
 		OmsTimeSeriesIteratorReader predictedFromRReaderValue = new OmsTimeSeriesIteratorReader();
-		URL testRainFromR = this.getClass().getClassLoader().getResource("Output/krigings/PointCase/h_fromR_no_trend.csv");
+		URL testRainFromR = this.getClass().getClassLoader()
+				.getResource("Output/krigings/PointCase/h_fromR_no_trend.csv");
 		File testFileFromR = new File(testRainFromR.toURI());
 		predictedFromRReaderValue.file = testFileFromR.getAbsolutePath();
 		predictedFromRReaderValue.idfield = "ID";
-		
+
 		predictedFromRReaderValue.tStart = "2022-12-06 17:00";
 		predictedFromRReaderValue.tTimestep = 60;
 		predictedFromRReaderValue.fileNovalue = "-9999";
@@ -114,7 +97,6 @@ import java.util.Set;
 		testReader.file = testGridFile.getAbsolutePath();
 		testReader.readFeatureCollection();
 		SimpleFeatureCollection testFC = testReader.geodata;
-
 		kriging.inInterpolate = testFC;
 		kriging.inStations = stationsFC;
 		kriging.fStationsid = stationIdField;
@@ -123,13 +105,13 @@ import java.util.Set;
 		kriging.sill = 20903.88;
 		kriging.range = 64126.08;
 		kriging.pSemivariogramType = "exponential";
-
+		kriging.parallelComputation = false;
 		while (reader.doProcess) {
 			try {
 				reader.nextRecord();
 				HashMap<Integer, double[]> id2ValueMap = reader.outData;
 				kriging.inData = id2ValueMap;
-				kriging.executeKriging();
+				kriging.execute();
 				predictedFromRReaderValue.nextRecord();
 				HashMap<Integer, double[]> predictedGstatR = predictedFromRReaderValue.outData;
 				HashMap<Integer, double[]> result = kriging.outData;
@@ -143,7 +125,7 @@ import java.util.Set;
 					int id = iteratorTest.next();
 					double[] values = result.get(id);
 					double[] actual = predictedGstatR.get(id);
-					assertEquals(actual[0], values[0],1);
+					assertEquals(actual[0], values[0], 1);
 					System.out.println("actual is:" + actual[0] + " evaluate " + values[0]);
 					double error = Math.abs(actual[0] - values[0]);
 					meanError += error;
@@ -184,11 +166,11 @@ import java.util.Set;
 	 * in R with gstat. N.B. data are generated in Rwith a slop of 0.05 and the
 	 * intercept the mean value of original h pf sic97.
 	 * 
-	 * Crete the data with:
-	 * <script src="https://gist.github.com/bubbobne/320dc6145ec89e73e8feaae40102773c.js"></script>
+	 * Crete the data with: <script src=
+	 * "https://gist.github.com/bubbobne/320dc6145ec89e73e8feaae40102773c.js"></script>
 	 * 
-	 * Detrended kriging:
-	 * <script src="https://gist.github.com/bubbobne/924bc09f6c580f0d2ee95614d0b5f59c.js"></script>
+	 * Detrended kriging: <script src=
+	 * "https://gist.github.com/bubbobne/924bc09f6c580f0d2ee95614d0b5f59c.js"></script>
 	 * 
 	 * @throws Exception
 	 * @throws Exception
@@ -199,14 +181,16 @@ import java.util.Set;
 		//
 		String stationIdField = "id";
 		// 100 station to training model
-		URL stazioniGridUrl = this.getClass().getClassLoader().getResource("Input/krigings/PointCase/sic97/observed.shp");
+		URL stazioniGridUrl = this.getClass().getClassLoader()
+				.getResource("Input/krigings/PointCase/sic97/observed.shp");
 		File stazioniGridFile = new File(stazioniGridUrl.toURI());
 		OmsShapefileFeatureReader stationsReader = new OmsShapefileFeatureReader();
 		stationsReader.file = stazioniGridFile.getAbsolutePath();
 		stationsReader.readFeatureCollection();
 		SimpleFeatureCollection stationsFC = stationsReader.geodata;
 
-		URL observedRain4Url = this.getClass().getClassLoader().getResource("Input/krigings/PointCase/sic97/observed_trend.csv");
+		URL observedRain4Url = this.getClass().getClassLoader()
+				.getResource("Input/krigings/PointCase/sic97/observed_trend.csv");
 		File observedFile = new File(observedRain4Url.toURI());
 		OmsTimeSeriesIteratorReader reader = new OmsTimeSeriesIteratorReader();
 		reader.file = observedFile.getAbsolutePath();
@@ -218,7 +202,8 @@ import java.util.Set;
 		reader.initProcess();
 
 		OmsTimeSeriesIteratorReader predictedFromRReaderValue = new OmsTimeSeriesIteratorReader();
-		URL testRainFromR = this.getClass().getClassLoader().getResource("Output/krigings/PointCase//h_from_R_trend.csv");
+		URL testRainFromR = this.getClass().getClassLoader()
+				.getResource("Output/krigings/PointCase//h_from_R_trend.csv");
 		File testFileFromR = new File(testRainFromR.toURI());
 		predictedFromRReaderValue.file = testFileFromR.getAbsolutePath();
 		predictedFromRReaderValue.idfield = "ID";
@@ -246,7 +231,7 @@ import java.util.Set;
 		kriging.sill = 60.07937;
 		kriging.range = 492121.5;
 		kriging.inIntercept = 181.79;
-		kriging.inSlope =0.049;
+		kriging.inSlope = 0.049;
 		kriging.pSemivariogramType = "exponential";
 		kriging.doDetrended = true;
 		while (reader.doProcess) {
@@ -268,7 +253,7 @@ import java.util.Set;
 					int id = iteratorTest.next();
 					double[] values = result.get(id);
 					double[] actual = predictedGstatR.get(id);
-				    assertEquals(actual[0], values[0], 3);
+					assertEquals(actual[0], values[0], 3);
 					System.out.println(" " + id + "  actual is:" + actual[0] + " evaluate " + values[0]);
 					double error = Math.abs(actual[0] - values[0]);
 					meanError += error;
@@ -323,14 +308,16 @@ import java.util.Set;
 		SimpleFeatureCollection stationsFC = stationsReader.geodata;
 		//
 		OmsShapefileFeatureReader interpolatedPointsReader = new OmsShapefileFeatureReader();
-		stazioniGridUrl = this.getClass().getClassLoader().getResource("Input/krigings/PointCase/basins_passirio_width0.shp");
+		stazioniGridUrl = this.getClass().getClassLoader()
+				.getResource("Input/krigings/PointCase/basins_passirio_width0.shp");
 		stazioniGridFile = new File(stazioniGridUrl.toURI());
 		interpolatedPointsReader.file = stazioniGridFile.getAbsolutePath();
 		interpolatedPointsReader.readFeatureCollection();
 		SimpleFeatureCollection interpolatedPointsFC = interpolatedPointsReader.geodata;
 		//
 		OmsTimeSeriesIteratorReader reader = new OmsTimeSeriesIteratorReader();
-		URL observedRain4Url = this.getClass().getClassLoader().getResource("Input/krigings/PointCase/rain_test_all_NoValue.csv");
+		URL observedRain4Url = this.getClass().getClassLoader()
+				.getResource("Input/krigings/PointCase/rain_test_all_NoValue.csv");
 		File observedFile = new File(observedRain4Url.toURI());
 		reader.file = observedFile.getAbsolutePath();
 		reader.idfield = "ID";
@@ -358,7 +345,8 @@ import java.util.Set;
 
 		//
 		OmsTimeSeriesIteratorWriter writer = new OmsTimeSeriesIteratorWriter();
-		URL interpolatedUrl = this.getClass().getClassLoader().getResource("Output/krigings/PointCase/kriging_interpolated_NoValue.csv");
+		URL interpolatedUrl = this.getClass().getClassLoader()
+				.getResource("Output/krigings/PointCase/kriging_interpolated_NoValue.csv");
 		File interpolatedFile = new File(interpolatedUrl.toURI());
 		writer.file = interpolatedFile.getAbsolutePath();
 		//
@@ -411,17 +399,21 @@ import java.util.Set;
 	@Test
 	public void testKrigingOnlyOneStation() throws Exception {
 		OmsShapefileFeatureReader stationsReader = new OmsShapefileFeatureReader();
-		stationsReader.file = new File(this.getClass().getClassLoader().getResource("Input/krigings/PointCase/rainstations.shp").toURI()).getAbsolutePath();
+		stationsReader.file = new File(
+				this.getClass().getClassLoader().getResource("Input/krigings/PointCase/rainstations.shp").toURI())
+				.getAbsolutePath();
 		stationsReader.readFeatureCollection();
 		SimpleFeatureCollection stationsFC = stationsReader.geodata;
 		//
 		OmsShapefileFeatureReader interpolatedPointsReader = new OmsShapefileFeatureReader();
-		interpolatedPointsReader.file = new File(this.getClass().getClassLoader().getResource("Input/krigings/PointCase/basins_passirio_width0.shp").toURI()).getAbsolutePath();
+		interpolatedPointsReader.file = new File(this.getClass().getClassLoader()
+				.getResource("Input/krigings/PointCase/basins_passirio_width0.shp").toURI()).getAbsolutePath();
 		interpolatedPointsReader.readFeatureCollection();
 		SimpleFeatureCollection interpolatedPointsFC = interpolatedPointsReader.geodata;
 		//
 		OmsTimeSeriesIteratorReader reader = new OmsTimeSeriesIteratorReader();
-		reader.file = new File(this.getClass().getClassLoader().getResource("Input/krigings/PointCase/rain_test_one_value.csv").toURI()).getAbsolutePath();
+		reader.file = new File(this.getClass().getClassLoader()
+				.getResource("Input/krigings/PointCase/rain_test_one_value.csv").toURI()).getAbsolutePath();
 		reader.idfield = "ID";
 		reader.tStart = "2000-01-01 00:00";
 		reader.tTimestep = 60;
@@ -447,7 +439,8 @@ import java.util.Set;
 		kriging.sill = 1.678383;
 		// kriging.maxdist=1000;
 		OmsTimeSeriesIteratorWriter writer = new OmsTimeSeriesIteratorWriter();
-		writer.file = new File(this.getClass().getClassLoader().getResource("Output/krigings/PointCase/kriging_interpolated_3.csv").toURI()).getAbsolutePath();
+		writer.file = new File(this.getClass().getClassLoader()
+				.getResource("Output/krigings/PointCase/kriging_interpolated_3.csv").toURI()).getAbsolutePath();
 		//
 		writer.tStart = reader.tStart;
 		writer.tTimestep = reader.tTimestep;

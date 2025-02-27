@@ -11,7 +11,7 @@
 
 ## Description
 
-The Krigings project is designed to perform spatial interpolation using kriging methods.
+The **Krigings** project is designed to perform spatial interpolation using kriging methods.
 The implementation includes the following components:
 
   *  Variogram modeling: Supports multiple types of variograms (e.g., spherical, exponential, Gaussian).
@@ -19,23 +19,24 @@ The implementation includes the following components:
   *  Cross-validation module: Evaluates model accuracy through leave-one-out cross-validation.
   *  Input/Output: Reads input data from shapefile and csv and outputs results as CSV/GeoTIFF.
 
-The project is developed using Java and built with Gradle to ensure modularity and flexibility.
+The project is developed using **Java** and built with **Gradle** to ensure modularity and flexibility.
 
 First version from [@Formetta2014-zn] and [@Bancheri2018-x]
 
-A built version of the lates release is available at the [GitHub release section](https://github.com/geoframecomponents/Krigings/releases).
+A ***built version of the lates release*** is available at the [ GitHub release section](https://github.com/geoframecomponents/Krigings/releases).
 
 
 ## Repository and Compatibility
 
-* The project can be imported into Eclipse.
+* The project can be imported into *Eclipse*.
 * It is available on GitHub and can be cloned or downloaded from: [GitHub Repository](https://github.com/geoframecomponents/Krigings.git)
-* Travis CI is set up for automated builds and testing, running on every commit but only deploying the JAR file when a tagged release is pushed to GitHub.
+* **Travis CI** is set up for automated builds and testing, running on every commit but only deploying the JAR file when a tagged release is pushed to GitHub.
 * The project uses Java ?? (Oracle JDK ??) for compatibility.
 
 
 ## Developers' documentation
-This project is a **Gradle-based Java project**.
+
+This project is a Gradle-based Java project.
 
 ![Gradle logo](doc/ReadMe/gradle.png)
 
@@ -64,9 +65,13 @@ This command ensures proper formatting and inclusion of references from the `bib
 
 ---
 
+#### `org.geoframe.blogpost.kriging`
+**Main Class:**
+- `Kriging.java` → Main execution class for kriging interpolation
 
+---
 
-#### `interpolationdata`
+#### `org.geoframe.blogpost.kriging.interpolationdata`
 
 
 **Description:** Provides interpolation data, including raster and vector input handling.
@@ -77,60 +82,59 @@ This command ensures proper formatting and inclusion of references from the `bib
 
 ---
 
-#### `linearsystemsolver`
+#### `org.geoframe.blogpost.kriging.linearsystemsolver`
 **Description:** Implements solvers for linear systems required in kriging computations.
 **Main Class:**
 - `SimpleLinearSystemSolverFactory.java` → Factory class for linear system solvers
 
 ---
 
-### `loo` (Leave-One-Out Kriging)
+### `org.geoframe.blogpost.kriging.loo` (Leave-One-Out Kriging)
 **Description:** Implements Leave-One-Out cross-validation (LOO-CV) for assessing kriging accuracy.
 **Main Class:**
 - `LeaveOneOutKrigings.java` → Performs leave-one-out kriging validation
 
 ---
 
-#### `pointcase`
+#### `org.geoframe.blogpost.kriging.pointcase`
 **Description:** Implements kriging for point-based interpolation.
 **Main Class:**
-- `KrigingPointCase.java` → Performs kriging interpolation on point data
+- `KrigingPointCase.java` → Performs kriging interpolation on point data, actual implementation of the Kriging abstract class.
 
 ---
 
-#### `primarylocation`
+#### `org.geoframe.blogpost.kriging.primarylocation`
 **Description:** Manages station selection, residual evaluation, and spatial processing.
 **Main Classes:**
 - `MaxDistance.java` → Computes the maximum interpolation distance
 - `Model.java` → Defines station selection models
 - `NumberOfStations.java` → Determines the number of stations used in kriging
-- `ResidualsEvaluator.java` → Evaluates residuals from kriging results
-- `StationProcessor.java` → Preprocesses station data
+- `ResidualsEvaluator.java` → Compute a regression and evaluates residuals.
+- `StationProcessor.java` → Preprocesses station data (filter with StationSelection and compute the residuals.)
 - `StationsSelection.java` → Implements station selection strategies
 
 ---
 
-#### `rastercase`
+#### `org.geoframe.blogpost.kriging.rastercase`
 **Description:** Implements kriging for raster datasets.
 **Main Class:**
-- `KrigingRasterCase.java` → Applies kriging on raster data
+- `KrigingRasterCase.java` → Applies kriging on raster data, actual implementation of Kriging abstract class.
 
 ---
 
-#### `variogram`
+#### `org.geoframe.blogpost.kriging.variogram`
 **Description:** Implements variogram modeling, both experimental and theoretical.
 
-#### Subpackages
 
-###### `experimental`
-- `ExperimentalVariogram.java` → Computes the experimental variogram from data
+###### `org.geoframe.blogpost.kriging.variogram.experimental`
+- `ExperimentalVariogram.java` → Computes the experimental variogram from data.
 
-###### `theoretical.curvefitter`
+###### `org.geoframe.blogpost.kriging.variogram.theoretical.curvefitter`
 - `KrigingParamValidator.java` → Validates kriging parameters
-- `VariogramFitter.java` → Fits variogram models to experimental data
-- `VariogramFunction.java` → Implements mathematical functions for variogram calculations
+- `VariogramFitter.java` → Fits variogram models to experimental data. **Note**:  Initial guess values are set here.
+- `VariogramFunction.java` → Implements mathematical functions for variogram calculations. **Note**:There is no if statement for logarithmic and exponential functions in the case where the x value is equal to 0.
 
-###### `theoretical.model`
+###### `org.geoframe.blogpost.kriging.variogram.theoretical.model`
 **Supported theoretical variogram models:**
 - `Bessel.java`
 - `Circular.java`
@@ -143,22 +147,19 @@ This command ensures proper formatting and inclusion of references from the `bib
 
 ---
 
-#### `utilities`
-**Description:** Utility functions and helper classes for kriging computations.
+#### `org.geoframe.blogpost.kriging.utilities`
+**Description:** Utility functions and helper classes for kriging computations, including logarithmic transformation and the extraction of coordinates from a feature collection.
 
+**Note**: This module might be restructured. The logarithmic transformation could be moved to a separate module to run before and after (see [issue #4](https://github.com/bubbobne/Krigings/issues/4)).
+Additionally, getCoordinate might be better placed in a different class.
 ---
 
-#### `org.geoframe.blogpost.kriging`
-**Main Class:**
-- `Kriging.java` → Main execution class for kriging interpolation
-
----
 
 ## Linkers' documentation
 
 Integration with OMS3/GEOFrame:
 
-    * The project is structured to be compatible with GEOFrame/OMS3 models.
+    * The project is structured to be compatible with **GEOFrame/OMS3** models.
     * Input data can be retrieved from existing hydrological simulations for further processing.
 
 

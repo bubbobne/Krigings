@@ -22,10 +22,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import org.apache.commons.math3.linear.SingularMatrixException;
+import org.apache.commons.math3.util.Pair;
 import org.geoframe.blogpost.kriging.interpolationdata.InterpolationDataProvider;
 import org.geoframe.blogpost.kriging.linearsystemsolver.SimpleLinearSystemSolverFactory;
 import org.geoframe.blogpost.kriging.primarylocation.StationProcessor;
@@ -185,13 +191,25 @@ public abstract class Kriging extends HMModel {
 	public double inIntercept = 0.0;
 	@In
 	public double inSlope = 0;
+	@In
+	public boolean parallelComputation = false;
 
 	private VariogramParameters variogramParameters;
 
 	protected InterpolationDataProvider provider = null;
 
+	@Execute
+	public void execute() throws Exception {
+		if (parallelComputation) {
+			this.executeKrigingParallel();
+		} else {
+			this.executeKriging();
+		}
+
+	}
+
 	/**
-	 * Executes the Ordinary Kriging algorithm.
+	 * Executes Kriging algorithm.
 	 * <p>
 	 * Steps:
 	 * <ol>
@@ -207,7 +225,6 @@ public abstract class Kriging extends HMModel {
 	 *
 	 * @throws Exception if any error occurs during the kriging execution.
 	 */
-	@Execute
 	public void executeKriging() throws Exception {
 		// SUGGESTION: Consider logging the start of execution.
 		// Initialization and verification
@@ -288,28 +305,34 @@ public abstract class Kriging extends HMModel {
 		List<Map.Entry<Integer, Coordinate>> entries = new ArrayList<>(pointsMap.entrySet());
 		double[] result = new double[entries.size()];
 
-		// Use an AtomicInteger to safely assign indices across parallel tasks.
-		StationsSelection stations = createAndConfigureStationSelection();
-		determineVariogram(vp);
-		StationProcessor sp = new StationProcessor(stations, variogramParameters);
-		if (maxdist == 0 && inNumCloserStations == 0) {
-
-			sp.updateForCoordinate(null, inData, 0, 0);
+		List<Pair<Integer, Map.Entry<Integer, Coordinate>>> indexedEntries = new LinkedList<Pair<Integer, Map.Entry<Integer, Coordinate>>>();
+		for (int i = 0; i < entries.size(); i++) {
+			indexedEntries.add(new Pair<Integer, Entry<Integer, Coordinate>>(i, entries.get(i)));
 		}
-		entries.parallelStream().forEach(entry -> {
-			Coordinate coordinate = entry.getValue();
-			int i = entries.indexOf(entry);
 
+		// Use an AtomicInteger to safely assign indices across parallel tasks.
+		determineVariogram(vp);
+
+		indexedEntries.parallelStream().forEach(pair -> {
+			StationsSelection stations = createAndConfigureStationSelection();
+			StationProcessor sp = new StationProcessor(stations, variogramParameters);
+
+			Coordinate coordinate = pair.getValue().getValue();
+			int i = pair.getKey();
 			// Each thread creates its own instance of StationsSelection.
 			// Variogram parameters might need to be recalculated per thread if mutable.
+			try {
+				if (maxdist > 0 || inNumCloserStations > 0) {
 
-			if (maxdist > 0 || inNumCloserStations > 0) {
-				try {
 					sp.updateForCoordinate(coordinate, inData, inNumCloserStations, maxdist);
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+
+				} else {
+					sp.updateForCoordinate(null, inData, 0, 0);
+
 				}
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 
 			double interpolatedValue;
@@ -343,13 +366,10 @@ public abstract class Kriging extends HMModel {
 		storeResult(result, pointsMap);
 	}
 
-	
-	
 	protected StationProcessor createStationProcessor(StationsSelection stations, VariogramParameters vp) {
-	    return new StationProcessor(stations, vp);
+		return new StationProcessor(stations, vp);
 	}
-	
-	
+
 	private double intepolateValue(StationProcessor sp, Coordinate coordinate) throws MatrixException {
 		double interpolatedValue;
 		double[] xStations = sp.getXStations();
