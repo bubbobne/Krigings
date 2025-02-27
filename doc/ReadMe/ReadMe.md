@@ -11,24 +11,6 @@
 
 ## Description
 
-This is a Gradle project 
-
-![Gradle logo](doc/ReadMe/gradle.png)
-
-To build the project just run
-
-    ~ $ gradle build
-
-in the working directory. You will find the built `.jar` in `build/libs`. But a
-built version of the lates release is already available at the [GitHub release
-section](https://github.com/geoframecomponents/Krigings/releases)
-
-To build the ReadMe file from the markdown one in the doc/ReadMe folder
-
-    pandoc doc/ReadMe/ReadMe.md -o ReadMe.rst --bibliography=doc/ReadMe/biblio.bib
-
-### Implementation
-
 The Krigings project is designed to perform spatial interpolation using kriging methods.
 The implementation includes the following components:
 
@@ -41,11 +23,43 @@ The project is developed using Java and built with Gradle to ensure modularity a
 
 First version from [@Formetta2014-zn] and [@Bancheri2018-x]
 
+A built version of the lates release is available at the [GitHub release section](https://github.com/geoframecomponents/Krigings/releases).
+
 ## Documentation
 
+#### Repository and Compatibility
+
+* The project can be imported into Eclipse.
+* It is available on GitHub and can be cloned or downloaded from: [GitHub Repository](https://github.com/geoframecomponents/Krigings.git)
+* Travis CI is set up for automated builds and testing, running on every commit but only deploying the JAR file when a tagged release is pushed to GitHub.
+* The project uses Java ?? (Oracle JDK ??) for compatibility.
 
 
 ### Developers' documentation
+This project is a **Gradle-based Java project**.
+
+![Gradle logo](doc/ReadMe/gradle.png)
+
+#### Building the Project
+
+To build the project, run the following command in the working directory:
+
+    ~ $ gradle build
+
+in the working directory. You will find the built `.jar` in `build/libs`.
+Once the build process is complete, the generated `.jar` file will be located in the `build/libs` directory.
+
+#### Building the ReadMe File
+
+To convert the ReadMe file from Markdown (`.md`) to RestructuredText (`.rst`), run:
+
+    pandoc doc/ReadMe/ReadMe.md -o ReadMe.rst --bibliography=doc/ReadMe/biblio.bib
+
+This command ensures proper formatting and inclusion of references from the `biblio.bib` file.
+
+
+
+#### The Code
 
 **Base Package:** `org.geoframe.blogpost.kriging`
 
@@ -149,7 +163,7 @@ Integration with OMS3/GEOFrame:
 
 ### Users' documentation
 
-(To be completed)
+(To be completed, it will be published on a Notion static page or on the blog.)
 
 
 ###  Future Improvements
