@@ -101,7 +101,7 @@ public class KrigingFlagTest {
 		kriging.sill = 10;
 		kriging.range = 4;
 		kriging.pSemivariogramType = "linear";
-		kriging.executeKriging();
+		kriging.execute();
 		HashMap<Integer, double[]> result = kriging.outData;
 
 		for (Map.Entry<Integer, double[]> entry : result.entrySet()) {
@@ -137,7 +137,7 @@ public class KrigingFlagTest {
 		kriging.range = 15;
 		kriging.inNumCloserStations = 4;
 		kriging.pSemivariogramType = "exponential";
-		kriging.executeKriging();
+		kriging.execute();
 		HashMap<Integer, double[]> results = kriging.outData;
 		double firstValue = results.get(1)[0];
 		assertTrue(" not bounded", firstValue == 100);
@@ -148,7 +148,7 @@ public class KrigingFlagTest {
 
 		kriging.inNumCloserStations = 0;
 		kriging.maxdist = 8.0;
-		kriging.executeKriging();
+		kriging.execute();
 		results = kriging.outData;
 		firstValue = results.get(1)[0];
 		assertTrue(" not bounded", firstValue == 100);

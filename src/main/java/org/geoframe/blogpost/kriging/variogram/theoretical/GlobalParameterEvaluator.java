@@ -234,6 +234,8 @@ public class GlobalParameterEvaluator {
 		double[] varianceDeTrended = new double[cutoffDivide];
 		double[] distanceDeTrended = new double[cutoffDivide];
 		double[] nDeTrended = new double[cutoffDivide];
+		double intecept = 0;
+		double slope = 0;
 
 		OmsTimeSeriesIteratorReader readH = getReader();
 		ExperimentalVariogram exp = ExperimentalVariogram.create(fStationsid, inStations, doIncludeZero, cutoffDivide,
@@ -294,6 +296,8 @@ public class GlobalParameterEvaluator {
 									distanceDeTrended[j] = distanceDeTrended[j] + tt.getValue()[0];
 									varianceDeTrended[j] = varianceDeTrended[j] + v.get(tt.getKey())[0];
 									nDeTrended[j] = nDeTrended[j] + nDeTrendedTmp.get(tt.getKey())[0];
+									slope = slope + rEvaluator.trendCoefficient;
+									intecept = intecept + rEvaluator.trendIntercept;
 									j = j + 1;
 								}
 							}
@@ -319,8 +323,9 @@ public class GlobalParameterEvaluator {
 			vEvaluator.n = n;
 
 			vEvaluator.proces();
-			vpGlobal = new VariogramParameters.Builder(vEvaluator.outSemivariogramType, vEvaluator.nugget, vEvaluator.range,
-					vEvaluator.sill).setLocal(false).setTrend(false).build();
+			vpGlobal = new VariogramParameters.Builder(vEvaluator.outSemivariogramType, vEvaluator.nugget,
+					vEvaluator.range, vEvaluator.sill).setLocal(false).setTrend(false).setTrendIntercept(0)
+					.setTrendSlope(0).build();
 			pm.message("Global value for nugget: " + vpGlobal.getNugget() + " sill:" + vpGlobal.getSill() + " range: "
 					+ vpGlobal.getRange() + "  semivariogram type:" + vpGlobal.getModelName());
 
@@ -345,8 +350,10 @@ public class GlobalParameterEvaluator {
 					vEvaluator.y = varianceDeTrended;
 					vEvaluator.n = nDeTrended;
 					vEvaluator.proces();
-					vpGlobalDetrended = new VariogramParameters.Builder(vEvaluator.outSemivariogramType, vEvaluator.nugget,
-							vEvaluator.range, vEvaluator.sill).setLocal(false).setTrend(true).build();
+					vpGlobalDetrended = new VariogramParameters.Builder(vEvaluator.outSemivariogramType,
+							vEvaluator.nugget, vEvaluator.range, vEvaluator.sill).setLocal(false).setTrend(true)
+							.setTrendIntercept(intecept / nRows).setTrendSlope(slope / nRows).build();
+
 					pm.message("Global value with TREND for nugget: " + vpGlobalDetrended.getNugget() + " sill:"
 							+ vpGlobalDetrended.getSill() + " range: " + vpGlobalDetrended.getRange()
 							+ "  semivariogram type:" + vpGlobalDetrended.getModelName());

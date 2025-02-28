@@ -175,7 +175,7 @@ public class LeaveOneOutKrigings extends HMModel {
 				double[] tmpValue = inData.get(idToCheck);
 				inData.remove(idToCheck);
 				kriging.inData = inData;
-				kriging.executeKriging();
+				kriging.execute();
 				HashMap<Integer, double[]> result = kriging.outData;
 				outData.put(idToCheck, result.get(idToCheck));
 				inData.put(idToCheck, tmpValue);

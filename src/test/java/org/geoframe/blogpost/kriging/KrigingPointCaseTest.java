@@ -241,7 +241,7 @@ public class KrigingPointCaseTest {
 				reader.nextRecord();
 				HashMap<Integer, double[]> id2ValueMap = reader.outData;
 				kriging.inData = id2ValueMap;
-				kriging.executeKriging();
+				kriging.execute();
 				predictedFromRReaderValue.nextRecord();
 				HashMap<Integer, double[]> predictedGstatR = predictedFromRReaderValue.outData;
 				HashMap<Integer, double[]> result = kriging.outData;
@@ -360,7 +360,7 @@ public class KrigingPointCaseTest {
 			reader.nextRecord();
 			HashMap<Integer, double[]> id2ValueMap = reader.outData;
 			kriging.inData = id2ValueMap;
-			kriging.executeKriging();
+			kriging.execute();
 			/*
 			 * Extract the result.
 			 */
@@ -455,7 +455,7 @@ public class KrigingPointCaseTest {
 			reader.nextRecord();
 			HashMap<Integer, double[]> id2ValueMap = reader.outData;
 			kriging.inData = id2ValueMap;
-			kriging.executeKriging();
+			kriging.execute();
 			// Extract the result.
 			HashMap<Integer, double[]> result = kriging.outData;
 			Set<Integer> pointsToInterpolateResult = result.keySet();

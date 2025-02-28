@@ -68,6 +68,10 @@ public class VariogramParametersCalculator {
 						.setTrendSlope(rEvaluator.trendCoefficient).build();
 
 				return myVariogramParam;
+			}else if (doDetrend && globalDeTrendedVP.isValid()) {
+				return globalDeTrendedVP;
+			} else if (globalVP.isValid()) {
+				return globalVP;
 			}
 		}
 		if (doDetrend && globalDeTrendedVP.isValid()) {

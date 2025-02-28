@@ -225,7 +225,7 @@ public abstract class Kriging extends HMModel {
 	 *
 	 * @throws Exception if any error occurs during the kriging execution.
 	 */
-	public void executeKriging() throws Exception {
+	private void executeKriging() throws Exception {
 		// SUGGESTION: Consider logging the start of execution.
 		// Initialization and verification
 		VariogramParameters vp = initializeKrigingParameters();
@@ -293,7 +293,7 @@ public abstract class Kriging extends HMModel {
 
 	}
 
-	public void executeKrigingParallel() throws Exception {
+	private void executeKrigingParallel() throws Exception {
 		// Initialization and verification (assumed to be thread-safe or immutable)
 		VariogramParameters vp = initializeKrigingParameters();
 
