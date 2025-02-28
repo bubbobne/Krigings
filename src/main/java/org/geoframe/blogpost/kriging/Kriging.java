@@ -450,8 +450,8 @@ public abstract class Kriging extends HMModel {
 			variogramParameters = new VariogramParameters.Builder(
 					VariogramParameters.getVariogramType(inTheoreticalVariogram.get(5)[0]),
 					inTheoreticalVariogram.get(0)[0], inTheoreticalVariogram.get(2)[0],
-					inTheoreticalVariogram.get(1)[0]).setLocal(inTheoreticalVariogram.get(3)[0] == 0.0)
-					.setTrend(inTheoreticalVariogram.get(4)[0] == 0.0)
+					inTheoreticalVariogram.get(1)[0]).setLocal(inTheoreticalVariogram.get(3)[0])
+					.setTrend(inTheoreticalVariogram.get(4)[0])
 					.setTrendIntercept(inTheoreticalVariogram.get(6)[0]).setTrendSlope(inTheoreticalVariogram.get(7)[0])
 					.build();
 		} else if (vp.isValid()) {

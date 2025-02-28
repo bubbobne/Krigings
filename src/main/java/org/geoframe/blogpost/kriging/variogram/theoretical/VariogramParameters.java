@@ -12,7 +12,7 @@ import org.hortonmachine.gears.libs.modules.HMConstants;
 public class VariogramParameters {
 	/** Available theoretical variogram models */
 	public static final String[] AVAILABLE_THEORETICAL_VARIOGRAMS = new String[] { "exponential", "linear", "power",
-			"spherical","gaussian" };
+			"spherical", "gaussian" };
 	private double nugget;
 	private double range;
 	private double sill;
@@ -61,6 +61,17 @@ public class VariogramParameters {
 
 		public VariogramParameters build() {
 			return new VariogramParameters(this);
+		}
+
+		public Builder setLocal(double d) {
+			// TODO Auto-generated method stub
+			this.isLocal = d == 1.0;
+			return this;
+		}
+
+		public Builder setTrend(double d) {
+			this.isTrend = d == 1.0;
+			return null;
 		}
 	}
 
@@ -128,8 +139,8 @@ public class VariogramParameters {
 			outVariogramParams.put(0, new double[] { nugget });
 			outVariogramParams.put(1, new double[] { sill });
 			outVariogramParams.put(2, new double[] { range });
-			outVariogramParams.put(3, new double[] { isLocal ? 0.0 : 1.0 });
-			outVariogramParams.put(4, new double[] { isTrend ? 0.0 : 1.0 });
+			outVariogramParams.put(3, new double[] { isLocal ? 1.0 : 0.0 });
+			outVariogramParams.put(4, new double[] { isTrend ? 1.0 : 0.0 });
 			outVariogramParams.put(5, new double[] { getVariogramCode(modelName) });
 			outVariogramParams.put(6, new double[] { trendIntercept });
 			outVariogramParams.put(7, new double[] { trendSlope });
