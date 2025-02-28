@@ -12,8 +12,9 @@ Krigings
 Description
 -----------
 
-The Krigings project is designed to perform spatial interpolation using
-kriging methods. The implementation includes the following components:
+The **Krigings** project is designed to perform spatial interpolation
+using kriging methods. The implementation includes the following
+components:
 
 -  Variogram modeling: Supports multiple types of variograms (e.g.,
    spherical, exponential, Gaussian).
@@ -23,22 +24,23 @@ kriging methods. The implementation includes the following components:
 -  Input/Output: Reads input data from shapefile and csv and outputs
    results as CSV/GeoTIFF.
 
-The project is developed using Java and built with Gradle to ensure
-modularity and flexibility.
+The project is developed using **Java** and built with **Gradle** to
+ensure modularity and flexibility.
 
 First version from [@Formetta2014-zn] and [@Bancheri2018-x]
 
-A built version of the lates release is available at the `GitHub release
+A **built version of the lates release** is available at the `GitHub
+release
 section <https://github.com/geoframecomponents/Krigings/releases>`__.
 
 Repository and Compatibility
 ----------------------------
 
--  The project can be imported into Eclipse.
+-  The project can be imported into *Eclipse*.
 -  It is available on GitHub and can be cloned or downloaded from:
    `GitHub
    Repository <https://github.com/geoframecomponents/Krigings.git>`__
--  Travis CI is set up for automated builds and testing, running on
+-  **Travis CI** is set up for automated builds and testing, running on
    every commit but only deploying the JAR file when a tagged release is
    pushed to GitHub.
 -  The project uses Java ?? (Oracle JDK ??) for compatibility.
@@ -46,7 +48,7 @@ Repository and Compatibility
 Developers’ documentation
 -------------------------
 
-This project is a **Gradle-based Java project**.
+This project is a Gradle-based Java project.
 
 .. figure:: doc/ReadMe/gradle.png
    :alt: Gradle logo
@@ -87,8 +89,16 @@ Package Structure
 
 --------------
 
-``interpolationdata``
-^^^^^^^^^^^^^^^^^^^^^
+``org.geoframe.blogpost.kriging``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Main Class:** - ``Kriging.java`` → Main execution class for kriging
+interpolation
+
+--------------
+
+``org.geoframe.blogpost.kriging.interpolationdata``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Description:** Provides interpolation data, including raster and
 vector input handling. **Main Classes:** -
@@ -99,8 +109,8 @@ Handles vector-based interpolation
 
 --------------
 
-``linearsystemsolver``
-^^^^^^^^^^^^^^^^^^^^^^
+``org.geoframe.blogpost.kriging.linearsystemsolver``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Description:** Implements solvers for linear systems required in
 kriging computations. **Main Class:** -
@@ -109,8 +119,8 @@ system solvers
 
 --------------
 
-``loo`` (Leave-One-Out Kriging)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``org.geoframe.blogpost.kriging.loo`` (Leave-One-Out Kriging)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **Description:** Implements Leave-One-Out cross-validation (LOO-CV) for
 assessing kriging accuracy. **Main Class:** -
@@ -118,62 +128,65 @@ assessing kriging accuracy. **Main Class:** -
 
 --------------
 
-``pointcase``
-^^^^^^^^^^^^^
+``org.geoframe.blogpost.kriging.pointcase``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Description:** Implements kriging for point-based interpolation.
 **Main Class:** - ``KrigingPointCase.java`` → Performs kriging
-interpolation on point data
+interpolation on point data, actual implementation of the Kriging
+abstract class.
 
 --------------
 
-``primarylocation``
-^^^^^^^^^^^^^^^^^^^
+``org.geoframe.blogpost.kriging.primarylocation``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Description:** Manages station selection, residual evaluation, and
 spatial processing. **Main Classes:** - ``MaxDistance.java`` → Computes
 the maximum interpolation distance - ``Model.java`` → Defines station
 selection models - ``NumberOfStations.java`` → Determines the number of
-stations used in kriging - ``ResidualsEvaluator.java`` → Evaluates
-residuals from kriging results - ``StationProcessor.java`` →
-Preprocesses station data - ``StationsSelection.java`` → Implements
-station selection strategies
+stations used in kriging - ``ResidualsEvaluator.java`` → Compute a
+regression and evaluates residuals. - ``StationProcessor.java`` →
+Preprocesses station data (filter with StationSelection and compute the
+residuals.) - ``StationsSelection.java`` → Implements station selection
+strategies
 
 --------------
 
-``rastercase``
-^^^^^^^^^^^^^^
+``org.geoframe.blogpost.kriging.rastercase``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Description:** Implements kriging for raster datasets. **Main Class:**
-- ``KrigingRasterCase.java`` → Applies kriging on raster data
+- ``KrigingRasterCase.java`` → Applies kriging on raster data, actual
+implementation of Kriging abstract class.
 
 --------------
 
-``variogram``
-^^^^^^^^^^^^^
+``org.geoframe.blogpost.kriging.variogram``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Description:** Implements variogram modeling, both experimental and
 theoretical.
 
-Subpackages
-^^^^^^^^^^^
-
-``experimental``
-                
+``org.geoframe.blogpost.kriging.variogram.experimental``
+                                                        
 
 -  ``ExperimentalVariogram.java`` → Computes the experimental variogram
-   from data
+   from data.
 
-``theoretical.curvefitter``
-                           
+``org.geoframe.blogpost.kriging.variogram.theoretical.curvefitter``
+                                                                   
 
 -  ``KrigingParamValidator.java`` → Validates kriging parameters
--  ``VariogramFitter.java`` → Fits variogram models to experimental data
+-  ``VariogramFitter.java`` → Fits variogram models to experimental
+   data. **Note**: Initial guess values are set here.
 -  ``VariogramFunction.java`` → Implements mathematical functions for
-   variogram calculations
+   variogram calculations. **Note**:There is no if statement for
+   logarithmic and exponential functions in the case where the x value
+   is equal to 0.
 
-``theoretical.model``
-                     
+``org.geoframe.blogpost.kriging.variogram.theoretical.model``
+                                                             
 
 **Supported theoretical variogram models:** - ``Bessel.java`` -
 ``Circular.java`` - ``Exponential.java`` - ``Gaussian.java`` -
@@ -182,21 +195,18 @@ Subpackages
 
 --------------
 
-``utilities``
-^^^^^^^^^^^^^
+``org.geoframe.blogpost.kriging.utilities``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Description:** Utility functions and helper classes for kriging
-computations.
+computations, including logarithmic transformation and the extraction of
+coordinates from a feature collection.
 
---------------
-
-``org.geoframe.blogpost.kriging``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-**Main Class:** - ``Kriging.java`` → Main execution class for kriging
-interpolation
-
---------------
+**Note**: This module might be restructured. The logarithmic
+transformation could be moved to a separate module to run before and
+after (see `issue
+#4 <https://github.com/bubbobne/Krigings/issues/4>`__). Additionally,
+getCoordinate might be better placed in a different class. —
 
 Linkers’ documentation
 ----------------------
@@ -205,7 +215,7 @@ Integration with OMS3/GEOFrame:
 
 ::
 
-   * The project is structured to be compatible with GEOFrame/OMS3 models.
+   * The project is structured to be compatible with **GEOFrame/OMS3** models.
    * Input data can be retrieved from existing hydrological simulations for further processing.
 
 Users’ documentation
@@ -213,6 +223,19 @@ Users’ documentation
 
 (To be completed, it will be published on a Notion static page or on the
 blog.)
+
+Under Development
+-----------------
+
+PArallelization
+~~~~~~~~~~~~~~~
+
+A parallelization method is now under test. If the flag
+**parallelComputation** is set to true, a method that uses
+**ParallelStream** is employed.
+
+**Note**: This can be useful if you have a large number of points/maps
+and are not using tree parallelization.
 
 Future Improvements
 -------------------

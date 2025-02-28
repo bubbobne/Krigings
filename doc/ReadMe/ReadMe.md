@@ -167,6 +167,13 @@ Integration with OMS3/GEOFrame:
 
 (To be completed, it will be published on a Notion static page or on the blog.)
 
+## Under Development
+
+### PArallelization
+
+A parallelization method is now under test. If the flag ***parallelComputation*** is set to true, a method that uses **ParallelStream** is employed. 
+
+**Note**: This can be useful if you have a large number of points/maps and are not using tree parallelization.
 
 ##  Future Improvements
 

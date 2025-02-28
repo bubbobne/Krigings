@@ -1,11 +1,15 @@
 package org.geoframe.blogpost.kriging;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.Map.Entry;
 import java.util.Random;
+import java.util.Set;
 
 import org.geoframe.blogpost.kriging.linearsystemsolver.SimpleLinearSystemSolverFactory;
 import org.geoframe.blogpost.kriging.pointcase.KrigingPointCase;
@@ -32,7 +36,6 @@ public class ParallelTest {
 
 	@Before
 	public void init() throws URISyntaxException {
-		String stationIdField = "id";
 		// 100 station to training model
 		URL stazioniGridUrl = this.getClass().getClassLoader()
 				.getResource("Input/krigings/PointCase/sic97/observed.shp");
@@ -40,7 +43,6 @@ public class ParallelTest {
 		URL observedRain4Url = this.getClass().getClassLoader()
 				.getResource("Input/krigings/PointCase/sic97/observed_H.csv");
 		observedFile = new File(observedRain4Url.toURI());
-		KrigingPointCase kriging = new KrigingPointCase();
 		URL testGridUrl = this.getClass().getClassLoader().getResource("Input/krigings/PointCase/sic97/test.shp");
 		testGridFile = new File(testGridUrl.toURI());
 	}
@@ -49,14 +51,19 @@ public class ParallelTest {
 	public void testParallel() throws CQLException, URISyntaxException, SchemaException, IOException {
 
 		long startTime = System.currentTimeMillis();
-		ParallelTest.testKrigingSic97(false);
+		HashMap<Integer, double[]> seqResult = ParallelTest.testKrigingSic97(false);
 		long endTime = System.currentTimeMillis();
 		System.out.println("Parallel method:" + (endTime - startTime));
 		startTime = System.currentTimeMillis();
-		ParallelTest.testKrigingSic97(true);
+		HashMap<Integer, double[]> parallelResult = ParallelTest.testKrigingSic97(true);
 		endTime = System.currentTimeMillis();
 		System.out.println("Parallel method:" + (endTime - startTime));
-
+		
+		Set<Entry<Integer, double[]>> set = parallelResult.entrySet();
+		
+		for (Entry<Integer, double[]> entry : set) {
+			assertEquals(entry.getValue()[0], seqResult.get(entry.getKey())[0], 10e-04);
+		}
 	}
 
 	public static DefaultFeatureCollection multiplyFeature(SimpleFeatureCollection originalFeatures) {
@@ -101,7 +108,7 @@ public class ParallelTest {
 		return replicatedCollection;
 	}
 
-	public static void testKrigingSic97(boolean parallel)
+	public static HashMap<Integer, double[]> testKrigingSic97(boolean parallel)
 			throws URISyntaxException, SchemaException, CQLException, IOException {
 		//
 
@@ -155,7 +162,6 @@ public class ParallelTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		// writer.close();
-	}
+return kriging.outData;	}
 
 }
