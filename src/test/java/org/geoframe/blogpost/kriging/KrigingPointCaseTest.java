@@ -39,7 +39,7 @@ import org.hortonmachine.gears.io.timedependent.OmsTimeSeriesIteratorWriter;
 import org.junit.Test;
 
 public class KrigingPointCaseTest {
-
+    public boolean  doParalle =true;
 	/**
 	 * Run the kriging models.
 	 * 
@@ -105,7 +105,7 @@ public class KrigingPointCaseTest {
 		kriging.sill = 20903.88;
 		kriging.range = 64126.08;
 		kriging.pSemivariogramType = "exponential";
-		kriging.parallelComputation = false;
+		kriging.parallelComputation = doParalle;
 		while (reader.doProcess) {
 			try {
 				reader.nextRecord();
@@ -234,6 +234,8 @@ public class KrigingPointCaseTest {
 		kriging.inSlope = 0.049;
 		kriging.pSemivariogramType = "exponential";
 		kriging.doDetrended = true;
+		kriging.parallelComputation = doParalle;
+
 		while (reader.doProcess) {
 			try {
 				reader.nextRecord();
@@ -342,6 +344,7 @@ public class KrigingPointCaseTest {
 		kriging.nugget = 0.0;
 		kriging.sill = 1.678383;
 		kriging.pSemivariogramType = "linear";
+		kriging.parallelComputation = doParalle;
 
 		//
 		OmsTimeSeriesIteratorWriter writer = new OmsTimeSeriesIteratorWriter();
@@ -437,6 +440,8 @@ public class KrigingPointCaseTest {
 		kriging.range = 123537.0;
 		kriging.nugget = 0.0;
 		kriging.sill = 1.678383;
+		kriging.parallelComputation = doParalle;
+
 		// kriging.maxdist=1000;
 		OmsTimeSeriesIteratorWriter writer = new OmsTimeSeriesIteratorWriter();
 		writer.file = new File(this.getClass().getClassLoader()

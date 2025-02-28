@@ -47,3 +47,5 @@ Thumbs.db
 # Version control & dependency files
 .vscode/
 node_modules/
+src/test/java/org/geoframe/blogpost/mytest
+

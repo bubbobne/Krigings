@@ -26,15 +26,16 @@ public class StationProcessor {
 	 */
 	public void updateForCoordinate(Coordinate coordinate, HashMap<Integer, double[]> inData, int inNumCloserStations,
 			double maxdist) throws Exception {
-		if (inNumCloserStations > 0) {
-			stations.inNumCloserStations = inNumCloserStations;
-		}
-		if (maxdist > 0) {
-			stations.maxdist = maxdist;
-		}
+	
 		if (coordinate != null && (maxdist > 0 || inNumCloserStations > 0)) {
 			stations.idx = coordinate.x;
 			stations.idy = coordinate.y;
+			if (inNumCloserStations > 0) {
+				stations.inNumCloserStations = inNumCloserStations;
+			}
+			if (maxdist > 0) {
+				stations.maxdist = maxdist;
+			}
 		}
 		stations.inData = inData;
 		stations.execute();
@@ -46,7 +47,10 @@ public class StationProcessor {
 		this.count = xStations.length - 1;
 		this.areAllEquals = stations.areAllEquals;
 		this.hResiduals = this.evaluateResidual();
-
+//		int n1 = getCount();
+//		this.xStations[n1] = coordinate.x;
+//		this.yStations[n1] = coordinate.y;
+//		this.zStations[n1] = coordinate.z;
 	}
 
 	private double[] evaluateResidual() {

@@ -32,6 +32,7 @@ public class KrigingFlagTest {
 	@Before
 	public void setUp() throws Exception {
 		kriging = new KrigingTest();
+		kriging.parallelComputation = true;
 		// Build a SimpleFeatureType with a geometry, station id, and z attribute.
 		SimpleFeatureTypeBuilder typeBuilder = new SimpleFeatureTypeBuilder();
 		typeBuilder.setName("Station");

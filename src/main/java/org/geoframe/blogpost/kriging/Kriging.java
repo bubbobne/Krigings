@@ -298,9 +298,6 @@ public abstract class Kriging extends HMModel {
 		VariogramParameters vp = initializeKrigingParameters();
 
 		LinkedHashMap<Integer, Coordinate> pointsMap = provider.getCoordinates();
-		// Prepare arrays to store results.
-
-		int size = pointsMap.size();
 		// Convert the entry set to a list for parallel processing.
 		List<Map.Entry<Integer, Coordinate>> entries = new ArrayList<>(pointsMap.entrySet());
 		double[] result = new double[entries.size()];
@@ -310,25 +307,24 @@ public abstract class Kriging extends HMModel {
 			indexedEntries.add(new Pair<Integer, Entry<Integer, Coordinate>>(i, entries.get(i)));
 		}
 
-		// Use an AtomicInteger to safely assign indices across parallel tasks.
 		determineVariogram(vp);
+
+		// Decide whether to use a shared instance based on the parameters.
+		final boolean useSharedInstance = (maxdist == 0 && inNumCloserStations == 0);
 
 		indexedEntries.parallelStream().forEach(pair -> {
 			StationsSelection stations = createAndConfigureStationSelection();
 			StationProcessor sp = new StationProcessor(stations, variogramParameters);
-
 			Coordinate coordinate = pair.getValue().getValue();
 			int i = pair.getKey();
 			// Each thread creates its own instance of StationsSelection.
 			// Variogram parameters might need to be recalculated per thread if mutable.
 			try {
-				if (maxdist > 0 || inNumCloserStations > 0) {
+				if (useSharedInstance) {
+					sp.updateForCoordinate(null, inData, inNumCloserStations, maxdist);
+				} else {
 
 					sp.updateForCoordinate(coordinate, inData, inNumCloserStations, maxdist);
-
-				} else {
-					sp.updateForCoordinate(null, inData, 0, 0);
-
 				}
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
