@@ -69,15 +69,14 @@ public class GlobalParameterEvaluator {
 	@In
 	public boolean doLogarithmic = false;
 
-	@Out
-	public StationsSelection stations;
+	// @Out
+	private StationsSelection stations;
 	@Description("The Experimental Variogram.")
 	@In
 	public String inTheoreticalVariogramFile;
 	@Description("In the case of kriging with neighbor, maxdist is the maximum distance "
 			+ "within the algorithm has to consider the stations")
-	@In
-	public double maxdist;
+
 	@In
 	public boolean getExperimentalVariogramData;
 	@In
@@ -93,7 +92,6 @@ public class GlobalParameterEvaluator {
 		stations = new StationsSelection();
 		stations.inStations = inStations;
 		stations.doIncludezero = doIncludeZero;
-		stations.maxdist = maxdist;
 		stations.fStationsid = fStationsid;
 		stations.fStationsZ = fStationsZ;
 		stations.doLogarithmic = doLogarithmic;

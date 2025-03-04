@@ -65,9 +65,9 @@ public class VariogramParametersTest {
 		assertEquals(0.5, paramsMap.get(0)[0], 1e-6);
 		assertEquals(130.0, paramsMap.get(1)[0], 1e-6);
 		assertEquals(80.0, paramsMap.get(2)[0], 1e-6);
-		// For isLocal true, we expect 0.0; for isTrend true, we expect 0.0.
-		assertEquals(0.0, paramsMap.get(3)[0], 1e-6);
-		assertEquals(0.0, paramsMap.get(4)[0], 1e-6);
+		// For isLocal true, we expect 1.0; for isTrend true, we expect 0.0.
+		assertEquals(1.0, paramsMap.get(3)[0], 1e-6);
+		assertEquals(1.0, paramsMap.get(4)[0], 1e-6);
 		// "spherical" is at index 3 in availableTheorethicalVariogra.
 		assertEquals(3, paramsMap.get(5)[0], 1e-6);
 	}

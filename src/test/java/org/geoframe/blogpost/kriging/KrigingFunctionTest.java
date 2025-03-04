@@ -195,8 +195,8 @@ public class KrigingFunctionTest {
 		variogram.put(0, new double[] { nugget });
 		variogram.put(1, new double[] { sill });
 		variogram.put(2, new double[] { range });
-		variogram.put(3, new double[] { 0 });
-		variogram.put(4, new double[] { 0 });
+		variogram.put(3, new double[] { 1 });
+		variogram.put(4, new double[] { 1 });
 		variogram.put(5, new double[] { 0 });
 		variogram.put(6, new double[] { intercept });
 		variogram.put(7, new double[] { slope });
@@ -220,8 +220,8 @@ public class KrigingFunctionTest {
 		variogram.put(0, new double[] { nugget });
 		variogram.put(1, new double[] { sill });
 		variogram.put(2, new double[] { range });
-		variogram.put(3, new double[] { 0 });
-		variogram.put(4, new double[] { 1 });
+		variogram.put(3, new double[] { 1 });
+		variogram.put(4, new double[] { 0 });
 		variogram.put(5, new double[] { 0 });
 		variogram.put(6, new double[] { intercept });
 		variogram.put(7, new double[] { slope });

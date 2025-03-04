@@ -71,7 +71,7 @@ public class VariogramParameters {
 
 		public Builder setTrend(double d) {
 			this.isTrend = d == 1.0;
-			return null;
+			return this;
 		}
 	}
 
