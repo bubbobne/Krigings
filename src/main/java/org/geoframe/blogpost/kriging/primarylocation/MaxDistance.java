@@ -28,7 +28,7 @@ public class MaxDistance implements Model{
 
 	/** The maxdist. */
 	double maxdist;
-	
+
 	/** The distance vector. */
 	double [] distanceVector;
 
@@ -52,7 +52,7 @@ public class MaxDistance implements Model{
 	 */
 	@Override
 	public int numberOfStations() {
-		// posDist is the number of the stations within the distance 
+		// posDist is the number of the stations within the distance
 		int posDist = distanceVector.length;
 		for (int k = 0; k < distanceVector.length; k++) {
 			if (distanceVector[k] > maxdist) {

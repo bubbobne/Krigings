@@ -11,7 +11,6 @@ import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 
-import org.geoframe.blogpost.kriging.linearsystemsolver.SimpleLinearSystemSolverFactory;
 import org.geoframe.blogpost.kriging.pointcase.KrigingPointCase;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
@@ -58,9 +57,9 @@ public class ParallelTest {
 		HashMap<Integer, double[]> parallelResult = ParallelTest.testKrigingSic97(true);
 		endTime = System.currentTimeMillis();
 		System.out.println("Parallel method:" + (endTime - startTime));
-		
+
 		Set<Entry<Integer, double[]>> set = parallelResult.entrySet();
-		
+
 		for (Entry<Integer, double[]> entry : set) {
 			assertEquals(entry.getValue()[0], seqResult.get(entry.getKey())[0], 10e-04);
 		}

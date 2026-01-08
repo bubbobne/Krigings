@@ -92,7 +92,7 @@ public class StationsSelectionTest {
         assertEquals(10.0, stationsSelection.zStationInitialSet[0], 1e-6);
         assertEquals(100.0, stationsSelection.hStationInitialSet[0], 1e-6);
         assertEquals(1, stationsSelection.idStationInitialSet[0]);
-        
+
         // Verify that the counter for valid stations (n1) is set correctly.
         assertEquals(3, stationsSelection.n1);
     }

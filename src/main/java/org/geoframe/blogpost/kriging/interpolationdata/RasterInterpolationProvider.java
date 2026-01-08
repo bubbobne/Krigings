@@ -43,7 +43,7 @@ public class RasterInterpolationProvider implements InterpolationDataProvider {
 	public LinkedHashMap<Integer, Coordinate> getCoordinates() {
 		// Retrieve the grid geometry from the raster.
 		GridGeometry2D grid = gridCoverage.getGridGeometry();
-		LinkedHashMap<Integer, Coordinate> out = new LinkedHashMap<Integer, Coordinate>();
+		LinkedHashMap<Integer, Coordinate> out = new LinkedHashMap<>();
 		int count = 0;
 
 		// Convert the grid geometry into a region map containing parameters like rows,

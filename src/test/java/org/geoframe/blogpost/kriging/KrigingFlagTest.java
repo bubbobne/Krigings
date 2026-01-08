@@ -199,6 +199,6 @@ public class KrigingFlagTest {
 			return new StationProcessor(stations, vp);
 		}
 
-	};
+	}
 
 }

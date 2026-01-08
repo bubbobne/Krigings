@@ -26,11 +26,11 @@ public class Hole implements Model{
 	double nug;
 
 
-	public Hole (double dist, double sill, double range, double nug){	
+	public Hole (double dist, double sill, double range, double nug){
 		this.dist=dist;
 		this.sill=sill;
 		this.range=range;
-		this.nug=nug;		
+		this.nug=nug;
 	}
 
 

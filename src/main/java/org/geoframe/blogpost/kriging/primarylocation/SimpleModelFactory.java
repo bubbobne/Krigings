@@ -37,7 +37,7 @@ public class SimpleModelFactory {
 		if (maxdist>0){
 			model=new MaxDistance(distanceVector,maxdist);
 		}else if (inNumCloserStations>0){
-			model=new NumberOfStations(inNumCloserStations);			
+			model=new NumberOfStations(inNumCloserStations);
 		}
 		return model;
 	}

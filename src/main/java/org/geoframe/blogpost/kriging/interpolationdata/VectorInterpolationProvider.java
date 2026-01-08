@@ -44,12 +44,12 @@ public class VectorInterpolationProvider implements InterpolationDataProvider {
 		this.msg = msg;
 	}
 
-	
+
     /**
      * Extracts the coordinates from the feature collection using the Utility.getCoordinate method.
      *
      * @return A LinkedHashMap where each key is a unique integer identifier and each value is a Coordinate.
-     * @throws Exception 
+     * @throws Exception
      */
 	@Override
 	public LinkedHashMap<Integer, Coordinate> getCoordinates()  {

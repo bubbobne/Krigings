@@ -1,6 +1,6 @@
 /* This file is part of JGrasstools (http://www.jgrasstools.org)
- * (C) HydroloGIS - www.hydrologis.com 
- * 
+ * (C) HydroloGIS - www.hydrologis.com
+ *
  * JGrasstools is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -27,10 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
-import org.apache.commons.math3.linear.SingularMatrixException;
 import org.apache.commons.math3.util.Pair;
 import org.geoframe.blogpost.kriging.interpolationdata.InterpolationDataProvider;
 import org.geoframe.blogpost.kriging.linearsystemsolver.SimpleLinearSystemSolverFactory;
@@ -252,7 +249,7 @@ public abstract class Kriging extends HMModel {
 		int j = 0;
 		while (idIterator.hasNext()) {
 			id = idIterator.next();
-			Coordinate coordinate = (Coordinate) pointsToInterpolate.get(id);
+			Coordinate coordinate = pointsToInterpolate.get(id);
 			if (maxdist > 0 || inNumCloserStations > 0) {
 				sp.updateForCoordinate(coordinate, inData, inNumCloserStations, maxdist);
 			}
@@ -302,9 +299,9 @@ public abstract class Kriging extends HMModel {
 		List<Map.Entry<Integer, Coordinate>> entries = new ArrayList<>(pointsMap.entrySet());
 		double[] result = new double[entries.size()];
 
-		List<Pair<Integer, Map.Entry<Integer, Coordinate>>> indexedEntries = new LinkedList<Pair<Integer, Map.Entry<Integer, Coordinate>>>();
+		List<Pair<Integer, Map.Entry<Integer, Coordinate>>> indexedEntries = new LinkedList<>();
 		for (int i = 0; i < entries.size(); i++) {
-			indexedEntries.add(new Pair<Integer, Entry<Integer, Coordinate>>(i, entries.get(i)));
+			indexedEntries.add(new Pair<>(i, entries.get(i)));
 		}
 
 		determineVariogram(vp);
@@ -430,7 +427,7 @@ public abstract class Kriging extends HMModel {
 			if (doLogarithmic) {
 				interpolatedValue = Utility.getInverseLog(interpolatedValue);
 			}
-			if (boundedToZero && interpolatedValue < 0) {
+			if (boundedToZero && interpolatedValue < 0 && !isNovalue(interpolatedValue)) {
 				interpolatedValue = 0;
 			}
 		}
@@ -459,7 +456,6 @@ public abstract class Kriging extends HMModel {
 		} else {
 			pm.errorMessage("no variogram provided");
 		}
-		;
 
 	}
 
@@ -479,7 +475,7 @@ public abstract class Kriging extends HMModel {
 			}
 		}
 		step = step + 1;
-		if (provider == null) {
+		if (provider == null || step==0) {
 			provider = initializeInterpolatorData();
 		}
 		return vp;
@@ -535,8 +531,9 @@ public abstract class Kriging extends HMModel {
 	 * @return the double value of the variable rounded
 	 */
 	public static double round(double value, int places) {
-		if (places < 0)
+		if (places < 0) {
 			throw new IllegalArgumentException();
+		}
 
 		long factor = (long) Math.pow(10, places);
 		value = value * factor;

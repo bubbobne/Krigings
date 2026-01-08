@@ -49,8 +49,8 @@ public class VariogramParamsEvaluator {
 
 	@In
 	public double[] n;
-	
-	
+
+
 	@Out
 	public double sill;
 
@@ -76,7 +76,7 @@ public class VariogramParamsEvaluator {
 	public void proces() {
 		try {
 
-			ArrayList<WeightedObservedPoint> points = new ArrayList<WeightedObservedPoint>();
+			ArrayList<WeightedObservedPoint> points = new ArrayList<>();
 
 			if (expVar != null) {
 				expVar.process();
@@ -133,11 +133,11 @@ public class VariogramParamsEvaluator {
 
 				double distance = 0;
 				int count = 0;
-				for (int i = 0; i < points.size(); i++) {
-					double actualValue = points.get(i).getY();
+				for (WeightedObservedPoint point : points) {
+					double actualValue = point.getY();
 					if (actualValue != 0) {
 						distance = distance + (SimpleModelFactory
-								.createModel(variogramType[j], points.get(i).getX(), coeffs[0], coeffs[1], coeffs[2])
+								.createModel(variogramType[j], point.getX(), coeffs[0], coeffs[1], coeffs[2])
 								.computeSemivariance() - actualValue) / actualValue;
 						count = count + 1;
 					//	System.out.println(" "+actualValue);

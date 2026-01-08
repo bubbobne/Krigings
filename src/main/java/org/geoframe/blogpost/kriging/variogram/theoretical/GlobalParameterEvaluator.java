@@ -19,7 +19,6 @@ import org.hortonmachine.gears.libs.monitor.LogProgressMonitor;
 import oms3.annotations.Description;
 import oms3.annotations.Execute;
 import oms3.annotations.In;
-import oms3.annotations.Out;
 
 public class GlobalParameterEvaluator {
 	@Description("The .shp of the measurement point, containing the position of the stations.")
@@ -156,11 +155,11 @@ public class GlobalParameterEvaluator {
 			parameterWriter.close();
 			if (getExperimentalVariogramData) {
 				distanceWriter.close();
-				;
+
 				hwriter.close();
-				;
+
 				nwriter.close();
-				;
+
 			}
 			readH.close();
 		} catch (Exception e) {

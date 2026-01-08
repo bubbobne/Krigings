@@ -4,7 +4,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
-import org.geoframe.blogpost.kriging.variogram.theoretical.model.*;
+import org.geoframe.blogpost.kriging.variogram.theoretical.model.Exponential;
+import org.geoframe.blogpost.kriging.variogram.theoretical.model.Gaussian;
+import org.geoframe.blogpost.kriging.variogram.theoretical.model.Linear;
+import org.geoframe.blogpost.kriging.variogram.theoretical.model.Logarithmic;
+import org.geoframe.blogpost.kriging.variogram.theoretical.model.Model;
+import org.geoframe.blogpost.kriging.variogram.theoretical.model.Power;
+import org.geoframe.blogpost.kriging.variogram.theoretical.model.Spherical;
 import org.junit.Test;
 
 public class TheoreticalSemivariogramModelTest {

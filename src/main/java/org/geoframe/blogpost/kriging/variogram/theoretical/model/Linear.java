@@ -38,7 +38,7 @@ public class Linear implements Model {
 	@Override
 	public double computeSemivariance() {
 
-		double result = Double.MAX_VALUE;;
+		double result = Double.MAX_VALUE;
 
 		if ( dist <= range) {
 			result = nug + sill * (dist / range);

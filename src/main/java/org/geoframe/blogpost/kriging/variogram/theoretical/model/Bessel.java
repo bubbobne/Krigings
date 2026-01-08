@@ -27,11 +27,11 @@ public class Bessel implements Model{
 	double nug;
 
 
-	public Bessel (double dist, double sill, double range, double nug){	
+	public Bessel (double dist, double sill, double range, double nug){
 		this.dist=dist;
 		this.sill=sill;
 		this.range=range;
-		this.nug=nug;		
+		this.nug=nug;
 	}
 
 
@@ -67,7 +67,7 @@ public class Bessel implements Model{
 					+ y * (-0.3655620e-1 + y * (0.1504268e-1 + y * (-0.780353e-2
 							+ y * (0.325614e-2 + y * (-0.68245e-3)))))));
 		}
-		return (double) ans;
+		return ans;
 	}
 
 	static double bessi1(double x) /*
@@ -89,7 +89,7 @@ public class Bessel implements Model{
 					+ y * (0.163801e-2 + y * (-0.1031555e-1 + y * ans))));
 			ans *= (Math.exp(ax) / Math.sqrt(ax));
 		}
-		return (double) x < 0.0 ? -ans : ans;
+		return x < 0.0 ? -ans : ans;
 	}
 
 

@@ -88,7 +88,7 @@ public class VariogramParameters {
 
 	/**
 	 * Gets whether a trend is considered.
-	 * 
+	 *
 	 * @return true if a trend is used, false otherwise.
 	 */
 	public boolean getIsTrend() {
@@ -97,7 +97,7 @@ public class VariogramParameters {
 
 	/**
 	 * Gets whether the variogram is local.
-	 * 
+	 *
 	 * @return true if local, false otherwise.
 	 */
 	public boolean getIsLocal() {
@@ -130,7 +130,7 @@ public class VariogramParameters {
 
 	/**
 	 * Converts the variogram parameters into a HashMap.
-	 * 
+	 *
 	 * @return HashMap containing variogram parameters.
 	 */
 	public HashMap<Integer, double[]> toHashMap() {
@@ -154,7 +154,7 @@ public class VariogramParameters {
 
 	/**
 	 * Retrieves the variogram code corresponding to a given model name.
-	 * 
+	 *
 	 * @param name The model name.
 	 * @return The variogram code, or -9999 if not found.
 	 */
@@ -169,7 +169,7 @@ public class VariogramParameters {
 
 	/**
 	 * Retrieves the variogram type based on an index.
-	 * 
+	 *
 	 * @param d The index.
 	 * @return The corresponding variogram type, or "unknown" if index is out of
 	 *         range.
@@ -181,7 +181,7 @@ public class VariogramParameters {
 
 	/**
 	 * Retrieves the variogram type based on an index.
-	 * 
+	 *
 	 * @param d The index.
 	 * @return The corresponding variogram type, or "unknown" if index is out of
 	 *         range.
@@ -195,7 +195,7 @@ public class VariogramParameters {
 
 	/**
 	 * Checks if the variogram parameters are valid.
-	 * 
+	 *
 	 * @return true if valid, false otherwise.
 	 */
 

@@ -75,7 +75,7 @@ public class ResidualsEvaluator {
 	}
 /**
  * @todo
- * 
+ *
  * @param zStations
  * @param hStations
  * @param doDetrended

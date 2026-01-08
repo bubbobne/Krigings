@@ -79,7 +79,7 @@ public class Utility {
 	 */
 	public final static LinkedHashMap<Integer, Coordinate> getCoordinate(SimpleFeatureCollection collection,
 			String idField, String fPointZ, IHMProgressMonitor pm, HortonMessageHandler msg) throws Exception {
-		LinkedHashMap<Integer, Coordinate> id2CoordinatesMcovarianceMatrix = new LinkedHashMap<Integer, Coordinate>();
+		LinkedHashMap<Integer, Coordinate> id2CoordinatesMcovarianceMatrix = new LinkedHashMap<>();
 		FeatureIterator<SimpleFeature> iterator = collection.features();
 		Coordinate coordinate = null;
 		try {

@@ -29,7 +29,7 @@ public class VariogramFunction implements ParametricUnivariateFunction {
 	}
 
 	public ArrayList<WeightedObservedPoint> filterPoint(ArrayList<WeightedObservedPoint> points) {
-		ArrayList<WeightedObservedPoint> newPoint = new ArrayList<WeightedObservedPoint>();
+		ArrayList<WeightedObservedPoint> newPoint = new ArrayList<>();
 		if (type == "logarithmic" || type == "power") {
 			for (WeightedObservedPoint point : points) {
 				if (point.getX() != 0) {

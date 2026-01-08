@@ -39,10 +39,10 @@ public class VariogramSelectionTest {
 
 	/**
 	 * Run the kriging models.
-	 * 
+	 *
 	 * Test from Sic97 data (Spatial interpolation Comparison). Value are evaluated
 	 * in R with gstat.
-	 * 
+	 *
 	 * <script src=
 	 * "https://gist.github.com/bubbobne/0e029b541c6f30d8ce7ff95c55608c8b.js"></script>
 	 *
@@ -57,9 +57,9 @@ public class VariogramSelectionTest {
 	 *   Mat    0.0000  20903.88  64126.09  4.281377
 	 * </pre>
 	 *
-	 * 
-	 * 
-	 * 
+	 *
+	 *
+	 *
 	 * @throws Exception
 	 * @throws Exception
 	 */

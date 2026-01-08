@@ -19,25 +19,25 @@
 package org.geoframe.blogpost.kriging.variogram.theoretical.model;
 
 public class Pentaspherical implements Model{
-	
+
 	double dist;
 	double sill;
 	double range;
 	double nug;
-	
-	
-	public Pentaspherical (double dist, double sill, double range, double nug){	
+
+
+	public Pentaspherical (double dist, double sill, double range, double nug){
 		this.dist=dist;
 		this.sill=sill;
 		this.range=range;
-		this.nug=nug;		
+		this.nug=nug;
 	}
-	
-	
+
+
 
 	@Override
 	public double computeSemivariance() {
-    
+
         double result = 0;
         double hr = 0;
             hr = dist / (range);

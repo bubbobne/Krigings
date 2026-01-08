@@ -51,7 +51,7 @@ public class Power implements Model {
 	public double[] computeGradient() {
 		// TODO Auto-generated method stub
 		double[] gradient = new double[] { Double.NaN, Double.NaN, Double.NaN };
-		
+
 		if (isOk && !Double.isInfinite(Math.pow(dist, 2))) {
 			gradient = new double[] { Math.pow(dist, range), sill * Math.pow(dist, 2) * Math.log(dist), 1.0 };
 		}

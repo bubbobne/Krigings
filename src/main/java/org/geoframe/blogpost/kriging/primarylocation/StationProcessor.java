@@ -26,7 +26,7 @@ public class StationProcessor {
 	 */
 	public void updateForCoordinate(Coordinate coordinate, HashMap<Integer, double[]> inData, int inNumCloserStations,
 			double maxdist) throws Exception {
-	
+
 		if (coordinate != null && (maxdist > 0 || inNumCloserStations > 0)) {
 			stations.idx = coordinate.x;
 			stations.idy = coordinate.y;
@@ -54,7 +54,7 @@ public class StationProcessor {
 	}
 
 	private double[] evaluateResidual() {
-		if (vp.getIsTrend() || (vp.getIntercept() == 0 && vp.getSlope() == 0)) {
+		if (vp.getIsTrend() || (vp.getIntercept() != 0 && vp.getSlope() != 0)) {
 			double[] residuals = new double[this.hStations.length];
 			for (int i = 0; i < this.hStations.length; i++) {
 				residuals[i] = this.hStations[i] - vp.getIntercept() - vp.getSlope() * this.zStations[i];

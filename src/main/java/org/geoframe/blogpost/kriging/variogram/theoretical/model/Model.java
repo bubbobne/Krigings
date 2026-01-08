@@ -23,15 +23,15 @@ package org.geoframe.blogpost.kriging.variogram.theoretical.model;
  */
 public interface Model {
 
-	
+
 	abstract public double computeSemivariance ();
-	
+
 	/**
-	 * 
+	 *
 	 * @return gradient of function as {df/dSill,df/dRange, df/dNugget}
 	 */
 	abstract public double[] computeGradient ();
 
-	
+
 
 }

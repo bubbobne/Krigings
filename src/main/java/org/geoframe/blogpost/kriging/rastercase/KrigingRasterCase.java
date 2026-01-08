@@ -34,18 +34,18 @@ import oms3.annotations.Out;
 import oms3.annotations.Status;
 /**
  * KrigingRasterCase extends the abstract Kriging class to implement ordinary kriging for raster data.
- * It uses a RasterInterpolationProvider to extract data from a GridCoverage2D input and stores the 
+ * It uses a RasterInterpolationProvider to extract data from a GridCoverage2D input and stores the
  * interpolated results as a new GridCoverage2D.
  *
  * <p><strong>Key Points and Suggestions:</strong></p>
  * <ul>
  *   <li>
- *     In {@code storeResult()}, the transformation from world coordinates to grid coordinates is performed 
- *     for each interpolated point. If the transformation fails, currently the exception is caught and the stack 
+ *     In {@code storeResult()}, the transformation from world coordinates to grid coordinates is performed
+ *     for each interpolated point. If the transformation fails, currently the exception is caught and the stack
  *     trace is printed. Consider throwing a custom unchecked exception to better manage errors.
  *   </li>
  *   <li>
- *     It is assumed that the ordering of the {@code result} array corresponds exactly to the ordering of 
+ *     It is assumed that the ordering of the {@code result} array corresponds exactly to the ordering of
  *     the keys in {@code interpolatedCoordinatesMap}. Make sure this invariant is maintained.
  *   </li>
  *   <li>
@@ -97,6 +97,7 @@ public class KrigingRasterCase extends Kriging {
      * @param result The array of interpolated values.
      * @param interpolatedCoordinatesMap A HashMap mapping unique point IDs to their corresponding Coordinates.
      */
+	@Override
 	protected void storeResult(double[] result, HashMap<Integer, Coordinate> interpolatedCoordinatesMap) {
 		GridGeometry2D grid = inGridCoverage2D.getGridGeometry();
 
@@ -115,7 +116,7 @@ public class KrigingRasterCase extends Kriging {
 
 		while (idIterator.hasNext()) {
 			int id = idIterator.next();
-			Coordinate coordinate = (Coordinate) interpolatedCoordinatesMap.get(id);
+			Coordinate coordinate = interpolatedCoordinatesMap.get(id);
 
 			DirectPosition point = new DirectPosition2D(grid.getCoordinateReferenceSystem(), coordinate.x,
 					coordinate.y);
@@ -145,6 +146,6 @@ public class KrigingRasterCase extends Kriging {
 		return new RasterInterpolationProvider(inGridCoverage2D);
 	}
 
-	
+
 
 }

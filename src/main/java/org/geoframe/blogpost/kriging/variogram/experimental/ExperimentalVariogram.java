@@ -20,6 +20,14 @@ package org.geoframe.blogpost.kriging.variogram.experimental;
 
 import java.util.HashMap;
 
+import org.geoframe.blogpost.kriging.primarylocation.StationsSelection;
+import org.geotools.data.simple.SimpleFeatureCollection;
+import org.geotools.feature.SchemaException;
+import org.hortonmachine.gears.libs.modules.HMConstants;
+import org.hortonmachine.gears.libs.modules.HMModel;
+import org.hortonmachine.gears.libs.monitor.IHMProgressMonitor;
+import org.hortonmachine.gears.libs.monitor.LogProgressMonitor;
+
 import oms3.annotations.Author;
 import oms3.annotations.Description;
 import oms3.annotations.Documentation;
@@ -31,14 +39,6 @@ import oms3.annotations.License;
 import oms3.annotations.Name;
 import oms3.annotations.Out;
 import oms3.annotations.Status;
-
-import org.geoframe.blogpost.kriging.primarylocation.StationsSelection;
-import org.geotools.data.simple.SimpleFeatureCollection;
-import org.geotools.feature.SchemaException;
-import org.hortonmachine.gears.libs.modules.HMConstants;
-import org.hortonmachine.gears.libs.modules.HMModel;
-import org.hortonmachine.gears.libs.monitor.IHMProgressMonitor;
-import org.hortonmachine.gears.libs.monitor.LogProgressMonitor;
 
 @Description("Experimental semivariogram algorithm.")
 @Documentation("Experimental semivariogram")
@@ -198,7 +198,7 @@ n the double[][] matrix of the results of the processing
 		}
 
 		// compute the mean of the input hStation
-		mean /= (double) iCount;
+		mean /= iCount;
 
 		return calculate(Cutoff, distanceMatrix, hStation, mean, maxDistance);
 
@@ -293,9 +293,9 @@ n the double[][] matrix of the results of the processing
 	 * @throws SchemaException the schema exception
 	 */
 	private void storeResult(double[][] result) throws SchemaException {
-		outDistances = new HashMap<Integer, double[]>();
-		outExperimentalVariogram = new HashMap<Integer, double[]>();
-		outNumberPairsPerBin = new HashMap<Integer, double[]>();
+		outDistances = new HashMap<>();
+		outExperimentalVariogram = new HashMap<>();
+		outNumberPairsPerBin = new HashMap<>();
 
 		for (int i = 0; i < result.length; i++) {
 			outDistances.put(i, new double[] { result[i][0] });

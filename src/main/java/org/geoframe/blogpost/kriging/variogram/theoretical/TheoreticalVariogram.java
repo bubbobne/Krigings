@@ -21,16 +21,26 @@ package org.geoframe.blogpost.kriging.variogram.theoretical;
 import static org.hortonmachine.gears.libs.modules.HMConstants.isNovalue;
 
 import java.util.HashMap;
-import java.util.Set;
 import java.util.Map.Entry;
-
-import oms3.annotations.*;
+import java.util.Set;
 
 import org.geoframe.blogpost.kriging.variogram.theoretical.model.Model;
 import org.geoframe.blogpost.kriging.variogram.theoretical.model.SimpleModelFactory;
 import org.geotools.feature.SchemaException;
 import org.hortonmachine.gears.libs.modules.HMConstants;
 import org.hortonmachine.gears.libs.modules.HMModel;
+
+import oms3.annotations.Author;
+import oms3.annotations.Description;
+import oms3.annotations.Documentation;
+import oms3.annotations.Execute;
+import oms3.annotations.In;
+import oms3.annotations.Keywords;
+import oms3.annotations.Label;
+import oms3.annotations.License;
+import oms3.annotations.Name;
+import oms3.annotations.Out;
+import oms3.annotations.Status;
 
 @Description("Teorethical semivariogram models.")
 @Documentation("vgm.html")
@@ -86,10 +96,10 @@ public class TheoreticalVariogram extends HMModel {
 	@Description("the output hashmap withe the semivariance")
 	@Out
 	public double[] observation;
-	
+
 	@Description("the output hashmap withe the semivariance")
 	@Out
-	public HashMap<Integer, double[]> outHMtheoreticalVariogram = new HashMap<Integer, double[]>();;
+	public HashMap<Integer, double[]> outHMtheoreticalVariogram = new HashMap<>();
 
 	@Execute
 	public void process() throws Exception {

@@ -13,11 +13,10 @@ import org.hortonmachine.gears.libs.modules.ModelsEngine;
 import org.hortonmachine.gears.libs.monitor.IHMProgressMonitor;
 import org.hortonmachine.gears.libs.monitor.LogProgressMonitor;
 import org.hortonmachine.gears.utils.sorting.QuickSortAlgorithm;
-import org.opengis.feature.simple.SimpleFeature;
 
 /*
  * Niccol� Tubini 28-12-2021
- * Replaced with lines 40 and 41 
+ * Replaced with lines 40 and 41
  * https://sourceforge.net/p/geotools/mailman/message/36652855/
  */
 //import com.vividsolutions.jts.geom.Coordinate;
@@ -25,10 +24,11 @@ import org.opengis.feature.simple.SimpleFeature;
 
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
+import org.opengis.feature.simple.SimpleFeature;
 
 /**
  * The Class StationsSelection.
- * 
+ *
  * This class filters stations for kriging by selecting only the nearest
  * stations based on either a distance threshold or a specified number of closer
  * stations.
@@ -110,16 +110,16 @@ public class StationsSelection {
 	public void execute() throws Exception {
 
 		// create the arraylist containing the station with the measurements
-		List<Double> xStationList = new ArrayList<Double>();
-		List<Double> yStationList = new ArrayList<Double>();
-		List<Double> zStationList = new ArrayList<Double>();
-		List<Double> hStationList = new ArrayList<Double>();
-		List<Integer> idStationList = new ArrayList<Integer>();
+		List<Double> xStationList = new ArrayList<>();
+		List<Double> yStationList = new ArrayList<>();
+		List<Double> zStationList = new ArrayList<>();
+		List<Double> hStationList = new ArrayList<>();
+		List<Integer> idStationList = new ArrayList<>();
 
 		/*
 		 * Store the station coordinates and measured data in the array. Skip data for
 		 * non existing stations and also skip novalues.
-		 * 
+		 *
 		 * @TODO maybe use Utility.
 		 */
 
@@ -190,7 +190,6 @@ public class StationsSelection {
 		hStationInitialSet = new double[nStaz + 1];
 		idStationInitialSet = new int[nStaz + 1];
 
-
 		if (nStaz != 0) {
 			xStationInitialSet[0] = xStationList.get(0);
 			yStationInitialSet[0] = yStationList.get(0);
@@ -240,10 +239,10 @@ public class StationsSelection {
 
 			double x2, y2;
 			double dDifX, dDifY;
-			double distanceVector[] = new double[xStationInitialSet.length-1];
-			double pos[] = new double[xStationInitialSet.length-1];
+			double distanceVector[] = new double[xStationInitialSet.length - 1];
+			double pos[] = new double[xStationInitialSet.length - 1];
 
-			for (int jj = 0; jj < xStationInitialSet.length-1; jj++) {
+			for (int jj = 0; jj < xStationInitialSet.length - 1; jj++) {
 
 				x2 = xStationInitialSet[jj];
 				y2 = yStationInitialSet[jj];
@@ -267,8 +266,11 @@ public class StationsSelection {
 			 */
 
 			modelSelection = SimpleModelFactory.createModel(distanceVector, inNumCloserStations, maxdist);
-			int dim = modelSelection.numberOfStations();
-
+			int dim = 0;
+			if (modelSelection != null) {
+				dim = modelSelection.numberOfStations();
+			}
+			;
 			double[] xStationWithNeighbour = new double[dim + 1];
 			double[] yStationWithNeighbour = new double[dim + 1];
 			int[] idStationWithNeighbour = new int[dim + 1];

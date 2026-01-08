@@ -41,7 +41,7 @@ public class VariogramFitter extends AbstractCurveFitter {
 
 		/*
 		 * TODO: quali valori iniziali? da dove posso ricavarli?
-		 * 
+		 *
 		 * sill = 0.9 * max(semivarianze) nugget = 0 range = vettore t.c. la differenza
 		 * fra semivarianza e sill, il minimo di queste differenze => range cheint
 		 * corrisponde a questa differenza

@@ -42,14 +42,14 @@ public class KrigingPointCaseTest {
     public boolean  doParalle =true;
 	/**
 	 * Run the kriging models.
-	 * 
+	 *
 	 * Test from Sic97 data (Spatial interpolation Comparison). Value are evaluated
 	 * in R with gstat.
-	 * 
+	 *
 	 * <script src=
 	 * "https://gist.github.com/bubbobne/0e029b541c6f30d8ce7ff95c55608c8b.js"></script>
-	 * 
-	 * 
+	 *
+	 *
 	 * @throws Exception
 	 * @throws Exceptionimport org.junit.jupiter.api.BeforeEach;
 	 */
@@ -161,17 +161,17 @@ public class KrigingPointCaseTest {
 
 	/**
 	 * Run the kriging models.
-	 * 
+	 *
 	 * Test from Sic97 data (Spatial interpolation Comparison). Value are evaluated
 	 * in R with gstat. N.B. data are generated in Rwith a slop of 0.05 and the
 	 * intercept the mean value of original h pf sic97.
-	 * 
+	 *
 	 * Crete the data with: <script src=
 	 * "https://gist.github.com/bubbobne/320dc6145ec89e73e8feaae40102773c.js"></script>
-	 * 
+	 *
 	 * Detrended kriging: <script src=
 	 * "https://gist.github.com/bubbobne/924bc09f6c580f0d2ee95614d0b5f59c.js"></script>
-	 * 
+	 *
 	 * @throws Exception
 	 * @throws Exception
 	 */
@@ -295,7 +295,7 @@ public class KrigingPointCaseTest {
 	 * This is the case which all the station have the same value equal to -9999, no
 	 * values.
 	 * </p>
-	 * 
+	 *
 	 * @throws Exception
 	 * @throws Exception
 	 */
@@ -387,14 +387,14 @@ public class KrigingPointCaseTest {
 	 * Run the kriging models. ex Test5
 	 * <p>
 	 * This is the case which there is only one station.
-	 * 
+	 *
 	 * Pay attention, there are several points to evaluate. For the first point,
 	 * kriging enters the first if condition (n1 != 0), which checks if there is at
 	 * least one station. Then, areAllEqual is true since only one value is
 	 * available. In this section, n1 is set to 0 (I suppose it's a design choice).
-	 * 
+	 *
 	 * </p>
-	 * 
+	 *
 	 * @throws Exception
 	 * @throws Exception
 	 */

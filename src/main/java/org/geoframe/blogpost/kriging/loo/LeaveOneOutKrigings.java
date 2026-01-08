@@ -1,6 +1,6 @@
 /* This file is part of JGrasstools (http://www.jgrasstools.org)
- * (C) HydroloGIS - www.hydrologis.com 
- * 
+ * (C) HydroloGIS - www.hydrologis.com
+ *
  * JGrasstools is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -17,8 +17,10 @@
 package org.geoframe.blogpost.kriging.loo;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import org.geoframe.blogpost.kriging.pointcase.KrigingPointCase;
+import org.geotools.data.DataUtilities;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.filter.text.cql2.CQL;
@@ -134,43 +136,24 @@ public class LeaveOneOutKrigings extends HMModel {
 	@In
 	public String globalVariogramType;
 
+	private boolean isFirstStep = true;
+	private KrigingPointCase kriging;
+	private Map<Integer, SimpleFeature> featureMap = new HashMap<>();
 	@Execute
 	public void executeKriging() throws Exception {
-		outData = new HashMap<Integer, double[]>();
+		outData = new HashMap<>();
+		inizialize();
+		for (Integer idToCheck : featureMap.keySet()) {
+		    SimpleFeature feature = featureMap.get(idToCheck);
 
-		KrigingPointCase kriging = new KrigingPointCase();
+		    if (feature == null) {
+		        pm.message("Warning: no feature found for station id " + idToCheck);
+		        continue;
+		    }
 
-//      evaluate before the parameters		
-//		kriging.inHValuesPath = inHValuesPath;
-		kriging.inTheoreticalVariogram = inTheoreticalVariogram;
-		kriging.tTimeStep = tTimeStep;
-		kriging.boundedToZero = boundedToZero;
-		kriging.maxdist = maxdist;
-		kriging.inNumCloserStations = inNumCloserStations;
-		kriging.pSemivariogramType = pSemivariogramType;
-		kriging.nugget = nugget;
-		kriging.sill = sill;
-		kriging.range = range;
-		kriging.tStart = tStart;
-		kriging.fStationsid = fStationsid;
-		kriging.fInterpolateid = fStationsid;
-		kriging.doDetrended = doDetrended;
-		kriging.fPointZ = fStationsZ;
-		kriging.fStationsZ = fStationsZ;
-		kriging.inNumCloserStations = inNumCloserStations;
-		kriging.doLogarithmic = doLogarithmic;
-		kriging.doIncludeZero = doIncludeZero;
-		pm.beginTask("kriging loo", inStations.size());
-		SimpleFeatureIterator iterator = inStations.features();
-		while (iterator.hasNext()) {
-			SimpleFeature feature = iterator.next();
-			Property property = feature.getProperty(fStationsid);
-			Long value = (Long) property.getValue();
-			int idToCheck = value.intValue();
-			pm.message("working on station" + idToCheck);
-			Filter filter = CQL.toFilter("ID = " + idToCheck);
-			kriging.inInterpolate = inStations.subCollection(filter);
+			kriging.inInterpolate = DataUtilities.collection(feature);
 			kriging.inStations = inStations;
+			kriging.setProvider(null);
 			if (inData.containsKey(idToCheck)) {
 				double[] tmpValue = inData.get(idToCheck);
 				inData.remove(idToCheck);
@@ -180,8 +163,45 @@ public class LeaveOneOutKrigings extends HMModel {
 				outData.put(idToCheck, result.get(idToCheck));
 				inData.put(idToCheck, tmpValue);
 			}
-			pm.worked(1);
+			// pm.worked(1);
 		}
 		pm.done();
+	}
+
+	private void inizialize() {
+
+		// TODO Auto-generated method stub
+		if (isFirstStep) {
+			kriging = new KrigingPointCase();
+			kriging.boundedToZero = boundedToZero;
+			kriging.maxdist = maxdist;
+			kriging.inNumCloserStations = inNumCloserStations;
+			kriging.pSemivariogramType = pSemivariogramType;
+			kriging.nugget = nugget;
+			kriging.sill = sill;
+			kriging.range = range;
+			kriging.tStart = tStart;
+			kriging.fStationsid = fStationsid;
+			kriging.fInterpolateid = fStationsid;
+			kriging.doDetrended = doDetrended;
+			kriging.fPointZ = fStationsZ;
+			kriging.fStationsZ = fStationsZ;
+			kriging.inNumCloserStations = inNumCloserStations;
+			kriging.doLogarithmic = doLogarithmic;
+			kriging.doIncludeZero = doIncludeZero;
+			
+			SimpleFeatureIterator iterator = inStations.features();
+			try {
+			    while (iterator.hasNext()) {
+			        SimpleFeature feature = iterator.next();
+			        int id = ((Long) feature.getProperty(fStationsid).getValue()).intValue();
+			        featureMap.put(id, feature);
+			    }
+			} finally {
+			    iterator.close();
+			}
+		}
+		kriging.inTheoreticalVariogram = inTheoreticalVariogram;
+		kriging.tTimeStep = tTimeStep;
 	}
 }

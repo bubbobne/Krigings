@@ -1,21 +1,21 @@
 package org.geoframe.blogpost.kriging.variogram.theoretical.model;
 
 public class Circular implements Model{
-	
+
 	double dist;
 	double sill;
 	double range;
 	double nug;
-	
-	
-	public Circular (double dist, double sill, double range, double nug){	
+
+
+	public Circular (double dist, double sill, double range, double nug){
 		this.dist=dist;
 		this.sill=sill;
 		this.range=range;
-		this.nug=nug;		
+		this.nug=nug;
 	}
-	
-	
+
+
 
 	@Override
 	public double computeSemivariance() {

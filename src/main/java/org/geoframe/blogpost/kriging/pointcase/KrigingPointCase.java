@@ -1,6 +1,6 @@
 /* This file is part of JGrasstools (http://www.jgrasstools.org)
- * (C) HydroloGIS - www.hydrologis.com 
- * 
+ * (C) HydroloGIS - www.hydrologis.com
+ *
  * JGrasstools is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -87,6 +87,7 @@ public class KrigingPointCase extends Kriging {
 	 * Validates the essential inputs for the kriging model. In detrended mode, both
 	 * station and interpolation point elevation fields must be provided.
 	 */
+	@Override
 	protected void verifyInput() {
 		super.verifyInput();
 		if (fInterpolateid == null) {
@@ -111,7 +112,7 @@ public class KrigingPointCase extends Kriging {
 	 * @param id     the associated id of the calculating points.
 	 */
 	private void storeResult(double[] result, int[] id) {
-		outData = new HashMap<Integer, double[]>();
+		outData = new HashMap<>();
 		for (int i = 0; i < result.length; i++) {
 			outData.put(id[i], new double[] { result[i] });
 		}
@@ -140,6 +141,10 @@ public class KrigingPointCase extends Kriging {
 	protected void storeResult(double[] result, HashMap<Integer, Coordinate> interpolatedCoordinatesMap) {
 		int[] id = interpolatedCoordinatesMap.keySet().stream().mapToInt(Integer::intValue).toArray();
 		this.storeResult(result, id);
+	}
+
+	public void setProvider(InterpolationDataProvider provider) {
+		this.provider = provider;
 	}
 
 }
