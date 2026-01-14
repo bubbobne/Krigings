@@ -135,7 +135,7 @@ public class StationsSelection {
 					try {
 						z = ((Number) feature.getAttribute(fStationsZ)).doubleValue();
 					} catch (NullPointerException e) {
-
+						pm.errorMessage("Missing or invalid z value for station id " + id + ".");
 					}
 				}
 
@@ -150,16 +150,12 @@ public class StationsSelection {
 
 				// If zeros are allowed, add all values; otherwise, skip zero values.
 				if (doIncludezero) {
-					// Note: Math.abs(h0) >= 0 is always true, so this block always executes.
-					if (Math.abs(h0) >= 0.0) { // TOLL
-						xStationList.add(coordinate.x);
-						yStationList.add(coordinate.y);
-						zStationList.add(z);
-						hStationList.add(h0);
-						idStationList.add(id);
-						n1 = n1 + 1;
-					}
-
+					xStationList.add(coordinate.x);
+					yStationList.add(coordinate.y);
+					zStationList.add(z);
+					hStationList.add(h0);
+					idStationList.add(id);
+					n1 = n1 + 1;
 				} else {
 					if (Math.abs(h0) > 0.0) { // TOLL
 						xStationList.add(coordinate.x);

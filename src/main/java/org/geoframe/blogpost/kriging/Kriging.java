@@ -166,7 +166,7 @@ public abstract class Kriging extends HMModel {
 	@In
 	public HashMap<Integer, double[]> inTheoreticalVariogram;
 
-	private static final double TOLL = 1.0d * 10E-8;
+	private static final double TOLL = 10E-7;
 
 	private int step = 0;
 
@@ -324,8 +324,8 @@ public abstract class Kriging extends HMModel {
 					sp.updateForCoordinate(coordinate, inData, inNumCloserStations, maxdist);
 				}
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
+				pm.errorMessage("Error updating stations for kriging: " + e.getMessage());
 			}
 
 			double interpolatedValue;
@@ -448,9 +448,8 @@ public abstract class Kriging extends HMModel {
 					VariogramParameters.getVariogramType(inTheoreticalVariogram.get(5)[0]),
 					inTheoreticalVariogram.get(0)[0], inTheoreticalVariogram.get(2)[0],
 					inTheoreticalVariogram.get(1)[0]).setLocal(inTheoreticalVariogram.get(3)[0])
-					.setTrend(inTheoreticalVariogram.get(4)[0])
-					.setTrendIntercept(inTheoreticalVariogram.get(6)[0]).setTrendSlope(inTheoreticalVariogram.get(7)[0])
-					.build();
+					.setTrend(inTheoreticalVariogram.get(4)[0]).setTrendIntercept(inTheoreticalVariogram.get(6)[0])
+					.setTrendSlope(inTheoreticalVariogram.get(7)[0]).build();
 		} else if (vp.isValid()) {
 			variogramParameters = vp;
 		} else {
@@ -468,14 +467,10 @@ public abstract class Kriging extends HMModel {
 		VariogramParameters vp = new VariogramParameters.Builder(pSemivariogramType, nugget, range, sill)
 				.setLocal(false).setTrend(doDetrended).setTrendIntercept(inIntercept).setTrendSlope(inSlope).build();
 		if (step == 0) {
-			try {
-				verifyInput();
-			} catch (Exception e) {
-				pm.errorMessage("Error during input verification: " + e.toString());
-			}
+			verifyInput();
 		}
 		step = step + 1;
-		if (provider == null || step==0) {
+		if (provider == null) {
 			provider = initializeInterpolatorData();
 		}
 		return vp;
@@ -502,25 +497,38 @@ public abstract class Kriging extends HMModel {
 	 * station and interpolation point elevation fields must be provided.
 	 */
 	protected void verifyInput() {
-		if (inData == null || inStations == null || fStationsid == null) {
-			throw new NullPointerException(msg.message("kriging.stationProblem"));
-		}
+
+		requireNonNull(inData, "Missing input: inData (input raster/grid) is null.");
+		requireNonNull(inStations, "Missing input: inStations (stations feature collection) is null.");
+		requireNonNull(fStationsid, "Missing input: fStationsid (station id field) is null.");
+
 		if (doDetrended) {
-			if (fStationsZ == null) {
-				throw new NullPointerException("z field not found");
-			}
-			int ff = inStations.getSchema().indexOf(fStationsZ);
+			requireNonNull(fStationsZ,
+					"Detrending is enabled (doDetrended=true) but fStationsZ (elevation field) is null.");
 
-			if (ff < 0) {
-				throw new NullPointerException("check if the z field name is correct");
+			int idx = inStations.getSchema().indexOf(fStationsZ);
+			if (idx < 0) {
+				throw new IllegalArgumentException(
+						"Detrending is enabled but field '" + fStationsZ + "' was not found in inStations schema. "
+								+ "Check the field name (case-sensitive) and the input stations layer.");
 			}
 		}
-		if ((nugget != 0 || sill != 0 || range != 0) && (pSemivariogramType == null || pSemivariogramType.isEmpty())) {
-			throw new NullPointerException(
-					"You provide incomplete fixed parameter check: nugget, sill, range or pSemivariogramType");
-		} else {
 
+		boolean anyFixed = (nugget != 0.0) || (sill != 0.0) || (range != 0.0);
+		boolean typeMissing = (pSemivariogramType == null) || pSemivariogramType.isBlank();
+
+		if (anyFixed && typeMissing) {
+			throw new IllegalArgumentException(
+					"Incomplete fixed semivariogram parameters: you set at least one of nugget/sill/range "
+							+ "but pSemivariogramType is missing or blank. "
+							+ "Provide pSemivariogramType (e.g., 'Spherical', 'Exponential', ...) or set nugget=sill=range=0.");
 		}
+	}
+
+	private static <T> T requireNonNull(T obj, String message) {
+		if (obj == null)
+			throw new IllegalArgumentException(message);
+		return obj;
 	}
 
 	/**
