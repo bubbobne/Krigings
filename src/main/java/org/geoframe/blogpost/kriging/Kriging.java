@@ -262,7 +262,7 @@ public abstract class Kriging extends HMModel {
 
 				if (!areAllEquals && n1 > 1) {
 
-					interpolatedValue = intepolateValue(sp, coordinate);
+					interpolatedValue = interpolateValue(sp, coordinate);
 					// pm.worked(1);
 				} else if (n1 == 1 || areAllEquals) {
 					interpolatedValue = sp.getHResiduals()[0];
@@ -325,7 +325,9 @@ public abstract class Kriging extends HMModel {
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
-				pm.errorMessage("Error updating stations for kriging: " + e.getMessage());
+				// pm.errorMessage("Error updating stations for kriging: " + e.getMessage());
+				throw new ModelsRuntimeException("Error updating stations for kriging.",
+						this.getClass().getSimpleName());
 			}
 
 			double interpolatedValue;
@@ -335,19 +337,20 @@ public abstract class Kriging extends HMModel {
 			if (n1 != 0) {
 				if (!areAllEquals && n1 > 1) {
 					try {
-						interpolatedValue = intepolateValue(sp, coordinate);
+						interpolatedValue = interpolateValue(sp, coordinate);
 					} catch (MatrixException e) {
-						// Handle exception appropriately (e.g., log the error)
-						interpolatedValue = Double.NaN;
+						throw new ModelsRuntimeException("Error solving kriging system.",
+								this.getClass().getSimpleName());
 					}
 				} else if (n1 == 1 || areAllEquals) {
 					interpolatedValue = sp.getHResiduals()[0];
 				} else {
-					// Fallback case
+					// Fallback: inData stores a single double[] value; use its first entry.
 					interpolatedValue = inData.values().iterator().next()[0];
 				}
 			} else {
 				pm.errorMessage("No value for this time step");
+				// inData stores a single double[] value; use its first entry.
 				interpolatedValue = inData.values().iterator().next()[0];
 			}
 
@@ -363,7 +366,7 @@ public abstract class Kriging extends HMModel {
 		return new StationProcessor(stations, vp);
 	}
 
-	private double intepolateValue(StationProcessor sp, Coordinate coordinate) throws MatrixException {
+	private double interpolateValue(StationProcessor sp, Coordinate coordinate) throws MatrixException {
 		double interpolatedValue;
 		double[] xStations = sp.getXStations();
 		double[] yStations = sp.getYStations();
@@ -373,8 +376,7 @@ public abstract class Kriging extends HMModel {
 		xStations[n1] = coordinate.x;
 		yStations[n1] = coordinate.y;
 		zStations[n1] = coordinate.z;
-		// pm.beginTask(msg.message("kriging.working"),
-		// pointsToInterpolateId2Coordinates.size());
+		// pm.beginTask(msg.message("kriging.working"),0);
 
 		double h0 = 0.0;
 
