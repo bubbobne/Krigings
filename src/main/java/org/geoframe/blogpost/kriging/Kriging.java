@@ -252,7 +252,7 @@ public abstract class Kriging extends HMModel {
 			id = idIterator.next();
 			if (variogramParameters != null) {
 				try {
-					
+
 					Coordinate coordinate = pointsToInterpolate.get(id);
 					if (maxdist > 0 || inNumCloserStations > 0) {
 						sp.updateForCoordinate(coordinate, inData, inNumCloserStations, maxdist);
@@ -318,52 +318,59 @@ public abstract class Kriging extends HMModel {
 		final boolean useSharedInstance = (maxdist == 0 && inNumCloserStations == 0);
 
 		indexedEntries.parallelStream().forEach(pair -> {
-			StationsSelection stations = createAndConfigureStationSelection();
-			StationProcessor sp = new StationProcessor(stations, variogramParameters);
-			Coordinate coordinate = pair.getValue().getValue();
-			int i = pair.getKey();
-			// Each thread creates its own instance of StationsSelection.
-			// Variogram parameters might need to be recalculated per thread if mutable.
-			try {
-				if (useSharedInstance) {
-					sp.updateForCoordinate(null, inData, inNumCloserStations, maxdist);
-				} else {
-
-					sp.updateForCoordinate(coordinate, inData, inNumCloserStations, maxdist);
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-				// pm.errorMessage("Error updating stations for kriging: " + e.getMessage());
-				throw new ModelsRuntimeException("Error updating stations for kriging.",
-						this.getClass().getSimpleName());
-			}
-
-			double interpolatedValue;
-			int n1 = sp.getCount();
-			boolean areAllEquals = sp.areAllEquals();
-
-			if (n1 != 0) {
-				if (!areAllEquals && n1 > 1) {
+			double interpolatedValue = -9999.0;
+			if (variogramParameters != null) {
+				try {
+					StationsSelection stations = createAndConfigureStationSelection();
+					StationProcessor sp = new StationProcessor(stations, variogramParameters);
+					Coordinate coordinate = pair.getValue().getValue();
+					int i = pair.getKey();
+					// Each thread creates its own instance of StationsSelection.
+					// Variogram parameters might need to be recalculated per thread if mutable.
 					try {
-						interpolatedValue = interpolateValue(sp, coordinate);
-					} catch (MatrixException e) {
-						throw new ModelsRuntimeException("Error solving kriging system.",
+						if (useSharedInstance) {
+							sp.updateForCoordinate(null, inData, inNumCloserStations, maxdist);
+						} else {
+
+							sp.updateForCoordinate(coordinate, inData, inNumCloserStations, maxdist);
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+						// pm.errorMessage("Error updating stations for kriging: " + e.getMessage());
+						throw new ModelsRuntimeException("Error updating stations for kriging.",
 								this.getClass().getSimpleName());
 					}
-				} else if (n1 == 1 || areAllEquals) {
-					interpolatedValue = sp.getHResiduals()[0];
-				} else {
-					// Fallback: inData stores a single double[] value; use its first entry.
-					interpolatedValue = inData.values().iterator().next()[0];
-				}
-			} else {
-				pm.errorMessage("No value for this time step");
-				// inData stores a single double[] value; use its first entry.
-				interpolatedValue = inData.values().iterator().next()[0];
-			}
 
-			// Post-process and store the result.
-			result[i] = postProcessResult(interpolatedValue);
+					int n1 = sp.getCount();
+					boolean areAllEquals = sp.areAllEquals();
+
+					if (n1 != 0) {
+						if (!areAllEquals && n1 > 1) {
+							try {
+								interpolatedValue = interpolateValue(sp, coordinate);
+							} catch (MatrixException e) {
+								throw new ModelsRuntimeException("Error solving kriging system.",
+										this.getClass().getSimpleName());
+							}
+						} else if (n1 == 1 || areAllEquals) {
+							interpolatedValue = sp.getHResiduals()[0];
+						} else {
+							// Fallback: inData stores a single double[] value; use its first entry.
+							interpolatedValue = inData.values().iterator().next()[0];
+						}
+					} else {
+						pm.errorMessage("No value for this time step");
+						// inData stores a single double[] value; use its first entry.
+						interpolatedValue = inData.values().iterator().next()[0];
+					}
+
+					// Post-process and store the result.
+					result[i] = postProcessResult(interpolatedValue);
+				} catch (Exception e) {
+					pm.errorMessage(e.getMessage());
+
+				}
+			}
 		});
 
 		// Store results after all parallel tasks have completed.
