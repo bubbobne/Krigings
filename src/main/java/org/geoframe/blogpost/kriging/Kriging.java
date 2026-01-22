@@ -248,40 +248,48 @@ public abstract class Kriging extends HMModel {
 		}
 		int j = 0;
 		while (idIterator.hasNext()) {
+			double interpolatedValue = -9999.0;
 			id = idIterator.next();
-			Coordinate coordinate = pointsToInterpolate.get(id);
-			if (maxdist > 0 || inNumCloserStations > 0) {
-				sp.updateForCoordinate(coordinate, inData, inNumCloserStations, maxdist);
-			}
-			int n1 = sp.getCount();
-			boolean areAllEquals = sp.areAllEquals();
-			double interpolatedValue = 0;
+			if (variogramParameters != null) {
+				try {
+					
+					Coordinate coordinate = pointsToInterpolate.get(id);
+					if (maxdist > 0 || inNumCloserStations > 0) {
+						sp.updateForCoordinate(coordinate, inData, inNumCloserStations, maxdist);
+					}
+					int n1 = sp.getCount();
+					boolean areAllEquals = sp.areAllEquals();
 
-			// zStations[n1] = Double.NaN;
-			if (n1 != 0) {
+					// zStations[n1] = Double.NaN;
+					if (n1 != 0) {
 
-				if (!areAllEquals && n1 > 1) {
+						if (!areAllEquals && n1 > 1) {
 
-					interpolatedValue = interpolateValue(sp, coordinate);
-					// pm.worked(1);
-				} else if (n1 == 1 || areAllEquals) {
-					interpolatedValue = sp.getHResiduals()[0];
-					// pm.message(msg.message("kriging.setequalsvalue"));
-					// pm.beginTask(msg.message("kriging.working"),
-					// pointsToInterpolateId2Coordinates.size());
-					// (SUGGESTION: Clarify purpose of this reset).
-					n1 = 0;
-					// pm.worked(1);
+							interpolatedValue = interpolateValue(sp, coordinate);
+							// pm.worked(1);
+						} else if (n1 == 1 || areAllEquals) {
+							interpolatedValue = sp.getHResiduals()[0];
+							// pm.message(msg.message("kriging.setequalsvalue"));
+							// pm.beginTask(msg.message("kriging.working"),
+							// pointsToInterpolateId2Coordinates.size());
+							// (SUGGESTION: Clarify purpose of this reset).
+							n1 = 0;
+							// pm.worked(1);
+						}
+
+						// pm.done();
+
+					} else {
+
+						pm.errorMessage("No value for this time step");
+
+						interpolatedValue = inData.values().iterator().next()[0];
+
+					}
+				} catch (Exception e) {
+					pm.errorMessage(e.getMessage());
+
 				}
-
-				// pm.done();
-
-			} else {
-
-				pm.errorMessage("No value for this time step");
-
-				interpolatedValue = inData.values().iterator().next()[0];
-
 			}
 			result[j] = postProcessResult(interpolatedValue);
 			j++;
@@ -455,6 +463,7 @@ public abstract class Kriging extends HMModel {
 		} else if (vp.isValid()) {
 			variogramParameters = vp;
 		} else {
+			variogramParameters = null;
 			pm.errorMessage("no variogram provided");
 		}
 

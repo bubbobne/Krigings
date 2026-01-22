@@ -139,32 +139,38 @@ public class LeaveOneOutKrigings extends HMModel {
 	private boolean isFirstStep = true;
 	private KrigingPointCase kriging;
 	private Map<Integer, SimpleFeature> featureMap = new HashMap<>();
+
 	@Execute
 	public void executeKriging() throws Exception {
 		outData = new HashMap<>();
 		inizialize();
-		for (Integer idToCheck : featureMap.keySet()) {
-		    SimpleFeature feature = featureMap.get(idToCheck);
+		featureMap.keySet().stream().sorted().forEach(idToCheck -> {
+			SimpleFeature feature = featureMap.get(idToCheck);
 
-		    if (feature == null) {
-		        pm.message("Warning: no feature found for station id " + idToCheck);
-		        continue;
-		    }
+			if (feature == null) {
+				pm.message("Warning: no feature found for station id " + idToCheck);
+			} else {
 
-			kriging.inInterpolate = DataUtilities.collection(feature);
-			kriging.inStations = inStations;
-			kriging.setProvider(null);
-			if (inData.containsKey(idToCheck)) {
-				double[] tmpValue = inData.get(idToCheck);
-				inData.remove(idToCheck);
-				kriging.inData = inData;
-				kriging.execute();
-				HashMap<Integer, double[]> result = kriging.outData;
-				outData.put(idToCheck, result.get(idToCheck));
-				inData.put(idToCheck, tmpValue);
+				kriging.inInterpolate = DataUtilities.collection(feature);
+				kriging.inStations = inStations;
+				kriging.setProvider(null);
+				if (inData.containsKey(idToCheck)) {
+					double[] tmpValue = inData.get(idToCheck);
+					inData.remove(idToCheck);
+					kriging.inData = inData;
+					try {
+						kriging.execute();
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					HashMap<Integer, double[]> result = kriging.outData;
+					outData.put(idToCheck, result.get(idToCheck));
+					inData.put(idToCheck, tmpValue);
+				}
 			}
 			// pm.worked(1);
-		}
+		});
 		pm.done();
 	}
 
@@ -189,16 +195,16 @@ public class LeaveOneOutKrigings extends HMModel {
 			kriging.inNumCloserStations = inNumCloserStations;
 			kriging.doLogarithmic = doLogarithmic;
 			kriging.doIncludeZero = doIncludeZero;
-			
+
 			SimpleFeatureIterator iterator = inStations.features();
 			try {
-			    while (iterator.hasNext()) {
-			        SimpleFeature feature = iterator.next();
-			        int id = ((Long) feature.getProperty(fStationsid).getValue()).intValue();
-			        featureMap.put(id, feature);
-			    }
+				while (iterator.hasNext()) {
+					SimpleFeature feature = iterator.next();
+					int id = ((Long) feature.getProperty(fStationsid).getValue()).intValue();
+					featureMap.put(id, feature);
+				}
 			} finally {
-			    iterator.close();
+				iterator.close();
 			}
 		}
 		kriging.inTheoreticalVariogram = inTheoreticalVariogram;

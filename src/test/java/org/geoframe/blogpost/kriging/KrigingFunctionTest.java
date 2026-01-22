@@ -5,16 +5,31 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.Collection;
 import java.util.HashMap;
 
 import org.geoframe.blogpost.kriging.linearsystemsolver.SimpleLinearSystemSolverFactory;
 import org.geoframe.blogpost.kriging.pointcase.KrigingPointCase;
 import org.geoframe.blogpost.kriging.variogram.theoretical.VariogramParameters;
+import org.geotools.data.simple.SimpleFeatureCollection;
+import org.geotools.data.simple.SimpleFeatureIterator;
+import org.geotools.feature.DefaultFeatureCollection;
+import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.hortonmachine.gears.io.shapefile.OmsShapefileFeatureReader;
 import org.hortonmachine.gears.utils.math.matrixes.ColumnVector;
 import org.junit.Test;
+import org.opengis.feature.FeatureVisitor;
+import org.opengis.feature.simple.SimpleFeatureType;
+import org.opengis.filter.Filter;
+import org.opengis.filter.sort.SortBy;
+import org.opengis.util.ProgressListener;
 
 public class KrigingFunctionTest {
 
@@ -131,9 +146,15 @@ public class KrigingFunctionTest {
 
 	@Test
 	public void testFixedVariogram() throws NoSuchMethodException, SecurityException, IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException, NoSuchFieldException {
-
-		Kriging kriging = new KrigingPointCase();
+			IllegalArgumentException, InvocationTargetException, NoSuchFieldException, IOException, URISyntaxException {
+		OmsShapefileFeatureReader stationsReader = new OmsShapefileFeatureReader();
+		URL stazioniGridUrl = this.getClass().getClassLoader()
+				.getResource("Input/krigings/PointCase/sic97/observed.shp");
+		File stazioniGridFile = new File(stazioniGridUrl.toURI());
+		stationsReader.file = stazioniGridFile.getAbsolutePath();
+		stationsReader.readFeatureCollection();
+		SimpleFeatureCollection stationsFC = stationsReader.geodata;
+		KrigingPointCase kriging = new KrigingPointCase();
 		// Get the private field 'variogramParameters' from the Kriging class
 		Field vpField = Kriging.class.getDeclaredField("variogramParameters");
 		// Allow access to the private field
@@ -151,6 +172,21 @@ public class KrigingFunctionTest {
 		kriging.range = range;
 		kriging.inSlope = slope;
 		kriging.inIntercept = intercept;
+		kriging.inData = new HashMap<Integer, double[]>();
+		kriging.inStations = stationsFC;
+		kriging.fStationsZ = "z1";
+		kriging.fPointZ = "z1";
+		kriging.fStationsid = "ID";
+		kriging.fInterpolateid = "ID";
+		URL testGridUrl = this.getClass().getClassLoader().getResource("Input/krigings/PointCase/sic97/test.shp");
+		File testGridFile = new File(testGridUrl.toURI());
+		OmsShapefileFeatureReader testReader = new OmsShapefileFeatureReader();
+		testReader.file = testGridFile.getAbsolutePath();
+		testReader.readFeatureCollection();
+		SimpleFeatureCollection testFC = testReader.geodata;
+		kriging.inInterpolate = testFC;
+		
+		
 		Method method = Kriging.class.getDeclaredMethod("initializeKrigingParameters");
 		method.setAccessible(true);
 		VariogramParameters vp = (VariogramParameters) method.invoke(kriging);
@@ -176,10 +212,30 @@ public class KrigingFunctionTest {
 
 	@Test
 	public void testVariableVariogram() throws NoSuchMethodException, SecurityException, IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException, NoSuchFieldException {
+			IllegalArgumentException, InvocationTargetException, NoSuchFieldException, URISyntaxException, IOException {
 
-		Kriging kriging = new KrigingPointCase();
+		OmsShapefileFeatureReader stationsReader = new OmsShapefileFeatureReader();
+		URL stazioniGridUrl = this.getClass().getClassLoader()
+				.getResource("Input/krigings/PointCase/sic97/observed.shp");
+		File stazioniGridFile = new File(stazioniGridUrl.toURI());
+		stationsReader.file = stazioniGridFile.getAbsolutePath();
+		stationsReader.readFeatureCollection();
+	
+		SimpleFeatureCollection stationsFC = stationsReader.geodata;
+		KrigingPointCase kriging = new KrigingPointCase();
+        kriging.inStations = stationsFC;
+        kriging.fStationsid = "ID";
+    	URL testGridUrl = this.getClass().getClassLoader().getResource("Input/krigings/PointCase/sic97/test.shp");
+		File testGridFile = new File(testGridUrl.toURI());
+		OmsShapefileFeatureReader testReader = new OmsShapefileFeatureReader();
+		testReader.file = testGridFile.getAbsolutePath();
+		testReader.readFeatureCollection();
+		SimpleFeatureCollection testFC = testReader.geodata;
+		kriging.inInterpolate = testFC; 
+		kriging.fInterpolateid = "ID";
+
 		// Get the private field 'variogramParameters' from the Kriging class
+		
 		Field vpField = Kriging.class.getDeclaredField("variogramParameters");
 		// Allow access to the private field
 		vpField.setAccessible(true);
@@ -200,8 +256,8 @@ public class KrigingFunctionTest {
 		variogram.put(5, new double[] { 0 });
 		variogram.put(6, new double[] { intercept });
 		variogram.put(7, new double[] { slope });
-
 		kriging.inTheoreticalVariogram = variogram;
+		kriging.inData = new HashMap<Integer, double[]>();
 		Method method = Kriging.class.getDeclaredMethod("initializeKrigingParameters");
 		method.setAccessible(true);
 		VariogramParameters vp = (VariogramParameters) method.invoke(kriging);
@@ -225,7 +281,6 @@ public class KrigingFunctionTest {
 		variogram.put(5, new double[] { 0 });
 		variogram.put(6, new double[] { intercept });
 		variogram.put(7, new double[] { slope });
-
 		kriging.inTheoreticalVariogram = variogram;
 		vp = (VariogramParameters) method.invoke(kriging);
 		method2.invoke(kriging, vp);
