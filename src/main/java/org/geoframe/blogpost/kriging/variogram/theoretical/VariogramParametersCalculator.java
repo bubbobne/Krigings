@@ -8,6 +8,22 @@ import org.geoframe.blogpost.kriging.primarylocation.ResidualsEvaluator;
 import org.geoframe.blogpost.kriging.primarylocation.StationsSelection;
 import org.geoframe.blogpost.kriging.variogram.experimental.ExperimentalVariogram;
 
+/**
+ * Computes (local) variogram parameters from a subset of stations, optionally
+ * detrending residuals before building the experimental variogram and fitting a
+ * theoretical model.
+ *
+ * Fallback logic: - If the local fit is valid -> return local parameters -
+ * Otherwise, try returning global parameters (detrended or not) if
+ * available/valid.
+ *
+ * Assumptions: - stations.execute() populates the arrays used here
+ * (hStationInitialSet, zStationInitialSet, etc.). - globalVP/globalDeTrendedVP
+ * must be set by the caller before execute(), otherwise they can be null.
+ * 
+ * @author Daniele Andreis and Giuseppe Formetta.
+ * 
+ */
 public class VariogramParametersCalculator {
 	private VariogramParameters globalVP;
 	private VariogramParameters globalDeTrendedVP;
@@ -37,6 +53,15 @@ public class VariogramParametersCalculator {
 		}
 	}
 
+	/**
+	 * Main entry point.
+	 *
+	 * Workflow: 1) Guard checks: require enough stations and non-degenerate data.
+	 * 2) Compute residuals (optionally detrended) using a regression model. 3)
+	 * Build experimental variogram from residuals. 4) Fit theoretical semivariogram
+	 * model (VariogramParamsEvaluator). 5) If fit is good -> return local
+	 * parameters, else return global fallback if available.
+	 */
 	public VariogramParameters execute() {
 		if (!stations.areAllEquals && stations.n1 > 2) {
 			int n1 = stations.hStationInitialSet.length - 1;
@@ -49,26 +74,32 @@ public class VariogramParametersCalculator {
 			int[] idStations = Arrays.copyOfRange(stations.idStationInitialSet, 0, n1);
 			double[] hResiduals = rEvaluator.hResiduals;
 			hResiduals = rEvaluator.hResiduals;
-			VariogramParamsEvaluator variogramParamsEvaluator = new VariogramParamsEvaluator();
-			variogramParamsEvaluator.expVar = getExperimentalVariogram(hResiduals, idStations);
-			variogramParamsEvaluator.pSemivariogramType = this.semivariogramType;
-			variogramParamsEvaluator.proces();
+			SemivariogramParameterFitter semivariogramFitter = new SemivariogramParameterFitter();
+			semivariogramFitter.expVar = getExperimentalVariogram(hResiduals, idStations);
+			semivariogramFitter.pSemivariogramType = this.semivariogramType;
+			semivariogramFitter.proces();
 
-			dd = variogramParamsEvaluator.expVar.outDistances;
-			hh = variogramParamsEvaluator.expVar.outDistances;
-			nn = variogramParamsEvaluator.expVar.outNumberPairsPerBin;
+			dd = semivariogramFitter.expVar.outDistances;
+			hh = semivariogramFitter.expVar.outDistances;
+			nn = semivariogramFitter.expVar.outNumberPairsPerBin;
 
-			boolean variogramOk = variogramParamsEvaluator.nugget >= 0 && variogramParamsEvaluator.sill > 0
-					&& variogramParamsEvaluator.range > 0 && variogramParamsEvaluator.isFitGood;
-			if (variogramOk || (!globalVP.isValid()) || (doDetrend && globalDeTrendedVP.isValid())) {
+			boolean variogramOk = semivariogramFitter.nugget >= 0 && semivariogramFitter.sill > 0
+					&& semivariogramFitter.range > 0 && semivariogramFitter.isFitGood;
+
+			/**
+			 * Selection logic: - If local fit ok -> return local - Else if no global valid
+			 * OR (detrend enabled AND global detrended valid) -> return local anyway (!)
+			 *
+			 */
+			if (variogramOk || (!globalVP.isValid()) || (doDetrend && !globalDeTrendedVP.isValid())) {
 				VariogramParameters myVariogramParam = new VariogramParameters.Builder(
-						variogramParamsEvaluator.outSemivariogramType, variogramParamsEvaluator.nugget,
-						variogramParamsEvaluator.range, variogramParamsEvaluator.sill).setLocal(true)
+						semivariogramFitter.outSemivariogramType, semivariogramFitter.nugget,
+						semivariogramFitter.range, semivariogramFitter.sill).setLocal(true)
 						.setTrend(rEvaluator.isPValueOk).setTrendIntercept(rEvaluator.trendIntercept)
 						.setTrendSlope(rEvaluator.trendCoefficient).build();
 
 				return myVariogramParam;
-			}else if (doDetrend && globalDeTrendedVP.isValid()) {
+			} else if (doDetrend && globalDeTrendedVP.isValid()) {
 				return globalDeTrendedVP;
 			} else if (globalVP.isValid()) {
 				return globalVP;

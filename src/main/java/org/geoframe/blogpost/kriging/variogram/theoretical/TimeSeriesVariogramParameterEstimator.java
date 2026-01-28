@@ -20,7 +20,7 @@ import oms3.annotations.Description;
 import oms3.annotations.Execute;
 import oms3.annotations.In;
 
-public class GlobalParameterEvaluator {
+public class TimeSeriesVariogramParameterEstimator {
 	@Description("The .shp of the measurement point, containing the position of the stations.")
 	@In
 	public SimpleFeatureCollection inStations = null;
@@ -313,7 +313,7 @@ public class GlobalParameterEvaluator {
 				variance[i] = variance[i] / nRows;
 				n[i] = n[i] / nRows;
 			}
-			VariogramParamsEvaluator vEvaluator = new VariogramParamsEvaluator();
+			SemivariogramParameterFitter vEvaluator = new SemivariogramParameterFitter();
 			vEvaluator.pSemivariogramType = pSemivariogramType;
 			vEvaluator.x = distance;
 			vEvaluator.y = variance;
@@ -341,7 +341,7 @@ public class GlobalParameterEvaluator {
 						varianceDeTrended[i] = varianceDeTrended[i] / nRowsDeTrended;
 						nDeTrended[i] = nDeTrended[i] / nRowsDeTrended;
 					}
-					vEvaluator = new VariogramParamsEvaluator();
+					vEvaluator = new SemivariogramParameterFitter();
 					vEvaluator.pSemivariogramType = pSemivariogramType;
 					vEvaluator.x = distanceDeTrended;
 					vEvaluator.y = varianceDeTrended;

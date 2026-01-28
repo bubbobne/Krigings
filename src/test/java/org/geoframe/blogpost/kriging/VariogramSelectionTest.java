@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 
-import org.geoframe.blogpost.kriging.variogram.theoretical.GlobalParameterEvaluator;
+import org.geoframe.blogpost.kriging.variogram.theoretical.TimeSeriesVariogramParameterEstimator;
 import org.geoframe.blogpost.kriging.variogram.theoretical.VariogramParameters;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.feature.SchemaException;
@@ -81,7 +81,7 @@ public class VariogramSelectionTest {
 				.getResource("Input/krigings/PointCase/sic97/observed_H.csv");
 		File observedFile = new File(observedRain4Url.toURI());
 
-		GlobalParameterEvaluator parameterEvaluator = new GlobalParameterEvaluator();
+		TimeSeriesVariogramParameterEstimator parameterEvaluator = new TimeSeriesVariogramParameterEstimator();
 		URL thVariogramUrl = this.getClass().getClassLoader().getResource("Output/krigings/PointCase");
 		File thVariogramFile = new File(thVariogramUrl.toURI());
 

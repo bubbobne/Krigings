@@ -22,16 +22,17 @@ import oms3.annotations.License;
 import oms3.annotations.Name;
 import oms3.annotations.Out;
 import oms3.annotations.Status;
+
 @Description("Teorethical semivariogram evaluator.")
 @Documentation("vgm.html")
-@Author(name = "Daniele Andreis", contact = " http://www.ing.unitn.it/dica/hp/?user=rigon")
+@Author(name = "Daniele Andreis and Giuseppe Formetta", contact = " http://www.ing.unitn.it/dica/hp/?user=rigon")
 @Keywords("Kriging, Hydrology")
 @Label(HMConstants.STATISTICS)
 @Name("VariogramParametersEvaluator")
 @Status(Status.EXPERIMENTAL)
 @License("General Public License Version 3 (GPLv3)")
 @SuppressWarnings("nls")
-public class VariogramParamsEvaluator {
+public class SemivariogramParameterFitter {
 
 	private static final double TRESHOLD = 0.5;
 
@@ -49,7 +50,6 @@ public class VariogramParamsEvaluator {
 
 	@In
 	public double[] n;
-
 
 	@Out
 	public double sill;
@@ -88,8 +88,8 @@ public class VariogramParamsEvaluator {
 					double y = expVar.outExperimentalVariogram.get(ID)[0];
 					double n = expVar.outNumberPairsPerBin.get(ID)[0];
 					if (y != HMConstants.doubleNovalue) {
-						double w = n/(x*x);
-						w=1.0;
+						// double w = n/(x*x);
+						double w = 1.0;
 						WeightedObservedPoint point = new WeightedObservedPoint(w, x, y);
 						points.add(point);
 					}
@@ -98,7 +98,7 @@ public class VariogramParamsEvaluator {
 				for (int i = 0; i < x.length; i++) {
 					double distance = x[i];
 					double variance = y[i];
-					double w=1;
+					double w = 1;
 					WeightedObservedPoint point = new WeightedObservedPoint(w, distance, variance);
 					points.add(point);
 				}
@@ -110,14 +110,11 @@ public class VariogramParamsEvaluator {
 			} else {
 				variogramType = VariogramParameters.AVAILABLE_THEORETICAL_VARIOGRAMS;
 			}
-
 			performEvaluation(variogramType, points);
-
-			// System.out.println("calculated value " + nugget + " sill " + sill + " range "
-			// + range);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block    private final IVariogramFitter variogramFitter;
-			System.out.println(e.getMessage());
+			// TODO Auto-generated catch block private final IVariogramFitter
+			// variogramFitter;
+			//System.out.println(e.getMessage());
 			isFitGood = false;
 		}
 	}
@@ -140,11 +137,11 @@ public class VariogramParamsEvaluator {
 								.createModel(variogramType[j], point.getX(), coeffs[0], coeffs[1], coeffs[2])
 								.computeSemivariance() - actualValue) / actualValue;
 						count = count + 1;
-					//	System.out.println(" "+actualValue);
+						// System.out.println(" "+actualValue);
 					}
 				}
 				double tmpError = Math.abs(distance / points.size());
-				//System.out.println(variogramType[j]+" errore "+tmpError);
+				// System.out.println(variogramType[j]+" errore "+tmpError);
 				if (j == 0 || tmpError < relError) {
 					relError = Math.abs(distance / points.size());
 					sill = coeffs[0];
@@ -156,9 +153,9 @@ public class VariogramParamsEvaluator {
 				}
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
-				//System.out.println(variogramType[j]);
+				// System.out.println(variogramType[j]);
 
-				//System.out.println(e.getMessage());
+				// System.out.println(e.getMessage());
 			}
 		}
 	}
