@@ -23,13 +23,10 @@ import org.geoframe.blogpost.kriging.pointcase.KrigingPointCase;
 import org.geotools.data.DataUtilities;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
-import org.geotools.filter.text.cql2.CQL;
 import org.hortonmachine.gears.libs.modules.HMModel;
 import org.hortonmachine.gears.libs.monitor.IHMProgressMonitor;
 import org.hortonmachine.gears.libs.monitor.LogProgressMonitor;
-import org.opengis.feature.Property;
 import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.filter.Filter;
 
 import oms3.annotations.Description;
 import oms3.annotations.Execute;
@@ -138,39 +135,35 @@ public class LeaveOneOutKrigings extends HMModel {
 
 	private boolean isFirstStep = true;
 	private KrigingPointCase kriging;
-	private Map<Integer, SimpleFeature> featureMap = new HashMap<>();
+	private Map<Integer, SimpleFeatureCollection> featureCollectionMap = new HashMap<>();
 
 	@Execute
 	public void executeKriging() throws Exception {
 		outData = new HashMap<>();
 		inizialize();
-		featureMap.keySet().stream().sorted().forEach(idToCheck -> {
-			SimpleFeature feature = featureMap.get(idToCheck);
+		kriging.inStations = inStations;
+		kriging.setProvider(null);
+		ExcludingMap exMap =  new ExcludingMap(inData);
+		kriging.inData = exMap;
+		for (var e : featureCollectionMap.entrySet()) {
+			int idToCheck = e.getKey();
+			SimpleFeatureCollection fc = e.getValue();
 
-			if (feature == null) {
+			if (fc == null) {
 				pm.message("Warning: no feature found for station id " + idToCheck);
 			} else {
-
-				kriging.inInterpolate = DataUtilities.collection(feature);
-				kriging.inStations = inStations;
-				kriging.setProvider(null);
+                exMap.setExcludedId(idToCheck);
+				kriging.inInterpolate = fc;
 				if (inData.containsKey(idToCheck)) {
 					double[] tmpValue = inData.get(idToCheck);
 					inData.remove(idToCheck);
-					kriging.inData = inData;
-					try {
-						kriging.execute();
-					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					HashMap<Integer, double[]> result = kriging.outData;
-					outData.put(idToCheck, result.get(idToCheck));
-					inData.put(idToCheck, tmpValue);
+					kriging.execute();
+					outData.put(idToCheck, kriging.outData.get(idToCheck));
 				}
 			}
 			// pm.worked(1);
-		});
+		}
+		;
 		pm.done();
 	}
 
@@ -201,7 +194,7 @@ public class LeaveOneOutKrigings extends HMModel {
 				while (iterator.hasNext()) {
 					SimpleFeature feature = iterator.next();
 					int id = ((Long) feature.getProperty(fStationsid).getValue()).intValue();
-					featureMap.put(id, feature);
+					featureCollectionMap.put(id, DataUtilities.collection(feature));
 				}
 			} finally {
 				iterator.close();
