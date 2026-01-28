@@ -22,6 +22,9 @@ public class VariogramFitter extends AbstractCurveFitter {
 	private double rms = 0.0;
 	private RealVector residuals;
 	double tol = Math.pow(0.1, 9);
+	double sillMin = 1e-6;
+	double rangeMin = 1e-6;
+	double nuggetMin = 0.0;
 
 	private VariogramFitter() {
 		// make constructor private to prevento inizializzation without the parametric
@@ -46,11 +49,14 @@ public class VariogramFitter extends AbstractCurveFitter {
 		 * fra semivarianza e sill, il minimo di queste differenze => range cheint
 		 * corrisponde a questa differenza
 		 */
-
+		double maxRange = 0;
 		int i = 0;
 		for (WeightedObservedPoint point : points) {
 			target[i] = point.getY();
 			x[i] = point.getX();
+			if (x[i] > maxRange) {
+				maxRange = x[i];
+			}
 			weights[i] = point.getWeight();
 			i += 1;
 		}
@@ -77,8 +83,9 @@ public class VariogramFitter extends AbstractCurveFitter {
 		problem = new LeastSquaresBuilder().maxEvaluations(1000).maxIterations(1000).start(initialGuess).target(target)
 				.model(model.getModelFunction(), model.getModelFunctionJacobian()).weight(new DiagonalMatrix(weights))
 				.checker(new EvaluationRmsChecker(tol, tol))
-				.parameterValidator(new KrigingParamValidator(new double[] {0.000001,0.000001,0})).lazyEvaluation(false)
-				.build();
+				.parameterValidator(new KrigingParamValidator(new double[] { sillMin, rangeMin, nuggetMin },
+						new double[] { Double.POSITIVE_INFINITY, maxRange, Double.POSITIVE_INFINITY }))
+				.lazyEvaluation(false).build();
 
 		return problem;
 
